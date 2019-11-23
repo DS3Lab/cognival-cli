@@ -1,39 +1,17 @@
 {
     "cognitiveData": {
-        "mitchell-1000-7": {
-            "features": [
-                "ALL_DIM"
-            ]
-        }, 
-        "mitchell-1000-8": {
+        "zuco-eeg": {
+            "dataset": "cognitive-data/eeg/zuco/zuco_scaled.txt",
             "features": [
                 "ALL_DIM"
             ]
         }
     }, 
-    "configFile": "config/setupConfig.json", 
+    "configFile": "config/example_1.json", 
     "wordEmbeddings": [
-        "word2vec", 
-        "fasttext-crawl", 
-        "fasttext-crawl-subword", 
-        "fasttext-wiki-news", 
-        "fasttext-wiki-news-subword", 
-        "elmo", 
-        "bert-base", 
-        "bert-large", 
-        "bert-service-base", 
-        "bert-service-large", 
-        "glove-50", 
-        "glove-100", 
-        "glove-200", 
-        "glove-300", 
-        "random-embeddings-100", 
-        "random-embeddings-1024", 
-        "random-embeddings-200", 
-        "random-embeddings-300", 
-        "random-embeddings-50", 
-        "random-embeddings-768", 
-        "random-embeddings-850", 
-        "wordnet2vec"
+        "glove-50",
+        "glove-100",
+        "glove-200",
+        "glove-300"
     ]
 }
