@@ -139,7 +139,7 @@ def main():
     #   Saving results
     ##############################################################################
 
-    writeResults(config,logging,word_error,history)
+    writeResults(config, logging, word_error, history)
 
     timeTaken = datetime.now() - startTime
     print(timeTaken)

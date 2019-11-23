@@ -53,12 +53,12 @@ def modelPredict(grid, words, X_test, y_test):
         mse = np.mean(np.square(error),axis=0)
     return mse, word_error
 
-def modelHandler(config,words_test, X_train, y_train, X_test, y_test):
-    grids =[]
+def modelHandler(config, words_test, X_train, y_train, X_test, y_test):
+    grids = []
     grids_result = []
     mserrors = []
     if y_test[0].shape[1] == 1:
-        word_error = np.array(['word','error'],dtype='str')
+        word_error = np.array(['word', 'error'],dtype='str')
     else:
         word_error = np.array(['word'] + ['e' + str(i) for i in range(1,y_test[0].shape[1]+1)], dtype='str')
     for i in range(len(X_train)):
@@ -69,4 +69,3 @@ def modelHandler(config,words_test, X_train, y_train, X_test, y_test):
         mserrors.append(mse)
         word_error = np.vstack([word_error,w_e])
     return word_error, grids_result, mserrors
-

@@ -1,27 +1,76 @@
 {
-    "PATH": "/path/to/datasets/",
+    "PATH": "/home/adrian/repos/cognival/",
     "cogDataConfig": {
-
-        "dundee": {
-            "dataset": "cognitive-data/gaze/dundee/dundee_scaled.txt",
+        "zuco-eeg": {
+            "dataset": "cognitive-data/eeg/zuco/zuco_scaled.txt",
             "features": [
-                "First_fix_dur",
-                "First_pass_dur",
-                "Mean_fix_dur",
-                "Fix_prob",
-                "Re-read_prob",
-                "Tot_fix_dur",
-                "Tot_regres_from_dur",
-                "Tot_regres_to_dur",
-                "nFix",
-                "nLong_regres_from",
-                "nLong_regres_to",
-                "nRefix",
-                "nRegres_from",
-                "nRegres_to"
+                "ALL_DIM"
             ],
-            "type": "single_output",
+            "type": "multivariate_output",
             "wordEmbSpecifics": {
+                "glove-100": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        30
+                    ],
+                    "layers": [
+                        [
+                            50
+                        ],
+                        [
+                            30
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "glove-200": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            100
+                        ],
+                        [
+                            50
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "glove-300": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            50
+                        ],
+                        [
+                            150
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
                 "glove-50": {
                     "activations": [
                         "relu"
@@ -48,47 +97,31 @@
                         ]
                     ],
                     "validation_split": 0.2
-                },
-                "word2vec": {
-                    "activations": [
-                        "relu"
-                    ],
-                    "batch_size": [
-                        128
-                    ],
-                    "cv_split": 3,
-                    "epochs": [
-                        100
-                    ],
-                    "layers": [
-                        [
-                            50
-                        ],
-                        [
-                            150
-                        ]
-                    ],
-                    "validation_split": 0.2
                 }
             }
-        },
-        ,
+        }
+    },
     "cpu_count": 40,
     "folds": 5,
-    "outputDir": "dundee-feature-wordEmbedding",
+    "outputDir": "zuco-feature-wordEmbedding",
     "seed": 123,
-    "version": 0.0,
+    "version": 16.0,
     "wordEmbConfig": {
+        "glove-100": {
+            "chunked": 0,
+            "path": "embeddings/glove-6B/glove.6B.100d.txt"
+        },
+        "glove-200": {
+            "chunked": 0,
+            "path": "embeddings/glove-6B/glove.6B.200d.txt"
+        },
+        "glove-300": {
+            "chunked": 0,
+            "path": "embeddings/glove-6B/glove.6B.300d.txt"
+        },
         "glove-50": {
             "chunked": 0,
             "path": "embeddings/glove-6B/glove.6B.50d.txt"
-        },
-        "word2vec": {
-            "chunk_number": 4,
-            "chunked": 1,
-            "chunked_file": "embeddings/word2vec/word2vec",
-            "ending": ".txt",
-            "path": "embeddings/word2vec/word2vec.txt"
         }
     }
 }
