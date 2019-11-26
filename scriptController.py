@@ -7,7 +7,7 @@ from datetime import  datetime
 import script
 from handlers.fileHandler import getConfig
 from handlers.fileHandler import *
-from sideCode.animatedLoading import animatedLoading
+from utils import animatedLoading
 
 #TODO: clear all WARNINGS!
 
