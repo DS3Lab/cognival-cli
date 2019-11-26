@@ -4,11 +4,10 @@ import numpy as np
 from handlers.plotHandler import plotHandler
 
 def updateVersion(configFile):
-
     with open(configFile, 'r') as fileReader:
         config = json.load(fileReader)
 
-    config['version'] = config['version'] +1
+    config['version'] = config['version'] + 1
 
     with open(configFile,'w') as fileWriter:
         json.dump(config,fileWriter, indent=4, sort_keys=True)
@@ -22,13 +21,12 @@ def getConfig(configFile):
     return config
 
 def writeResults(config, logging, word_error, history):
-
     if not os.path.exists(config['outputDir']):
         os.mkdir(config['outputDir'])
 
     title = logging["cognitiveData"] + '_' + logging["feature"] + '_' + logging["wordEmbedding"]+'_'+str(config["version"])
 
-    outputDir = config['outputDir']+"/"+title
+    outputDir = config['outputDir'] + "/" + title
     if not os.path.exists(outputDir):
         os.mkdir(outputDir)
 
@@ -39,7 +37,7 @@ def writeResults(config, logging, word_error, history):
 
     plotHandler(title,history,outputDir)
 
-    pass
+    return
 
 def writeOptions(config, all_runs):
 

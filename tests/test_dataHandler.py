@@ -1,0 +1,155 @@
+import filecmp
+import sys
+from pathlib import Path
+
+import pytest
+import pandas as pd
+sys.path.insert(0, '..')
+
+from handlers.dataHandler import *
+
+@pytest.fixture
+def config():
+    return {
+    "PATH": "/home/adrian/repos/cognival/tests/",
+    "cogDataConfig": {
+        "zuco-eeg": {
+            "dataset": "cognitive-data/eeg/zuco/zuco_scaled.txt",
+            "features": [
+                "ALL_DIM"
+            ],
+            "type": "multivariate_output",
+            "wordEmbSpecifics": {
+                "glove-50": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            26
+                        ],
+                        [
+                            30
+                        ],
+                        [
+                            20
+                        ],
+                        [
+                            5
+                        ]
+                    ],
+                    "validation_split": 0.2
+                }
+            }
+        }
+    },
+    "cpu_count": 40,
+    "folds": 5,
+    "outputDir": "zuco-feature-wordEmbedding",
+    "seed": 123,
+    "version": 11.0,
+    "wordEmbConfig": {
+        "glove-50": {
+            "chunk_number": 4,
+            "chunked": 1,
+            "chunked_file": "reference/glove-50_",
+            "ending": ".txt",
+            "path": "input/glove.6B.50d.txt"
+        }
+    }
+}
+
+
+def test_chunker(tmpdir):
+    #TODO: Why did I need to add the header information to the embeddings
+    refdir = Path('reference')
+    outdir = tmpdir.mkdir('output')
+    chunker('input',
+            outdir,
+            'glove.6B.50d.txt',
+            'glove-50')
+    assert not filecmp.dircmp(refdir, outdir).diff_files
+
+
+def test_update():
+    df_word_embedding = pd.read_csv('reference/glove-50_0.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE, index_col=0)
+    df_cognitive_data = pd.read_csv('cognitive-data/eeg/zuco/zuco_scaled.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE)
+    we_chunk_rows = df_word_embedding.shape[0] // 4
+    df_word_embeddings_1 = df_word_embedding.iloc[:we_chunk_rows + 1, :]
+    df_word_embeddings_2 = df_word_embedding.iloc[we_chunk_rows:(we_chunk_rows + 1)*2, :]
+    df_join = pd.merge(df_cognitive_data, df_word_embeddings_1, how='left', on=['word'])
+    # length w/o NANs after first merge
+    assert len(df_join[df_join['edim1'].notnull()]) == 3386
+
+    update(df_join,
+           df_word_embeddings_2,
+           on_column=['word'],
+           columns_to_omit=df_cognitive_data.shape[1],
+           whole_row=True)
+
+    # length w/O NANs after second merge
+    assert len(df_join[df_join['edim1'].notnull()]) == 3769
+
+
+def test_dfMultiJoin():
+    df_word_embedding = pd.read_csv('input/glove.6B.50d.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE, index_col=0)
+    df_cognitive_data = pd.read_csv('cognitive-data/eeg/zuco/zuco_scaled.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE)
+    df_join = dfMultiJoin(4,
+                          df_cognitive_data,
+                          df_word_embedding)
+    assert len(df_join[df_join['edim1'].notnull()]) == 4162
+
+
+def test_multiJoin(config):
+    df_cognitive_data = pd.read_csv('cognitive-data/eeg/zuco/zuco_scaled.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE)
+    df_join = multiJoin(config,
+                        df_cognitive_data,
+                        'glove-50')
+    assert len(df_join[df_join['edim1'].notnull()]) == 4162
+
+
+def test_dataHandler(config):
+    #TODO: Handle chunked embeddings correctly
+    #TODO: Ascertain: 75:25 Train test split, then 80:20 CV on train set, and 3-fold CV on train-train set?
+    words_test, X_train, y_train, X_test, y_test = dataHandler(config,
+                                                               'glove-50',
+                                                               'zuco-eeg',
+                                                               'ALL_DIM')
+    assert [len(chunk) for chunk in X_train] == [3327, 3327, 3327, 3327, 3328]
+    assert [len(chunk) for chunk in y_train] == [3327, 3327, 3327, 3327, 3328]
+    assert [len(chunk) for chunk in words_test] == [832, 832, 832, 832, 831]
+    assert [len(chunk) for chunk in X_test] == [832, 832, 832, 832, 831]
+    assert [len(chunk) for chunk in y_test] == [832, 832, 832, 832, 831]
+
+
+def test_split_folds(config):
+    df_cognitive_data = pd.read_csv('cognitive-data/eeg/zuco/zuco_scaled.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE)
+    df_join = multiJoin(config, df_cognitive_data, 'glove-50')
+    df_join.dropna(inplace=True)
+    words = df_join['word']
+    words = np.array(words, dtype='str').reshape(-1,1)
+    df_join.drop(['word'], axis=1, inplace=True)
+    features = df_cognitive_data.columns[1:]
+    y = df_join[features]
+    y = np.array(y, dtype='float')
+    X = df_join.drop(features, axis=1)
+    X = np.array(X, dtype='float')
+
+    words_test, X_train, y_train, X_test, y_test = split_folds(words,
+                                                               X,
+                                                               y,
+                                                               config['folds'],
+                                                               config['seed'])
+    
+    assert [len(chunk) for chunk in X_train] == [3327, 3327, 3327, 3327, 3328]
+    assert [len(chunk) for chunk in y_train] == [3327, 3327, 3327, 3327, 3328]
+    assert [len(chunk) for chunk in words_test] == [832, 832, 832, 832, 831]
+    assert [len(chunk) for chunk in X_test] == [832, 832, 832, 832, 831]
+    assert [len(chunk) for chunk in y_test] == [832, 832, 832, 832, 831]

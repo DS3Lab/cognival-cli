@@ -58,7 +58,7 @@ def main(controllerConfig):
     print("\nMODELS CREATION, FITTING, PREDICTION...\n ")
 
     proc = min(os.cpu_count()-1, config["cpu_count"])
-    print("RUNNING ON  " + str(proc) + " PROCESSORS\n")
+    print("RUNNING ON " + str(proc) + " PROCESSORS\n")
     pool = Pool(processes=proc)
     async_results = [pool.apply_async(script.run,args=(config,
                                            options[i]["wordEmbedding"],
@@ -95,7 +95,7 @@ def main(controllerConfig):
         all_runs[config["version"]] = options[i]
         updateVersion(data["configFile"])
 
-    writeOptions(config,all_runs)
+    writeOptions(config, all_runs)
 
     print("\nSUCCESSFUL STORING")
 
@@ -110,7 +110,7 @@ def main(controllerConfig):
 
 
 if __name__=="__main__":
-    main("config/c.json")
+    main("config/c_single.json")
 
 
 
