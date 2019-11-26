@@ -12,5 +12,5 @@ def plotHandler(title, history, outputDir):
     plt.legend(['train', 'validation'], loc='upper left')
     plt.savefig(outputDir+"/"+title+ '.png')
     plt.clf()
-    #plt.show()
-    pass
+
+    return

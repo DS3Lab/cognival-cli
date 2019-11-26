@@ -10,11 +10,13 @@ import numpy as np
 
 def create_model(layers, activation, input_dim, output_dim):
     '''
+    Builds and compiles a Keras Sequential model based on the given
+    parameters.
 
     :param layers: [hiddenlayer1_nodes,hiddenlayer2_nodes,...]
-    :param activation: relu
-    :param input_dim: number_of_input_nodes
-    :return: model
+    :param activation: e.g. relu
+    :param input_dim: number of input nodes
+    :return: Keras model
     '''
     model = Sequential()
     for i, nodes in enumerate(layers):
@@ -23,13 +25,22 @@ def create_model(layers, activation, input_dim, output_dim):
         else:
             model.add(Dense(nodes, activation=activation))
     model.add(Dense(output_dim, activation='linear'))
-    #model.summary()
     model.compile(loss='mse',optimizer='adam')
 
     return model
 
 
-def modelCV(model_constr,config, X_train,y_train):
+def modelCV(model_constr, config, X_train, y_train):
+    '''
+    Performs grid search cross-validation using the given
+    model construction function, configuration and
+    training data.
+
+    :param model_constr: model construction function
+    :param config: embedding configuration dictionary
+    :param X_train: training data (embeddings)    
+    :param y_train: training labels (cognitive data)
+    '''
 
     model = KerasRegressor(build_fn=model_constr, verbose=0)
 
@@ -42,6 +53,15 @@ def modelCV(model_constr,config, X_train,y_train):
     return grid, grid_result
 
 def modelPredict(grid, words, X_test, y_test):
+    '''
+    Performs prediction for test data using given
+    fitted GridSearchCV model.
+
+    :param grid: fitted GridSearchCV model
+    :param words: words corresponding to embedding
+    :param X_test: test data (embeddings)
+    :param y_test: test labels (cognitive data)
+    '''
     y_pred = grid.predict(X_test)
     if y_test.shape[1] ==1:
         y_pred = y_pred.reshape(-1,1)
@@ -54,6 +74,18 @@ def modelPredict(grid, words, X_test, y_test):
     return mse, word_error
 
 def modelHandler(config, words_test, X_train, y_train, X_test, y_test):
+    '''
+    Performs cross-validation on chunks of training data to determine best parametrization
+    based on parameter grid given in config. Predicts with best-performing model on chunks
+    of test data. Returns word error, best-performing model and MSEs.
+
+    :param config: embedding configuration dictionary
+    :param words_test: words corresponding to test data
+    :param X_train: training data (embeddings)    
+    :param y_train: training labels (cognitive data)
+    :param X_test: test data (embeddings)
+    :param y_test: test labels (cognitive data)
+    '''
     grids = []
     grids_result = []
     mserrors = []
