@@ -59,7 +59,7 @@ def config():
         "glove-50": {
             "chunk_number": 4,
             "chunked": 1,
-            "chunked_file": "reference/glove-50_",
+            "chunked_file": "reference/chunked_embeddings/glove-50_",
             "ending": ".txt",
             "path": "input/glove.6B.50d.txt"
         }
@@ -79,7 +79,7 @@ def test_chunker(tmpdir):
 
 
 def test_update():
-    df_word_embedding = pd.read_csv('reference/glove-50_0.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE, index_col=0)
+    df_word_embedding = pd.read_csv('reference/chunked_embeddings/glove-50_0.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE, index_col=0)
     df_cognitive_data = pd.read_csv('cognitive-data/eeg/zuco/zuco_scaled.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE)
     we_chunk_rows = df_word_embedding.shape[0] // 4
     df_word_embeddings_1 = df_word_embedding.iloc[:we_chunk_rows + 1, :]
@@ -96,6 +96,33 @@ def test_update():
 
     # length w/O NANs after second merge
     assert len(df_join[df_join['edim1'].notnull()]) == 3769
+
+def test_update_synthetic_whole_row_True():
+    #TODO: This appears to operate exactly in reverse (whole_row)
+    df = pd.DataFrame({'A':[1,2,3,4],'B':[np.NaN,500,200,np.NaN],'C':[np.NaN,7.0,np.NaN,np.NaN]})
+    df_new = pd.DataFrame({'A':[1,2,3,4],'B':[4,500,8,0],'C':[0,0,99,0]})
+
+    update(df,
+           df_new,
+           on_column='A',
+           columns_to_omit=1,
+           whole_row=True)
+    
+    assert df.to_string() == '   A      B    C\n0  1    4.0  0.0\n1  2  500.0  7.0\n2  3  200.0  NaN\n3  4    0.0  0.0'
+
+
+def test_update_synthetic_whole_row_False():
+    #TODO: This appears to operate exactly in reverse (whole_row)
+    df = pd.DataFrame({'A':[1,2,3,4],'B':[np.NaN,500,200,np.NaN],'C':[np.NaN,7.0,np.NaN,np.NaN]})
+    df_new = pd.DataFrame({'A':[1,2,3,4],'B':[4,500,8,0],'C':[0,0,99,0]})
+
+    update(df,
+           df_new,
+           on_column='A',
+           columns_to_omit=1,
+           whole_row=False)
+    breakpoint()
+    assert df.to_string() == '   A      B     C\n0  1    4.0   0.0\n1  2  500.0   7.0\n2  3  200.0  99.0\n3  4    0.0   0.0'
 
 
 def test_dfMultiJoin():

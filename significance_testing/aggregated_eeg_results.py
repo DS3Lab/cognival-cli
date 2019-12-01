@@ -1,14 +1,13 @@
 import json
-import config
+import sig_test_config
 import aggregate_significance
 
 
-def extract_results(cognitive_dataset):
-    if not cognitive_dataset == "all":
-        result_dir = config.result_dir + 'eeg/' + cognitive_dataset + '/'
-        print(result_dir)
+def extract_results(result_path):
+    if not result_path == "all":
+        print(result_path)
 
-        with open(result_dir + 'options.json', 'r') as f:
+        with open(result_path, 'r') as f:
             combinations = json.load(f)
 
             combination_results = {}
@@ -24,10 +23,10 @@ def extract_results(cognitive_dataset):
         eeg_datasets = ['n400', 'ucl', 'naturalspeech', 'zuco']
         combination_results = {}
         for dataset in eeg_datasets:
-            result_dir = config.result_dir + 'eeg/' + dataset + '/'
-            print(result_dir)
+            result_path = sig_test_config.result_dir + 'eeg/' + dataset + '/'
+            print(result_path)
 
-            with open(result_dir + 'options.json', 'r') as f:
+            with open(result_path + 'options.json', 'r') as f:
                 combinations = json.load(f)
 
                 for x, y in combinations.items():

@@ -7,13 +7,15 @@ result_dir = './results/'
 report_dir = './reports/'
 
 # recording modalities: gaze, eeg and/or fmri
-modality = 'gaze'
+modality = 'eeg'
 
 # eye-tracking: ['geco', 'zuco', 'provo', 'dundee', 'cfilt-scanpath', 'cfilt-sarcasm', 'ucl']
 # eeg: ['n400', 'ucl', 'zuco', 'naturalspeech']
 # fmri: ['brennan', 'wehbe', 'mitchell', 'pereira']
 
-datasets = {'gaze': ['geco', 'zuco', 'provo', 'dundee', 'cfilt-scanpath', 'cfilt-sarcasm', 'ucl'], 'eeg': ['n400', 'ucl', 'zuco', 'naturalspeech'], 'fmri': ['brennan', 'wehbe', 'mitchell', 'pereira']}
+datasets = {'gaze': ['geco', 'zuco', 'provo', 'dundee', 'cfilt-scanpath', 'cfilt-sarcasm', 'ucl'],
+            'eeg': ['n400', 'ucl', 'zuco', 'naturalspeech'],
+            'fmri': ['brennan', 'wehbe', 'mitchell', 'pereira']}
 
 # testing parameters
 alpha = 0.01

@@ -124,7 +124,7 @@ def config():
         "glove-50": {
             "chunk_number": 4,
             "chunked": 1,
-            "chunked_file": "reference/glove-50_",
+            "chunked_file": "reference/chunked_embeddings/glove-50_",
             "ending": ".txt",
             "path": "input/glove.6B.50d.txt"
         }

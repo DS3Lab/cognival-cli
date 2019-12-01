@@ -1,14 +1,13 @@
 import json
-import config
+import sig_test_config
 import aggregate_significance
 
 
-def extract_results(cognitive_dataset):
-    if not cognitive_dataset == "all":
-        result_dir = config.result_dir + 'fmri/' + cognitive_dataset + '/'
-        print(result_dir)
+def extract_results(result_path):
+    if not result_path == "all":
+        print(result_path)
 
-        with open(result_dir + 'options.json', 'r') as f:
+        with open(result_path, 'r') as f:
             combinations = json.load(f)
 
             combination_results = {}
@@ -30,7 +29,7 @@ def extract_results(cognitive_dataset):
         fmri_datasets = ['brennan', 'wehbe', 'mitchell', 'pereira']
         combination_results = {}
         for dataset in fmri_datasets:
-            result_dir = config.result_dir + 'fmri/' + dataset + '/'
+            result_dir = sig_test_config.result_dir + 'fmri/' + dataset + '/'
             print(result_dir)
 
             with open(result_dir + 'options.json', 'r') as f:

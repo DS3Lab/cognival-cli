@@ -1,0 +1,13 @@
+{   "1.0": {
+        "AVERAGE_MSE": 0.008593254540586731,
+        "cognitiveData": "zuco-eeg",
+        "feature": "ALL_DIM",
+        "wordEmbedding": "glove-50"
+    },
+    "2.0": { 
+        "AVERAGE_MSE": 0.010960347359505416,
+        "cognitiveData": "zuco-eeg",
+        "feature": "ALL_DIM",
+        "wordEmbedding": "random-embeddings-50"
+    }
+}
