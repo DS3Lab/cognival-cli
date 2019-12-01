@@ -1,4 +1,5 @@
 import csv
+import json
 import sys
 import time
 
@@ -7,6 +8,10 @@ import numpy as np
 
 from numpy import fromfile, dtype
 from gensim.models.keyedvectors import KeyedVectors
+
+#
+# Misc
+#
 
 #animation to know when script is running
 def animatedLoading(completed, total):
@@ -17,6 +22,9 @@ def animatedLoading(completed, total):
 		time.sleep(.1)
 		sys.stdout.flush()
 
+#
+# Embeddings
+# 
 
 def headerGen(fileName):
 	df = pd.read_csv(fileName, sep=" ", engine='python', quoting=csv.QUOTE_NONE)
@@ -36,6 +44,41 @@ def word2vec_bin_to_txt(binPath,binName,outputName):
     model = KeyedVectors.load_word2vec_format(binPath+binName,binary=True)
     model.save_word2vec_format(binPath+outputName,binary=False)
 
+#
+# Formatting
+#
+
+def createTable(CONFIG):
+    with open(CONFIG,'r') as fR:
+        config = json.load(fR)
+    header = [key for key in config['wordEmbConfig']]
+    print(header)
+    index1 = []
+    index2 = []
+    for cD in config["cogDataConfig"]:
+    	for feature in config["cogDataConfig"][cD]["features"]:
+    		index1.append(cD)
+    		index2.append(feature)
+    index = [index1,index2]	
+    
+    setup = {header[j]:[np.NaN for i in range(len(index2)) ] for j in range(len(header))} 
+    df = pd.DataFrame(setup,index)
+    print(df)	
+    
+    pass
+
+def fillTable(PATH, table):
+
+    pass
+
+#def main():
+#    #OPTIONS = "../test_final/options.json"
+#    CONFIG = "../config/example_1.json"
+#    createTable(CONFIG)
+#    pass
+
+#if __name__=="__main__":
+#    main()
 
 # def main(binPath,binName,outputName, dim):
 #     header = [('word','str')] + [('x%s'%i,'float64') for i in range(1,dim+1)]

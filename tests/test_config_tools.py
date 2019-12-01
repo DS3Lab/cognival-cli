@@ -4,8 +4,8 @@ import sys
 
 sys.path.insert(0, '..')
 
-from sideCode.configJsonGenerator import *
-from sideCode.configJsonEditor import *
+from config_tools.configJsonGenerator import *
+from config_tools.configJsonEditor import *
 
 @pytest.fixture
 def conf_json_gen_reference():
@@ -285,7 +285,7 @@ def test_editor_config_json(conf_json_editor_reference, tmpdir):
                         }
     tmpdir.mkdir('output')
     editor_config_json(embedding_parameters=embedding_parameters,
-                       input_path=Path("../config/"),
+                       input_path=Path("reference/config/"),
                        output_path=tmpdir / 'output',
                        configFile='example_1.json')
     with open(tmpdir / 'output' / 'example_1.json') as f:

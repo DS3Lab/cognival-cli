@@ -30,7 +30,6 @@ def update(df1, df2, on_column, columns_to_omit, whole_row):
     # Both dataframes have to have same column names
     header = list(df1)
     header = header[columns_to_omit:]
-
     start = df1.shape[1]
     to_update = df1.merge(df2, on=on_column, how='left').iloc[:, start:].dropna()
     to_update.columns = header
@@ -189,6 +188,16 @@ def main():
     for cd in cds:
         words_test, X_train, y_train, X_test, y_test = dataHandler(config, we, cd, feat)        
         print("SUCCESS: " + cd)
+
+def main():
+	df = pd.DataFrame({'A':[1,2,3,4],'B':[np.NaN,500,200,np.NaN],'C':[np.NaN,7.0,np.NaN,np.NaN]})
+	df_new = pd.DataFrame({'A':[1,5,3],'B':[4,500,8],'C':[0,0,99]})
+	df_up = pd.DataFrame({'B':[0,0,0],'C':[0,0,0]})
+	print(df)
+	print(df_new)
+	update(df, df_new, 'A', 1, False)
+	print(df)
+	pass
 
 if __name__=="__main__":
     main()

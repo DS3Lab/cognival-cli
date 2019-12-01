@@ -1,0 +1,14 @@
+{
+    "32.0": {
+        "AVERAGE_MSE": 0.0061721854257836715,
+        "cognitiveData": "wehbe-100-1",
+        "feature": "ALL_DIM",
+        "wordEmbedding": "glove-50"
+    },
+    "33.0": {
+        "AVERAGE_MSE": 0.003556954166535499,
+        "cognitiveData": "wehbe-100-1",
+        "feature": "ALL_DIM",
+        "wordEmbedding": "random-embeddings-50"
+    }
+}

@@ -1,14 +1,19 @@
 import json
-import config
+import sig_test_config
 import numpy as np
 import matplotlib.pyplot as plt
 import aggregate_significance
 
-def extract_results_gaze(cognitive_dataset):
-    result_dir = config.result_dir + 'gaze/' + cognitive_dataset + '/'
-    print(result_dir)
+def extract_results_gaze(result_path,
+                         baselines=['random-embeddings-50', 'random-embeddings-100', 'random-embeddings-200', 'random-embeddings-300',
+                                    'random-embeddings-768', 'random-embeddings-850', 'random-embeddings-1024'],
+                         embeddings=['glove-50', 'glove-100', 'glove-200', 'glove-300', 'word2vec', 'fasttext-crawl',
+                                     'fasttext-wiki-news', 'fasttext-crawl-subword', 'fasttext-wiki-news-subword', 'bert-service-base',
+                                     'wordnet2vec', 'bert-service-large', 'elmo']
+                        ):
+    print(result_path)
 
-    with open(result_dir+'options.json', 'r') as f:
+    with open(result_path, 'r') as f:
         combinations = json.load(f)
 
         combination_results = {}
@@ -18,12 +23,6 @@ def extract_results_gaze(cognitive_dataset):
                 combination_results[y['feature']] = [(y['wordEmbedding'], y['AVERAGE_MSE'])]
             else:
                 combination_results[y['feature']].append((y['wordEmbedding'], y['AVERAGE_MSE']))
-
-        embeddings = ['glove-50', 'glove-100', 'glove-200', 'glove-300', 'word2vec', 'fasttext-crawl',
-                      'fasttext-wiki-news', 'fasttext-crawl-subword', 'fasttext-wiki-news-subword', 'bert-service-base',
-                      'wordnet2vec', 'bert-service-large', 'elmo']
-        baselines = ['random-embeddings-50', 'random-embeddings-100', 'random-embeddings-200', 'random-embeddings-300',
-                     'random-embeddings-768', 'random-embeddings-850','random-embeddings-1024']
 
         avg_results = {}
         for emb_type in embeddings + baselines:
@@ -42,7 +41,7 @@ def extract_results_gaze_all():
     gaze_datasets = ['geco', 'zuco', 'provo', 'dundee', 'cfilt-scanpath', 'cfilt-sarcasm', 'ucl']
     combination_results = {}
     for dataset in gaze_datasets:
-        result_dir = config.result_dir + 'gaze/' + dataset + '/'
+        result_dir = sig_test_config.result_dir + 'gaze/' + dataset + '/'
         print(result_dir)
 
         with open(result_dir+'options.json', 'r') as f:

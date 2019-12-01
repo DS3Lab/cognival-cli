@@ -1,0 +1,62 @@
+{
+    "20.0": {
+        "AVERAGE_MSE": 0.0059570758952217666,
+        "cognitiveData": "zuco-gaze",
+        "feature": "nFixations",
+        "wordEmbedding": "glove-50"
+    },
+    "21.0": {
+        "AVERAGE_MSE": 0.007971154625816258,
+        "cognitiveData": "zuco-gaze",
+        "feature": "nFixations",
+        "wordEmbedding": "random-embeddings-50"
+    },
+    "22.0": {
+        "AVERAGE_MSE": 0.006406049695212868,
+        "cognitiveData": "zuco-gaze",
+        "feature": "FFD",
+        "wordEmbedding": "glove-50"
+    },
+    "23.0": {
+        "AVERAGE_MSE": 0.0066560560407133065,
+        "cognitiveData": "zuco-gaze",
+        "feature": "FFD",
+        "wordEmbedding": "random-embeddings-50"
+    },
+    "24.0": {
+        "AVERAGE_MSE": 0.00825767826957988,
+        "cognitiveData": "zuco-gaze",
+        "feature": "GD",
+        "wordEmbedding": "glove-50"
+    },
+    "25.0": {
+        "AVERAGE_MSE": 0.009630678374142696,
+        "cognitiveData": "zuco-gaze",
+        "feature": "GD",
+        "wordEmbedding": "random-embeddings-50"
+    },
+    "26.0": {
+        "AVERAGE_MSE": 0.0052451611130349615,
+        "cognitiveData": "zuco-gaze",
+        "feature": "GPT",
+        "wordEmbedding": "glove-50"
+    },
+    "27.0": {
+        "AVERAGE_MSE": 0.005437584343787458,
+        "cognitiveData": "zuco-gaze",
+        "feature": "GPT",
+        "wordEmbedding": "random-embeddings-50"
+    },
+    "28.0": {
+        "AVERAGE_MSE": 0.007575194856541069,
+        "cognitiveData": "zuco-gaze",
+        "feature": "TRT",
+        "wordEmbedding": "glove-50"
+    },
+    "29.0": {
+        "AVERAGE_MSE": 0.010336946003907718,
+        "cognitiveData": "zuco-gaze",
+        "feature": "TRT",
+        "wordEmbedding": "random-embeddings-50"
+    }
+}
