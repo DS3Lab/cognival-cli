@@ -6,7 +6,7 @@ import pytest
 import pandas as pd
 sys.path.insert(0, '..')
 
-from handlers.dataHandler import *
+from handlers.data_handler import *
 
 @pytest.fixture
 def config():
@@ -71,7 +71,7 @@ def test_chunker(tmpdir):
     #TODO: Why did I need to add the header information to the embeddings
     refdir = Path('reference')
     outdir = tmpdir.mkdir('output')
-    chunker('input',
+    chunk('input',
             outdir,
             'glove.6B.50d.txt',
             'glove-50')
@@ -121,22 +121,21 @@ def test_update_synthetic_whole_row_False():
            on_column='A',
            columns_to_omit=1,
            whole_row=False)
-    breakpoint()
     assert df.to_string() == '   A      B     C\n0  1    4.0   0.0\n1  2  500.0   7.0\n2  3  200.0  99.0\n3  4    0.0   0.0'
 
 
 def test_dfMultiJoin():
     df_word_embedding = pd.read_csv('input/glove.6B.50d.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE, index_col=0)
     df_cognitive_data = pd.read_csv('cognitive-data/eeg/zuco/zuco_scaled.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE)
-    df_join = dfMultiJoin(4,
-                          df_cognitive_data,
-                          df_word_embedding)
+    df_join = df_multi_join(df_cognitive_data,
+                            df_word_embedding,
+                            4)
     assert len(df_join[df_join['edim1'].notnull()]) == 4162
 
 
 def test_multiJoin(config):
     df_cognitive_data = pd.read_csv('cognitive-data/eeg/zuco/zuco_scaled.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE)
-    df_join = multiJoin(config,
+    df_join = multi_join(config,
                         df_cognitive_data,
                         'glove-50')
     assert len(df_join[df_join['edim1'].notnull()]) == 4162
@@ -145,7 +144,7 @@ def test_multiJoin(config):
 def test_dataHandler(config):
     #TODO: Handle chunked embeddings correctly
     #TODO: Ascertain: 75:25 Train test split, then 80:20 CV on train set, and 3-fold CV on train-train set?
-    words_test, X_train, y_train, X_test, y_test = dataHandler(config,
+    words_test, X_train, y_train, X_test, y_test = data_handler(config,
                                                                'glove-50',
                                                                'zuco-eeg',
                                                                'ALL_DIM')
@@ -158,7 +157,7 @@ def test_dataHandler(config):
 
 def test_split_folds(config):
     df_cognitive_data = pd.read_csv('cognitive-data/eeg/zuco/zuco_scaled.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE)
-    df_join = multiJoin(config, df_cognitive_data, 'glove-50')
+    df_join = multi_join(config, df_cognitive_data, 'glove-50')
     df_join.dropna(inplace=True)
     words = df_join['word']
     words = np.array(words, dtype='str').reshape(-1,1)

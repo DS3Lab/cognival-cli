@@ -4,8 +4,8 @@ import sys
 
 sys.path.insert(0, '..')
 
-from config_tools.configJsonGenerator import *
-from config_tools.configJsonEditor import *
+from config_tools.config_json_generator import *
+from config_tools.config_json_editor import *
 
 @pytest.fixture
 def conf_json_gen_reference():

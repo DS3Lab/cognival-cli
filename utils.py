@@ -14,7 +14,7 @@ from gensim.models.keyedvectors import KeyedVectors
 #
 
 #animation to know when script is running
-def animatedLoading(completed, total):
+def animated_loading(completed, total):
 	chars = r"/-\|"
 	for char in chars:
 		sys.stdout.write('\r'+'loading...'+char)
@@ -26,7 +26,7 @@ def animatedLoading(completed, total):
 # Embeddings
 # 
 
-def headerGen(fileName):
+def header_gen(fileName):
 	df = pd.read_csv(fileName, sep=" ", engine='python', quoting=csv.QUOTE_NONE)
 	#print(df.shape)
 	dim = df.shape[1]
@@ -48,7 +48,7 @@ def word2vec_bin_to_txt(binPath,binName,outputName):
 # Formatting
 #
 
-def createTable(CONFIG):
+def create_table(CONFIG):
     with open(CONFIG,'r') as fR:
         config = json.load(fR)
     header = [key for key in config['wordEmbConfig']]
@@ -67,7 +67,7 @@ def createTable(CONFIG):
     
     pass
 
-def fillTable(PATH, table):
+def fill_table(PATH, table):
 
     pass
 
@@ -92,4 +92,4 @@ def fillTable(PATH, table):
 
 if __name__=="__main__":
 	fileName = "../embeddings/glove-6B/glove.6B.50d_nohead.txt"
-	print(headerGen(fileName))
+	print(header_gen(fileName))

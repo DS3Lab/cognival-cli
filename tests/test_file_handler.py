@@ -9,8 +9,7 @@ import pandas as pd
 import json
 sys.path.insert(0, '..')
 
-from handlers.fileHandler import *
-
+from handlers.file_handler import *
 
 @pytest.fixture
 def config(tmpdir):
@@ -190,20 +189,20 @@ def all_runs():
 
 def test_updateVersion(tmpdir, config):
     path = tmpdir / 'output' / 'config.json'
-    updateVersion(path)
+    update_version(path)
     with open(path, 'r') as f:
         config = json.load(f)
     assert config['version'] == 2.0
 
-def test_writeResults(tmpdir, config, results):
+def test_write_results(tmpdir, config, results):
     logging, word_error, history = results
-    writeResults(config, logging, word_error, history)
+    write_results(config, logging, word_error, history)
     refdir = refdir = Path('test_writeResults_results')
     outdir = tmpdir / 'output' / "test_writeResults_results"
     assert not filecmp.dircmp(refdir, outdir).diff_files
 
-def test_writeOptions(config, all_runs, tmpdir):
-    writeOptions(config, all_runs)
+def test_write_options(config, all_runs, tmpdir):
+    write_options(config, all_runs)
     with open(tmpdir / 'output' / 'test_writeResults_results' / 'options1.0.json') as f:
         options_str = f.read()
     ref_str = """{

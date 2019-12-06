@@ -30,7 +30,7 @@ def create_model(layers, activation, input_dim, output_dim):
     return model
 
 
-def modelCV(model_constr, config, X_train, y_train):
+def model_cv(model_constr, config, X_train, y_train):
     '''
     Performs grid search cross-validation using the given
     model construction function, configuration and
@@ -52,7 +52,8 @@ def modelCV(model_constr, config, X_train, y_train):
 
     return grid, grid_result
 
-def modelPredict(grid, words, X_test, y_test):
+
+def model_predict(grid, words, X_test, y_test):
     '''
     Performs prediction for test data using given
     fitted GridSearchCV model.
@@ -73,7 +74,8 @@ def modelPredict(grid, words, X_test, y_test):
         mse = np.mean(np.square(error),axis=0)
     return mse, word_error
 
-def modelHandler(config, words_test, X_train, y_train, X_test, y_test):
+
+def model_handler(config, words_test, X_train, y_train, X_test, y_test):
     '''
     Performs cross-validation on chunks of training data to determine best parametrization
     based on parameter grid given in config. Predicts with best-performing model on chunks
@@ -94,10 +96,10 @@ def modelHandler(config, words_test, X_train, y_train, X_test, y_test):
     else:
         word_error = np.array(['word'] + ['e' + str(i) for i in range(1,y_test[0].shape[1]+1)], dtype='str')
     for i in range(len(X_train)):
-        grid, grid_result = modelCV(create_model,config,X_train[i],y_train[i])
+        grid, grid_result = model_cv(create_model,config,X_train[i],y_train[i])
         grids.append(grid)
         grids_result.append(grid_result)
-        mse, w_e = modelPredict(grid,words_test[i],X_test[i],y_test[i])
+        mse, w_e = model_predict(grid,words_test[i],X_test[i],y_test[i])
         mserrors.append(mse)
         word_error = np.vstack([word_error,w_e])
     return word_error, grids_result, mserrors
