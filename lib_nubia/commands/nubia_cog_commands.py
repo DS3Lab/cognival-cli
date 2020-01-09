@@ -47,6 +47,7 @@ from cog_evaluate import run as run_serial
 from cog_evaluate_parallel import main as run_parallel
 from handlers.file_handler import write_results, update_version
 from handlers.data_handler import chunk
+from handlers.binary_to_text_conversion import bert_to_text, elmo_to_text
 
 from utils import generate_df_with_header, word2vec_bin_to_txt
 
@@ -64,7 +65,7 @@ from tensorflow.python.util import deprecation
 deprecation._PRINT_DEPRECATION_WARNINGS = False
 
 # Local imports
-from .binary_to_text_conversion import bert_to_text, elmo_to_text
+
 from .form_editor import ConfigEditor, config_editor
 from .utils import (tupleit,
                    _open_config,
@@ -362,8 +363,12 @@ def process_and_write_results(results, config_dict):
 
 @command
 class Run:
-    "Execute experimental runs based on specified configuration and constraints"
-
+    """Execute experimental runs based on specified configuration and constraints
+    [Sub-commands]
+    - experiment: Run parallelized evaluation of single, selected or all combinations of embeddings and cognitive sources.
+    - experiment_serial: Non-parallelized variant, only for debugging purposes.
+―
+    """
     def __init__(self, shared: int = 0) -> None:
         self._shared = shared
 
@@ -452,8 +457,8 @@ class Run:
                  processes=None,
                  random_baseline=False):
         '''
-        Run parallelized evaluation of all combinations of cognitive sources and embeddings registered
-        in the specified configuration.
+        Run parallelized evaluation of single, selected or all combinations of embeddings and cognitive sources.
+        Only exists for debugging purposes.
         '''
         parametrization = _filter_config(configuration,
                                          embedding,
@@ -488,7 +493,14 @@ class Run:
 
 @command
 class EditConfig:
-    "Generate or edit configuration files for experimental combinations (cog. data - embedding type)"
+    """Generate or edit configuration files for experimental combinations (cog. data - embedding type)
+    [Sub-commands] 
+    - create: Creates empty configuration file from template.
+    - populate: Populates specified configuration with empty templates or default configurations for some or all installed cognitive sources.
+    - general: Edit general properties of specified configuration
+    - experiment: Edit configuration of single, multiple or all combinations of embeddings and cognitive sources of specified configuration.
+―
+    """
 
     def __init__(self, shared: int = 0) -> None:
         self._shared = shared
@@ -777,9 +789,10 @@ def generate_random_df(seed, vocabulary, embedding_dim, emb_file, path):
           description='Name of embeddings that have been registered (not necessarily installed).',
           positional=True)
 def generate_random(embeddings, no_embeddings=10, seed_func='exp_e_floored', use_custom_vocab=False):
-    '''
-    Generate random embeddings for embeddings that have been installed
-    '''
+    """
+    Generate random embeddings for specified proper embeddings.
+―
+    """
     if embeddings.startswith('random'):
         cprint('✗ Reference embedding must be non-random! Aborting ...'. format(embeddings), 'red')
         return
@@ -856,10 +869,10 @@ def generate_random(embeddings, no_embeddings=10, seed_func='exp_e_floored', use
 @argument('modality', type=str, description='Modality for which significance is to be termined')
 @argument('alpha', type=str, description='Alpha value')
 @argument('test', type=str, description='Significance test')
-def sig_test(configuration, modality, alpha=0.01, test='Wilcoxon'):
-    '''
+def sig_test(configuration, modality, alpha=0.01, test='Wilcoxon'):    
+    """
     Test significance of results in the given modality and produced based on the specified configuration.
-    '''
+    """
     ctx = context.get_context()
 
     config_dict = _open_config(configuration)
@@ -907,7 +920,12 @@ def sig_test(configuration, modality, alpha=0.01, test='Wilcoxon'):
 
 @command
 class Download:
-    "Download CogniVal cognitive vectors, default embeddings (proper and random) and custom embeddings."
+    """Download CogniVal cognitive vectors, default embeddings (proper and random) and custom embeddings.
+    [Sub-commands]
+    - cognitive_sources: Download the entire batch of preprocessed CogniVal cognitive sources.
+    - embedding: Download and install a default embedding (by name) or custom embedding (from URL)
+―
+    """
 
     def __init__(self, shared: int = 0) -> None:
         self._shared = shared
@@ -922,9 +940,6 @@ class Download:
     @argument('force', type=bool, description='Force removal and download')
     @argument('url', type=str, description='Cognival vectors URL')
     def cognitive_sources(self, force=False, url='https://drive.google.com/uc?id=1pWwIiCdB2snIkgJbD1knPQ6akTPW_kx0'):
-        """
-        print a name
-        """
         basepath = Path('cognitive_sources')
         cog_config = _open_cog_config()
         if not cog_config['installed'] or force:
@@ -1241,7 +1256,8 @@ class Download:
 @command
 def list_embeddings():
     """
-    List all available and installed embeddings
+    List available and installed default embeddings as well as installed custom and random embeddings.
+―
     """
     ctx = context.get_context()
     if ctx.debug:
