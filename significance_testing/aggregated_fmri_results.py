@@ -1,6 +1,5 @@
 import json
-import sig_test_config
-import aggregate_significance
+from significance_testing import aggregate_significance
 
 
 def extract_results(result_path):

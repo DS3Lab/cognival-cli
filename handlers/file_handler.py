@@ -39,7 +39,7 @@ def write_results(config, log, word_error, history):
     '''
     if not os.path.exists(config['outputDir']):
         os.mkdir(config['outputDir'])
-
+    
     title = log["cognitiveData"] + '_' + log["feature"] + '_' + log["wordEmbedding"]+'_'+str(config["version"])
 
     output_dir = config['outputDir'] + "/" + title
@@ -50,8 +50,11 @@ def write_results(config, log, word_error, history):
         json.dump(log,f,indent=4, sort_keys=True)
 
     np.savetxt(output_dir + "/" + title + '.txt', word_error, delimiter=" ", fmt="%s")
-
-    plot_handler(title, history, output_dir)
+    
+    if history:
+        plot_handler(title, history, output_dir)
+    else:
+        print("No history, no plot ...")
 
     return
 

@@ -1,8 +1,7 @@
 import json
-import sig_test_config
 import numpy as np
 import matplotlib.pyplot as plt
-import aggregate_significance
+from significance_testing import aggregate_significance
 
 def extract_results_gaze(result_path,
                          baselines=['random-embeddings-50', 'random-embeddings-100', 'random-embeddings-200', 'random-embeddings-300',

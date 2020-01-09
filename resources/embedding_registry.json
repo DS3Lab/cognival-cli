@@ -1,0 +1,333 @@
+{
+    "proper": {
+        "glove.6B.50": {
+            "url": "http://nlp.stanford.edu/data/glove.6B.zip",
+            "dimensions": 50,
+            "binary": false,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "glove.6B",
+            "embedding_file": "glove.6B.50d.txt",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": "random-50-10"
+        },
+        "glove.6B.100": {
+            "url": "http://nlp.stanford.edu/data/glove.6B.zip",
+            "dimensions": 100,
+            "binary": false,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "glove.6B",
+            "embedding_file": "glove.6B.100d.txt",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": null
+        },
+        "glove.6B.200": {
+            "url": "http://nlp.stanford.edu/data/glove.6B.zip",
+            "dimensions": 200,
+            "binary": false,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "glove.6B",
+            "embedding_file": "glove.6B.200d.txt",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": null
+        },
+        "glove.6B.300": {
+            "url": "http://nlp.stanford.edu/data/glove.6B.zip",
+            "dimensions": 300,
+            "binary": false,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "glove.6B",
+            "embedding_file": "glove.6B.300d.txt",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": null
+        },
+        "word2vec": {
+            "url": "https://drive.google.com/uc?id=0B7XkCwpI5KDYNlNUTTlSS21pQmM",
+            "dimensions": 300,
+            "binary": true,
+            "binary_file": "word2vec-300d.bin",
+            "binary_format": "word2vec",
+            "path": "word2vec-300d",
+            "embedding_file": "word2vec-300d.txt",
+            "installed": false,
+            "truncate_first_line": true,
+            "chunked": false,
+            "chunk_number": 4,
+            "chunked_file": "word2vec",
+            "chunk_ending": ".txt",
+            "random_embedding": "random-300-10"
+        },
+        "wnet2vec": {
+            "url": "http://lxcenter.di.fc.ul.pt/wn2vec.zip",
+            "dimensions": 850,
+            "binary": false,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "wnet2vec",
+            "embedding_file": "wn2vec.txt",
+            "installed": false,
+            "truncate_first_line": true,
+            "chunked": false,
+            "random_embedding": null
+        },
+        "fasttext-wiki": {
+            "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-english/wiki-news-300d-1M.vec.zip",
+            "dimensions": 300,
+            "binary": false,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "fasttext-wikipedia-300d-16B",
+            "embedding_file": "wiki-news-300d-1M.vec",
+            "installed": false,
+            "truncate_first_line": true,
+            "chunked": true,
+            "chunk_number": 4,
+            "chunked_file": "fasttext-wiki",
+            "chunk_ending": ".txt",
+            "random_embedding": null
+        },
+        "fasttext-wiki-subword": {
+            "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-english/wiki-news-300d-1M-subword.vec.zip",
+            "dimensions": 300,
+            "binary": false,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "fasttext-wikipedia-subword-300d-16B",
+            "embedding_file": "wiki-news-300d-1M-subword.vec",
+            "installed": false,
+            "truncate_first_line": true,
+            "chunked": true,
+            "chunk_number": 4,
+            "chunked_file": "fasttext-wiki-subword",
+            "chunk_ending": ".txt",
+            "random_embedding": null
+        },
+        "fasttext-cc": {
+            "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip",
+            "dimensions": 300,
+            "binary": false,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "fasttext-cc-300d-600B",
+            "embedding_file": "crawl-300d-2M.vec",
+            "installed": false,
+            "truncate_first_line": true,
+            "chunked": true,
+            "chunk_number": 4,
+            "chunked_file": "fasttext-cc",
+            "chunk_ending": ".txt",
+            "random_embedding": null
+        },
+        "fasttext-cc-subword": {
+            "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M-subword.zip",
+            "dimensions": 300,
+            "binary": false,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "fasttext-cc-subword-300d-600B",
+            "embedding_file": "crawl-300d-2M-subword.vec",
+            "installed": false,
+            "truncate_first_line": true,
+            "chunked": true,
+            "chunk_number": 4,
+            "chunked_file": "fasttext-cc-subword",
+            "chunk_ending": ".txt",
+            "random_embedding": "random-300-10"
+        },
+        "elmo": {
+            "url": null,
+            "dimensions": 1024,
+            "binary": true,
+            "binary_file": "elmo_2x4096_512_2048cnn_2xhighway_5.5B_weights.hdf5",
+            "binary_format": "elmo",
+            "path": "elmo_2x4096_512_2048cnn",
+            "embedding_file": "elmo_as_wordembeddings_cognival.txt",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": "random-1024-10"
+        },
+        "bert-base": {
+            "url": "https://storage.googleapis.com/bert_models/2018_10_18/cased_L-12_H-768_A-12.zip",
+            "dimensions": 768,
+            "binary": true,
+            "binary_file": "bert_model.ckpt.data-00000-of-00001",
+            "binary_format": "bert",
+            "path": "bert-base_cased-768/cased_L-12_H-768_A-12",
+            "embedding_file": "bert-base_as_wordembeddings_cognival.txt",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": null
+        },
+        "bert-large": {
+            "url": "https://storage.googleapis.com/bert_models/2018_10_18/cased_L-24_H-1024_A-16.zip",
+            "dimensions": 1024,
+            "binary": false,
+            "binary_file": "bert_model.ckpt.data-00000-of-00001",
+            "binary_format": "bert",
+            "path": "bert-large_cased-1024/cased_L-24_H-1024_A-16",
+            "embedding_file": "bert-large_as_wordembeddings_cognival.txt",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": null
+        },
+        "my_custom_embeddings": {
+            "url": "https://github.com/eyaler/word2vec-slim/raw/master/GoogleNews-vectors-negative300-SLIM.bin.gz",
+            "dimensions": 350,
+            "path": "GoogleNews-vectors-negative300-SLIM",
+            "embedding_file": "GoogleNews-vectors-negative300-SLIM.txt",
+            "installed": false,
+            "binary": true,
+            "binary_format": "word2vec",
+            "binary_file": "GoogleNews-vectors-negative300-SLIM.bin",
+            "truncate_first_line": false,
+            "chunked": true,
+            "chunk_number": 4,
+            "chunked_file": "GoogleNews-vectors-negative300-SLIM",
+            "chunk_ending": ".txt",
+            "random_embedding": "random-350-10"
+        }
+    },
+    "random_static": {
+        "random-50": {
+            "url": "https://drive.google.com/uc?id=1sZzNKJB3mr5e_ftGzPJoJAeD796r03XE",
+            "dimensions": 50,
+            "path": "random_static",
+            "embedding_file": "random-embeddings-50.txt",
+            "installed": false
+        },
+        "random-100": {
+            "url": "https://drive.google.com/uc?id=1sZzNKJB3mr5e_ftGzPJoJAeD796r03XE",
+            "dimensions": 100,
+            "path": "random_static",
+            "embedding_file": "random-embeddings-100.txt",
+            "installed": false
+        },
+        "random-200": {
+            "url": "https://drive.google.com/uc?id=1sZzNKJB3mr5e_ftGzPJoJAeD796r03XE",
+            "dimensions": 200,
+            "path": "random_static",
+            "embedding_file": "random-embeddings-200.txt",
+            "installed": false
+        },
+        "random-300": {
+            "url": "https://drive.google.com/uc?id=1sZzNKJB3mr5e_ftGzPJoJAeD796r03XE",
+            "dimensions": 300,
+            "path": "random_static",
+            "embedding_file": "random-embeddings-300.txt",
+            "installed": false
+        },
+        "random-768": {
+            "url": "https://drive.google.com/uc?id=1sZzNKJB3mr5e_ftGzPJoJAeD796r03XE",
+            "dimensions": 768,
+            "path": "random_static",
+            "embedding_file": "random-embeddings-768.txt",
+            "installed": false
+        },
+        "random-850": {
+            "url": "https://drive.google.com/uc?id=1sZzNKJB3mr5e_ftGzPJoJAeD796r03XE",
+            "dimensions": 850,
+            "path": "random_static",
+            "embedding_file": "random-embeddings-850.txt",
+            "installed": false
+        },
+        "random-1024": {
+            "url": "https://drive.google.com/uc?id=1sZzNKJB3mr5e_ftGzPJoJAeD796r03XE",
+            "dimensions": 1024,
+            "path": "random_static",
+            "embedding_file": "random-embeddings-1024.txt",
+            "installed": false
+        }
+    },
+    "random_multiseed": {
+        "random-300-10": {
+            "url": "locally generated",
+            "dimensions": 300,
+            "path": "embeddings/random_multiseed/300_dim/10_seeds",
+            "embedding_parts": {
+                "random-300-10_1_1": "random-300-10_1_1.txt",
+                "random-300-10_2_6": "random-300-10_2_6.txt",
+                "random-300-10_3_19": "random-300-10_3_19.txt",
+                "random-300-10_4_43": "random-300-10_4_43.txt",
+                "random-300-10_5_79": "random-300-10_5_79.txt",
+                "random-300-10_6_130": "random-300-10_6_130.txt",
+                "random-300-10_7_198": "random-300-10_7_198.txt",
+                "random-300-10_8_285": "random-300-10_8_285.txt",
+                "random-300-10_9_392": "random-300-10_9_392.txt",
+                "random-300-10_10_522": "random-300-10_10_522.txt"
+            },
+            "installed": false,
+            "chunked": false
+        },
+        "random-1024-10": {
+            "url": "locally generated",
+            "dimensions": 1024,
+            "path": "embeddings/random_multiseed/1024_dim/10_seeds",
+            "embedding_parts": {
+                "random-1024-10_1_1": "random-1024-10_1_1.txt",
+                "random-1024-10_2_6": "random-1024-10_2_6.txt",
+                "random-1024-10_3_19": "random-1024-10_3_19.txt",
+                "random-1024-10_4_43": "random-1024-10_4_43.txt",
+                "random-1024-10_5_79": "random-1024-10_5_79.txt",
+                "random-1024-10_6_130": "random-1024-10_6_130.txt",
+                "random-1024-10_7_198": "random-1024-10_7_198.txt",
+                "random-1024-10_8_285": "random-1024-10_8_285.txt",
+                "random-1024-10_9_392": "random-1024-10_9_392.txt",
+                "random-1024-10_10_522": "random-1024-10_10_522.txt"
+            },
+            "installed": false,
+            "chunked": false
+        },
+        "random-350-10": {
+            "url": "locally generated",
+            "dimensions": 350,
+            "path": "embeddings/random_multiseed/350_dim/10_seeds",
+            "embedding_parts": {
+                "random-350-10_1_1": "random-350-10_1_1.txt",
+                "random-350-10_2_6": "random-350-10_2_6.txt",
+                "random-350-10_3_19": "random-350-10_3_19.txt",
+                "random-350-10_4_43": "random-350-10_4_43.txt",
+                "random-350-10_5_79": "random-350-10_5_79.txt",
+                "random-350-10_6_130": "random-350-10_6_130.txt",
+                "random-350-10_7_198": "random-350-10_7_198.txt",
+                "random-350-10_8_285": "random-350-10_8_285.txt",
+                "random-350-10_9_392": "random-350-10_9_392.txt",
+                "random-350-10_10_522": "random-350-10_10_522.txt"
+            },
+            "installed": false,
+            "chunked": false
+        },
+        "random-50-10": {
+            "url": "locally generated",
+            "dimensions": 50,
+            "path": "embeddings/random_multiseed/50_dim/10_seeds",
+            "embedding_parts": {
+                "random-50-10_1_1": "random-50-10_1_1.txt",
+                "random-50-10_2_6": "random-50-10_2_6.txt",
+                "random-50-10_3_19": "random-50-10_3_19.txt",
+                "random-50-10_4_43": "random-50-10_4_43.txt",
+                "random-50-10_5_79": "random-50-10_5_79.txt",
+                "random-50-10_6_130": "random-50-10_6_130.txt",
+                "random-50-10_7_198": "random-50-10_7_198.txt",
+                "random-50-10_8_285": "random-50-10_8_285.txt",
+                "random-50-10_9_392": "random-50-10_9_392.txt",
+                "random-50-10_10_522": "random-50-10_10_522.txt"
+            },
+            "installed": false,
+            "chunked": false
+        }
+    }
+}

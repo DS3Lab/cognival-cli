@@ -1,6 +1,4 @@
 import json
-import sig_test_config
-
 
 def aggregate_signi_fmri(result_dir,
                          test,

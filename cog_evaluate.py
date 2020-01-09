@@ -1,46 +1,87 @@
 import argparse
 from datetime import datetime
 
+from prompt_toolkit.shortcuts import ProgressBar
+from termcolor import cprint
+
+
 #own modules
 from handlers.data_handler import data_handler
 from handlers.model_handler import model_handler
 from handlers.file_handler import *
 
-def handler(config, word_embedding, cognitive_data, feature):
+def handler(mode, config, word_embedding, cognitive_data, feature, truncate_first_line):
     '''
     Takes a configuration dictionary and keys for a word embedding and cognitive
     data source, applies a model (as per configuration) and returns
     per-word errors, resulting grids and mean squared error (MSE).
     Wraps data_handler and model_handler.
 
+    :param mode: Type of embeddings, either 'proper' or 'random'
     :param config: Configuration dictionary
     :param word_embedding: String specifying word embedding (configuration key)
     :param cognitive_data: String specifying cognitiv data source (configuration key)
     :param feature: Cognitive data feature to be predicted
+    :param truncate_first_line: If the first line of the embedding file should be truncated (when containing meta data)
     '''
 
-    words_test, X_train, y_train, X_test, y_test = data_handler(config,word_embedding,cognitive_data,feature)
+    words_test, X_train, y_train, X_test, y_test = data_handler(mode, config,word_embedding,cognitive_data,feature,truncate_first_line)
     word_error, grids_result, mserrors = model_handler(config["cogDataConfig"][cognitive_data]["wordEmbSpecifics"][word_embedding],
                                          words_test, X_train, y_train, X_test, y_test)
 
     return word_error, grids_result, mserrors
 
 
-def run(config, word_embedding, cognitive_data, feature):
+def run(config,
+        word_embedding,
+        random_embeddings,
+        cognitive_data,
+        feature,
+        truncate_first_line,
+        parallelized=False):
     '''
     Takes a configuration dictionary and keys for a word embedding and cognitive
     data source, runs model, logs results and prepares output for plotting.
 
     :param config: Configuration dictionary
     :param word_embedding: String specifying word embedding (configuration key)
+    :param random_embeddings: String specifying corresponding random embedding or None
     :param cognitive_data: String specifying cognitiv data source (configuration key)
     :param feature: Cognitive data feature to be predicted
+    :param truncate_first_line: If the first line of the embedding file should be truncated (when containing meta data)
+    '''
+    cprint('Evaluating proper embedding {} ...'.format(word_embedding), 'cyan')
+    results = []
+    results.append(run_single('proper', config, word_embedding, cognitive_data, feature, truncate_first_line))
+    if random_embeddings:
+        cprint('Evaluating associated random embedding {} ...'.format(random_embeddings), 'cyan')
+        if parallelized:
+            for random_embedding in config["randEmbSetToParts"][random_embeddings]:
+                results.append(run_single('random', config, random_embedding, cognitive_data, feature, truncate_first_line))
+        else:
+            with ProgressBar() as pb:
+                for random_embedding in pb(config["randEmbSetToParts"][random_embeddings]):
+                    results.append(run_single('random', config, random_embedding, cognitive_data, feature, truncate_first_line))
+    return results
+
+
+def run_single(mode, config, word_embedding, cognitive_data, feature, truncate_first_line):
+    '''
+    Takes a configuration dictionary and keys for a word embedding and cognitive
+    data source, runs model, logs results and prepares output for plotting.
+
+    :param mode: Type of embeddings, either 'proper' or 'random'
+    :param config: Configuration dictionary
+    :param word_embedding: String specifying word embedding (configuration key)
+    :param cognitive_data: String specifying cognitiv data source (configuration key)
+    :param feature: Cognitive data feature to be predicted
+    :param truncate_first_line: If the first line of the embedding file should be truncated (when containing meta data)
     '''
 
     ##############################################################################
     #   Create logging information
     ##############################################################################
-
+    
     logging = {"folds":[]}
 
     logging["wordEmbedding"] = word_embedding
@@ -53,7 +94,7 @@ def run(config, word_embedding, cognitive_data, feature):
 
     startTime = datetime.now()
 
-    word_error, grids_result, mserrors = handler(config, word_embedding, cognitive_data, feature)
+    word_error, grids_result, mserrors = handler(mode, config, word_embedding, cognitive_data, feature, truncate_first_line)
 
     history = {'loss':[],'val_loss':[]}
     loss_list =[]
@@ -101,7 +142,7 @@ def run(config, word_embedding, cognitive_data, feature):
     timeTaken = datetime.now() - startTime
     logging["timeTaken"] = str(timeTaken)
 
-    return logging, word_error, history
+    return word_embedding, logging, word_error, history
 
 def main():
     '''
@@ -154,7 +195,7 @@ def main():
     else:
         feature = "ALL_DIM"
 
-    startTime = datetime.now()
+    start_time = datetime.now()
 
     logging, word_error, history = run(config, word_embedding, cognitive_data, feature)
 
@@ -164,8 +205,8 @@ def main():
 
     write_results(config, logging, word_error, history)
 
-    timeTaken = datetime.now() - startTime
-    print(timeTaken)
+    time_taken = datetime.now() - start_time
+    print(time_taken)
 
     return
 
