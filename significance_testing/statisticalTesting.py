@@ -1,15 +1,13 @@
 import json
-import sig_test_config
 import os
 import numpy as np
-from testing_helpers import bonferroni_correction, test_significance, save_scores
+from .testing_helpers import bonferroni_correction, test_significance, save_scores
 
 
 def extract_results(modality, embed, baseline, result_dir, output_dir):
     print(result_dir)
 
     if modality == 'fmri':
-
         for single_dir in os.listdir(result_dir):
             if not single_dir.endswith('.json'):
                 if embed in single_dir and not 'random' in single_dir:

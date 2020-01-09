@@ -32,7 +32,7 @@ class NubiaCognivalStatusBar(statusbar.StatusBar):
         else:
             is_verbose = (Token.Info, "OFF")
         return [
-            (Token.Toolbar, "Cognival"),
+            (Token.Toolbar, "CogniVal"),
             spacer,
             (Token.Toolbar, "Interactive Mode"),
             spacer,

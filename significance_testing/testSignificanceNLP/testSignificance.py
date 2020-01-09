@@ -1,7 +1,10 @@
 import sys
+import warnings
 import numpy as np
 from scipy import stats
 
+#np.seterr(all='raise')
+warnings.filterwarnings("error", category=RuntimeWarning)
 
 ### Normality Check
 # H0: data is normally distributed

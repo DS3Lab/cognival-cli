@@ -27,8 +27,7 @@ def animated_loading(completed, total):
 # 
 
 def header_gen(fileName):
-	df = pd.read_csv(fileName, sep=" ", engine='python', quoting=csv.QUOTE_NONE)
-	#print(df.shape)
+	df = pd.read_csv(fileName, sep=" ", engine='python', header=None, quoting=csv.QUOTE_NONE)
 	dim = df.shape[1]
 	header = "word"
 	for i in range(1,dim):
@@ -36,13 +35,25 @@ def header_gen(fileName):
 	return header
 
 
+def generate_df_with_header(fileName, skiprows=None):
+	reader = pd.read_csv(fileName, sep=" ", engine='python', header=None, quoting=csv.QUOTE_NONE, chunksize=10000, skiprows=skiprows)
+	df_chunk_1 = next(reader)
+	dim = df_chunk_1.shape[1]
+	header = "word"
+	for i in range(1,dim):
+		header = header+" x"+str(i)
+	header = header.split()
+	df_chunk_1.columns = header
+	return df_chunk_1, reader
+
+
 def word2vec_bin_to_df(filename,rec_dtype):
     return pd.DataFrame(fromfile(filename,rec_dtype))
 
 
-def word2vec_bin_to_txt(binPath,binName,outputName):
-    model = KeyedVectors.load_word2vec_format(binPath+binName,binary=True)
-    model.save_word2vec_format(binPath+outputName,binary=False)
+def word2vec_bin_to_txt(binPath,binName,outputName, limit=None):
+    model = KeyedVectors.load_word2vec_format(binPath / binName, binary=True, limit=limit)
+    model.save_word2vec_format(binPath / outputName,binary=False)
 
 #
 # Formatting

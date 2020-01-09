@@ -22,7 +22,7 @@ class NubiaCognivalPlugin(PluginInterface):
     """
 
     def __init__(self, *args, **kwargs):
-        self.embedding2url_path = kwargs.get('embedding2url_path', None)
+        self.embedding_registry_path = kwargs.get('embedding_registry_path', None)
 
     def create_context(self):
         """
@@ -30,7 +30,7 @@ class NubiaCognivalPlugin(PluginInterface):
         The plugin can return a custom context but it has to inherit from the
         correct parent class.
         """
-        return NubiaCognivalContext(embedding2url_path=self.embedding2url_path)
+        return NubiaCognivalContext(embedding_registry_path=self.embedding_registry_path)
 
     def validate_args(self, args):
         """
@@ -52,9 +52,15 @@ class NubiaCognivalPlugin(PluginInterface):
             formatter_class=argparse.ArgumentDefaultsHelpFormatter,
             add_help=add_help,
         )
+        
         opts_parser.add_argument(
-            "--config", "-c", default="", type=str, help="Configuration File"
+            "--debug",
+            "-d",
+            action="store_true",
+            help="Debug mode. Enables static (legacy) random embeddings "
+                 "used in the original CogniVal paper."
         )
+
         opts_parser.add_argument(
             "--verbose",
             "-v",

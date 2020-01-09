@@ -9,7 +9,8 @@ def chunk(input_path_name,
           output_path_name,
           input_file_name,
           output_file_name,
-          number_of_chunks=4):
+          number_of_chunks=4,
+          truncate_first_line=False):
     '''
     Splits embeddings into the given number of chunks.
 
@@ -20,8 +21,14 @@ def chunk(input_path_name,
     '''
     input_path = Path(input_path_name)
     output_path = Path(output_path_name)
+    if truncate_first_line:
+        skip_lines = 1
+    else:
+        skip_lines = None
     df_wE = pd.read_csv(input_path / input_file_name, sep=" ",
-                        encoding="utf-8", quoting=csv.QUOTE_NONE)
+                        encoding="utf-8", quoting=csv.QUOTE_NONE, header=None, skiprows=skip_lines)
+    df_wE.columns = ['word'] + ['x_{}'.format(idx + 1) for idx in range(df_wE.shape[1] - 1)]
+    #TODO: Test this
     rows = df_wE.shape[0]
     chunk_size = rows // number_of_chunks
     rest = rows % number_of_chunks
@@ -31,7 +38,7 @@ def chunk(input_path_name,
         if i == number_of_chunks - 1:
             end = end + rest
         df = df_wE.iloc[begin:end,:]
-        df.to_csv(output_path / "{}_{}.txt".format(output_file_name, str(i)), sep=" ", encoding="utf-8")
+        df.to_csv(output_path / "{}_{}.txt".format(output_file_name, str(i)), sep=" ", encoding="utf-8", header=False)
 
 
 def update(left_df, right_df, on_column, columns_to_omit, whole_row):
@@ -89,7 +96,7 @@ def df_multi_join(df_cognitive_data, df_word_embedding, chunk_number=4):
     return df_join
 
 
-def multi_join(config, df_cognitive_data, word_embedding):
+def multi_join(mode, config, df_cognitive_data, word_embedding):
     '''
     Joins a cognitive data DataFrame with chunked embeddings. Embeddings
     are expected to be provided as space-separated CSVs. Path of the CSVs 
@@ -101,11 +108,17 @@ def multi_join(config, df_cognitive_data, word_embedding):
     :param word_embedding: word embedding name (required for lookup in
                            configuration dictionary)
     '''
+    if mode == 'proper':
+        emb_key = 'wordEmbConfig'
+    else:
+        emb_key = 'randEmbConfig'
+    # READ Datasets into dataframes
+
     # Join from chunked FILE
     df_join = df_cognitive_data
-    chunk_number = config['wordEmbConfig'][word_embedding]["chunk_number"]
-    file_name = config['PATH'] + config['wordEmbConfig'][word_embedding]["chunked_file"]
-    ending = config['wordEmbConfig'][word_embedding]["ending"]
+    chunk_number = config[emb_key][word_embedding]["chunk_number"]
+    file_name = config['PATH'] + config[emb_key][word_embedding]["chunked_file"]
+    ending = config[emb_key][word_embedding]["ending"]
 
     for i in range(0, chunk_number):
         df = pd.read_csv(file_name + str(i) + ending, sep=" ",
@@ -162,17 +175,23 @@ def split_folds(words, X, y, folds, seed):
     return words_test, X_train, y_train, X_test, y_test
 
 
-def data_handler(config, word_embedding, cognitive_data, feature):
+def data_handler(mode, config, word_embedding, cognitive_data, feature, truncate_first_line):
     '''
     Loads and merges specified cognitive data and word embeddings through
     given configuraiton dictionary. Returns chunked data and labels for
     k-fold cross-validation.
 
+    :param mode: Type of embeddings, either 'proper' or 'random'
     :param config: Configuration dictionary
     :param word_embedding: String specifying word embedding (configuration key)
     :param cognitive_data: String specifying cognitiv data source (configuration key)
     :param feature: Cognitive data feature to be predicted
+    :param truncate_first_line: If the first line of the embedding file should be truncated (when containing meta data)
     '''
+    if mode == 'proper':
+        emb_key = 'wordEmbConfig'
+    else:
+        emb_key = 'randEmbConfig'
     # READ Datasets into dataframes
     df_cognitive_data = pd.read_csv(config['PATH'] + config['cogDataConfig'][cognitive_data]['dataset'], sep=" ")
 
@@ -181,11 +200,19 @@ def data_handler(config, word_embedding, cognitive_data, feature):
         df_cognitive_data = df_cognitive_data[['word',feature]]
     df_cognitive_data.dropna(inplace=True)
 
-    if (config['wordEmbConfig'][word_embedding]["chunked"]):
-        df_join = multi_join(config, df_cognitive_data, word_embedding)
+    if (config[emb_key][word_embedding]["chunked"]):
+        df_join = multi_join(mode, config, df_cognitive_data, word_embedding)
     else:
-        df_word_embedding = pd.read_csv(config['PATH'] + config['wordEmbConfig'][word_embedding]["path"], sep=" ",
-                            encoding="utf-8", quoting=csv.QUOTE_NONE)
+        if truncate_first_line:
+            skip_rows = 1
+        else:
+            skip_rows = None
+
+        df_word_embedding = pd.read_csv(config['PATH'] + config[emb_key][word_embedding]["path"], sep=" ",
+                            encoding="utf-8", quoting=csv.QUOTE_NONE, skiprows=skip_rows, header=None)
+
+        df_word_embedding.columns = ['word'] + ['x_{}'.format(idx + 1) for idx in range(df_word_embedding.shape[1] - 1)]
+
         # Left (outer) Join to get wordembedding vectors for all words in cognitive dataset
         df_join = pd.merge(df_cognitive_data, df_word_embedding, how='left', on=['word'])
 
@@ -210,7 +237,7 @@ def data_handler(config, word_embedding, cognitive_data, feature):
         X = df_join.drop(features, axis=1)
         X = np.array(X, dtype='float')
 
-    return split_folds(words, X, y, config["folds"], config["seed"] )
+    return split_folds(words, X, y, config["folds"], config["seed"])
 
 
 def main():
