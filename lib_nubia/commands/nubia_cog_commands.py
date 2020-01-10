@@ -438,6 +438,10 @@ class Run:
                 time_taken = datetime.now() - start_time
                 cprint('Finished after {} seconds'.format(time_taken), 'yellow')
                 
+        # Increment version
+        config_dict['version'] += 1
+
+        _save_config(config_dict, configuration)
         cprint('All done.', 'green')
     
     @command
@@ -492,6 +496,9 @@ class Run:
         for result_proper, result_random, rand_emb in zip(results_proper, results_random, random_embeddings):
             result = [result_proper] + result_random
             process_and_write_results(result, rand_emb, config_dict)
+
+        # Increment version
+        config_dict['version'] += 1
 
         _save_config(config_dict, configuration)
 
