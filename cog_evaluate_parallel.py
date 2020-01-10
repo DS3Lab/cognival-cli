@@ -11,7 +11,7 @@ from utils import animated_loading
 
 #TODO: clear all WARNINGS!
 
-def main(config_dict,
+def run_parallel(config_dict,
          emb_to_random_dict,
          embeddings_list,
          cog_sources_list,
@@ -65,9 +65,11 @@ def main(config_dict,
     pool = Pool(processes=proc)
     async_results_proper = []
     async_results_random = []
+    rand_embeddings = []
 
     for option in options:
         random_embeddings = option["random_embeddings"]
+        rand_embeddings.append(random_embeddings)
         result_proper = pool.apply_async(cog_evaluate.run_single, args=('proper',
                                                                         config_dict,
                                                                         option["wordEmbedding"],
@@ -99,9 +101,9 @@ def main(config_dict,
     pool.join()
 
     async_results_proper = [p.get() for p in async_results_proper]
-    async_results_random = [p.get() for p in async_results_random]
+    async_results_random = [[p.get() for p in p_list] for p_list in async_results_random]
     
-    return async_results_proper, async_results_random
+    return async_results_proper, async_results_random, rand_embeddings
 
     print("\nSUCCESSFUL MODELS")
 
@@ -110,4 +112,4 @@ def main(config_dict,
 
 
 if __name__=="__main__":
-    main("config/c_single_random.json")
+    run_parallel("config/c_single_random.json")

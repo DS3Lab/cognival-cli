@@ -53,7 +53,7 @@ from prompt_toolkit.shortcuts import input_dialog, yes_no_dialog, button_dialog,
 from termcolor import cprint
 
 from cog_evaluate import run as run_serial
-from cog_evaluate_parallel import main as run_parallel
+from cog_evaluate_parallel import run_parallel as run_parallel
 from handlers.file_handler import write_results, update_version
 from handlers.data_handler import chunk
 
@@ -66,7 +66,7 @@ from significance_testing.aggregated_fmri_results import extract_results as agg_
 from significance_testing.aggregated_gaze_results import extract_results_gaze as agg_gaze_extr_results
 from significance_testing.testing_helpers import bonferroni_correction, test_significance
 
-from prompt_toolkit_table import *
+from lib_nubia.prompt_toolkit_table import *
 
 # TODO: Make parametrizable
 BINARY_CONVERSION_LIMIT = 1000

@@ -17,7 +17,7 @@ from nubia import Nubia, Options
 from lib_nubia.nubia_plugin import NubiaCognivalPlugin
 from lib_nubia import commands
 
-warnings.filterwarnings("error", category=RuntimeWarning)
+#warnings.filterwarnings("error", category=RuntimeWarning)
 
 # Source: https://stackoverflow.com/a/22376126
 def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
@@ -26,7 +26,7 @@ def warn_with_traceback(message, category, filename, lineno, file=None, line=Non
     traceback.print_stack(file=log)
     log.write(warnings.formatwarning(message, category, filename, lineno, line))
 
-warnings.showwarning = warn_with_traceback
+#warnings.showwarning = warn_with_traceback
 
 if __name__ == "__main__":
     plugin = NubiaCognivalPlugin(embedding_registry_path='resources/embedding_registry.json')

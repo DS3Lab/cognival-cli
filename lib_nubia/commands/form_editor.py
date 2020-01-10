@@ -48,12 +48,13 @@ try:
 except ImportError:
     cprint('Warning: Package bert_serving.client not found. BERT conversion unavailable.', 'yellow')
 
-from prompt_toolkit import PromptSession
+from prompt_toolkit import prompt, PromptSession
 from prompt_toolkit.shortcuts import input_dialog, yes_no_dialog, button_dialog, radiolist_dialog, ProgressBar
+from prompt_toolkit.application.current import get_app
 from termcolor import cprint
 
 from cog_evaluate import run as run_serial
-from cog_evaluate_parallel import main as run_parallel
+from cog_evaluate_parallel import run_parallel as run_parallel
 from handlers.file_handler import write_results, update_version
 from handlers.data_handler import chunk
 
@@ -66,11 +67,13 @@ from significance_testing.aggregated_fmri_results import extract_results as agg_
 from significance_testing.aggregated_gaze_results import extract_results_gaze as agg_gaze_extr_results
 from significance_testing.testing_helpers import bonferroni_correction, test_significance
 
-from prompt_toolkit_table import *
+from lib_nubia.prompt_toolkit_table import *
 
 # TODO: Make parametrizable
 BINARY_CONVERSION_LIMIT = 1000
 NUM_BERT_WORKERS = 1
+
+_2D_FIELDS = set(['layers'])
 
 EDITOR_TITLES = {"main": "General Configuration",
                  "cognitive": "Cognitive Source Configuration",
@@ -86,13 +89,13 @@ EDITOR_DESCRIPTIONS = {"main": {"PATH": "Main working directory for all experime
                                 },
                        "cognitive": {"dataset": "Name of the cognitive data set. See resources/cognitive_sources.json for a list of all available source",
                                      "modality": "Cognitive source modality (eeg, eye-tracking or fmri)",
-                                     "features": "List of features to be evaluated. Must be set to ALL_DIM for all sources with only one feature, represented by all dimensions.",
+                                     "features": "Comma-separated list of features to be evaluated. Must be set to ALL_DIM for all sources with only one feature, represented by all dimensions.",
                                      "type": "'single_output' for most multi-feature resources (typically eye-tracking) and 'multivariate_output' for most single-feature resources (typicall eeg, fmri)"
                                     },
-                       "embedding_exp": {"activations": "Activation function(s) used in the neural regression model",
-                                         "batch_size": "Batch size used during training",
+                       "embedding_exp": {"activations": "Activation function(s) used in the neural regression model. Comma-separated list for multiple values.",
+                                         "batch_size": "Batch size used during training. Comma-separated list for multiple values.",
                                          "cv_split": "Number of cross-validation (CV) splits",
-                                         "epochs": "Number of training epochs",
+                                         "epochs": "Number of training epochs. Comma-separated list for multiple values.",
                                          "layers": "List of lists of layer specifications. Each row corresponds to possible layer sizes for a layer (comma-separated). Layers are separated by newlines.",
                                          "validation_split": "Ratio training data used as validation data during training"
                                         },
@@ -115,7 +118,7 @@ class ConfigEditor():
         self.table_fields = []
         
         # Add header information
-        self.table_fields.append([Merge(Label(EDITOR_TITLES[conf_type], style="fg:ansigreen bold"), 2)])
+        self.table_fields.append([Merge(Label("{} (Navigate with <Tab>/<Shift>-<Tab>)".format(EDITOR_TITLES[conf_type]), style="fg:ansigreen bold"), 2)])
         if cognitive_sources:
             self.table_fields.append([Merge(Label('Cognitive sources: {}'.format(cognitive_sources), style="fg:ansiyellow bold"), 2)])
         if embeddings:
@@ -134,15 +137,7 @@ class ConfigEditor():
         def _(event):
             event.app.layout.focus_next()
 
-        @self.kb.add("down")
-        def _(event):
-            event.app.layout.focus_next()
-
         @self.kb.add("s-tab")
-        def _(event):
-            event.app.layout.focus_previous()
-
-        @self.kb.add("up")
         def _(event):
             event.app.layout.focus_previous()
 
@@ -152,18 +147,19 @@ class ConfigEditor():
                 continue
             if v is None:
                 v = ""
-                style = "fg:ansigreen"
+                style = "fg:ansiwhite"
             elif isinstance(v, (list, tuple)):
                 if isinstance(v[0], (list, tuple)):
                     #TODO: Test this
-                    #v = zip(*v)
                     v = "\n".join([", ".join([str(y) for y in x]) for x in v])
                 else:
                     v = ", ".join([str(x) for x in v])
                 style = "fg:ansigreen"
+            elif v == '<multiple values>':
+                style = "fg:ansimagenta italic"
             else:
                 v = str(v)
-                style = "fg:ansimagenta italic"
+                style = "fg:ansiwhite"
 
             buffer = TextArea(v, style=style)
             self.buffers[k] = buffer
@@ -187,7 +183,7 @@ class ConfigEditor():
                     )
 
     def __call__(self):
-        Application(self.layout, key_bindings=self.kb, full_screen=True).run()
+        return Application(self.layout, key_bindings=self.kb, full_screen=True).run()
     
     def abort(self):
         get_app().exit(result=True)
@@ -221,10 +217,20 @@ class ConfigEditor():
                 continue
 
             if k in self.singleton_params or self.singleton_params == 'all':
+                if ',' in v.text:
+                    get_app().exit(result="Field '{}' does not support lists of values. "
+                                          "Press Enter to reopen editor.".format(k))
+                    return
+
                 values = self._cast_single(v)
                 
             else:
                 if '\n' in v.text:
+                    if k not in _2D_FIELDS:
+                        get_app().exit(result="Field '{}' does not support multiple levels of nesting. "
+                                              "Press Enter to reopen editor.".format(k))
+                        return
+                        
                     values_split = v.text.split('\n')
                     values_list = [v.replace(' ', '').split(',') for v in values_split]
                     values_list_cast = []
@@ -232,18 +238,17 @@ class ConfigEditor():
                         v_list = self._cast_list(v_list)
                         values_list_cast.append(v_list)
                     # TODO: Test this
-                    #values = list(map(list, zip(*values_list_cast)))
                     values = values_list_cast
                 else:
                     values_list = v.text.replace(' ', '').split(',')    
                     values = self._cast_list(values_list)
 
             self.config_dict_updated[k] = values
-            
+
         get_app().exit(result=True)
 
 def config_editor(conf_type,
-                  configuration,
+                  config_dict,
                   embeddings,
                   cognitive_sources,
                   singleton_params=None,
@@ -251,21 +256,24 @@ def config_editor(conf_type,
     embeddings = ", ".join(embeddings)
     cognitive_sources = ", ".join(cognitive_sources)
 
-    config_dict_for_editing = {}
     config_dict_updated = {}
-    for k, v in configuration.items():
-        if not v == '<multiple values>':
-            if not isinstance(v, (tuple, list)):
-                v = [v]
-        config_dict_for_editing[k] = v
 
-    conf_editor = ConfigEditor(conf_type,
-                               config_dict_for_editing,
-                               config_dict_updated,
-                               singleton_params=singleton_params,
-                               cognitive_sources=cognitive_sources,
-                               embeddings=embeddings,
-                               skip_params=skip_params)
-    conf_editor()
+    result = None
+    
+    while True:
+        conf_editor = ConfigEditor(conf_type,
+                                config_dict,
+                                config_dict_updated,
+                                singleton_params=singleton_params,
+                                cognitive_sources=cognitive_sources,
+                                embeddings=embeddings,
+                                skip_params=skip_params)
+        result = conf_editor()
+        if result is True:
+            break
+        else:
+            cprint('Error: {}'.format(result), 'red')
+            prompt()
+            result = None
 
     return config_dict_updated

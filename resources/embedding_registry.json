@@ -183,22 +183,6 @@
             "truncate_first_line": false,
             "chunked": false,
             "random_embedding": null
-        },
-        "my_custom_embeddings": {
-            "url": "https://github.com/eyaler/word2vec-slim/raw/master/GoogleNews-vectors-negative300-SLIM.bin.gz",
-            "dimensions": 350,
-            "path": "GoogleNews-vectors-negative300-SLIM",
-            "embedding_file": "GoogleNews-vectors-negative300-SLIM.txt",
-            "installed": false,
-            "binary": true,
-            "binary_format": "word2vec",
-            "binary_file": "GoogleNews-vectors-negative300-SLIM.bin",
-            "truncate_first_line": false,
-            "chunked": true,
-            "chunk_number": 4,
-            "chunked_file": "GoogleNews-vectors-negative300-SLIM",
-            "chunk_ending": ".txt",
-            "random_embedding": "random-350-10"
         }
     },
     "random_static": {
