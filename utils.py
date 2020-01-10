@@ -2,6 +2,7 @@ import csv
 import json
 import sys
 import time
+import warnings
 
 import pandas as pd
 import numpy as np
@@ -15,36 +16,36 @@ from gensim.models.keyedvectors import KeyedVectors
 
 #animation to know when script is running
 def animated_loading(completed, total):
-	chars = r"/-\|"
-	for char in chars:
-		sys.stdout.write('\r'+'loading...'+char)
-		sys.stdout.write('\t'+str(completed)+"/"+str(total))
-		time.sleep(.1)
-		sys.stdout.flush()
+    chars = r"/-\|"
+    for char in chars:
+        sys.stdout.write('\r'+'loading...'+char)
+        sys.stdout.write('\t'+str(completed)+"/"+str(total))
+        time.sleep(.1)
+        sys.stdout.flush()
 
 #
 # Embeddings
 # 
 
 def header_gen(fileName):
-	df = pd.read_csv(fileName, sep=" ", engine='python', header=None, quoting=csv.QUOTE_NONE)
-	dim = df.shape[1]
-	header = "word"
-	for i in range(1,dim):
-		header = header+" x"+str(i)
-	return header
+    df = pd.read_csv(fileName, sep=" ", engine='python', header=None, quoting=csv.QUOTE_NONE)
+    dim = df.shape[1]
+    header = "word"
+    for i in range(1,dim):
+        header = header+" x"+str(i)
+    return header
 
 
 def generate_df_with_header(fileName, skiprows=None):
-	reader = pd.read_csv(fileName, sep=" ", engine='python', header=None, quoting=csv.QUOTE_NONE, chunksize=10000, skiprows=skiprows)
-	df_chunk_1 = next(reader)
-	dim = df_chunk_1.shape[1]
-	header = "word"
-	for i in range(1,dim):
-		header = header+" x"+str(i)
-	header = header.split()
-	df_chunk_1.columns = header
-	return df_chunk_1, reader
+    reader = pd.read_csv(fileName, sep=" ", engine='python', header=None, quoting=csv.QUOTE_NONE, chunksize=10000, skiprows=skiprows)
+    df_chunk_1 = next(reader)
+    dim = df_chunk_1.shape[1]
+    header = "word"
+    for i in range(1,dim):
+        header = header+" x"+str(i)
+    header = header.split()
+    df_chunk_1.columns = header
+    return df_chunk_1, reader
 
 
 def word2vec_bin_to_df(filename,rec_dtype):
@@ -52,8 +53,11 @@ def word2vec_bin_to_df(filename,rec_dtype):
 
 
 def word2vec_bin_to_txt(binPath,binName,outputName, limit=None):
-    model = KeyedVectors.load_word2vec_format(binPath / binName, binary=True, limit=limit)
-    model.save_word2vec_format(binPath / outputName,binary=False)
+    with warnings.catch_warnings():
+        # Silence smart_open deprecation warnings (erroneously raised as UserWarnings)
+        warnings.simplefilter('ignore', UserWarning)
+        model = KeyedVectors.load_word2vec_format(binPath / binName, binary=True, limit=limit)
+        model.save_word2vec_format(binPath / outputName,binary=False)
 
 #
 # Formatting
@@ -67,14 +71,14 @@ def create_table(CONFIG):
     index1 = []
     index2 = []
     for cD in config["cogDataConfig"]:
-    	for feature in config["cogDataConfig"][cD]["features"]:
-    		index1.append(cD)
-    		index2.append(feature)
-    index = [index1,index2]	
+        for feature in config["cogDataConfig"][cD]["features"]:
+            index1.append(cD)
+            index2.append(feature)
+    index = [index1,index2]    
     
     setup = {header[j]:[np.NaN for i in range(len(index2)) ] for j in range(len(header))} 
     df = pd.DataFrame(setup,index)
-    print(df)	
+    print(df)    
     
     pass
 
@@ -102,5 +106,5 @@ def fill_table(PATH, table):
 #                   "GoogleNews-vectors-negative300.bin", 'word2vec.txt',300)
 
 if __name__=="__main__":
-	fileName = "../embeddings/glove-6B/glove.6B.50d_nohead.txt"
-	print(header_gen(fileName))
+    fileName = "../embeddings/glove-6B/glove.6B.50d_nohead.txt"
+    print(header_gen(fileName))

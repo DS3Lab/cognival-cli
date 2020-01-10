@@ -1,5 +1,5 @@
 {
-    "installed": true,
+    "installed": false,
     "sources": {
         "eeg": {
             "n400": {
