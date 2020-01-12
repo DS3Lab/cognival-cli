@@ -111,13 +111,13 @@ def run_single(mode, config, word_embedding, cognitive_data, feature, truncate_f
         for key in grids_result[i].best_params_:
             logging['folds'][i][key.upper()] = grids_result[i].best_params_[key]
         if config['cogDataConfig'][cognitive_data]['type'] == "multivariate_output":
-            logging['folds'][i]['MSE_PREDICTION_ALL_DIM:'] = list(mserrors[i])
-            logging['folds'][i]['MSE_PREDICTION:'] = np.mean(mserrors[i])
+            logging['folds'][i]['MSE_PREDICTION_ALL_DIM'] = list(mserrors[i])
+            logging['folds'][i]['MSE_PREDICTION'] = np.mean(mserrors[i])
         elif config['cogDataConfig'][cognitive_data]['type'] == "single_output":
-            logging['folds'][i]['MSE_PREDICTION:'] = mserrors[i]
+            logging['folds'][i]['MSE_PREDICTION'] = mserrors[i]
 
-        logging['folds'][i]['LOSS: '] = grids_result[i].best_estimator_.model.history.history['loss']
-        logging['folds'][i]['VALIDATION_LOSS: '] = grids_result[i].best_estimator_.model.history.history['val_loss']
+        logging['folds'][i]['LOSS'] = grids_result[i].best_estimator_.model.history.history['loss']
+        logging['folds'][i]['VALIDATION_LOSS'] = grids_result[i].best_estimator_.model.history.history['val_loss']
 
         loss_list.append(np.array(grids_result[i].best_estimator_.model.history.history['loss'],dtype='float'))
         val_loss_list.append(np.array(grids_result[i].best_estimator_.model.history.history['val_loss'], dtype='float'))

@@ -254,9 +254,8 @@ def cumulate_random_emb_results(logging,
                                 cum_average_mse,
                                 cum_rand_counter):
     # Cumulate logging
-    #TODO
-    mse_prediction = np.array([x['MSE_PREDICTION:'] for x in logging['folds']])
-    mse_prediction_all_dim = np.array([x['MSE_PREDICTION_ALL_DIM:'] for x in logging['folds']])
+    mse_prediction = np.array([x['MSE_PREDICTION'] for x in logging['folds']])
+    mse_prediction_all_dim = np.array([x['MSE_PREDICTION_ALL_DIM'] for x in logging['folds']])
     average_mse_all_dim = np.array(logging['AVERAGE_MSE_ALL_DIM'])
     average_mse = logging['AVERAGE_MSE']
 
@@ -312,11 +311,10 @@ def write_random_emb_results(rand_emb,
     cum_mse_prediction_all_dim = list(cum_mse_prediction_all_dim)
     
     for idx, fold in enumerate(cum_rand_logging['folds']):
-        #TODO
-        fold['LOSS: '] = []
-        fold['VALIDATION_LOSS: '] = []
-        fold['MSE_PREDICTION:'] = cum_mse_prediction[idx]
-        fold['MSE_PREDICTION_ALL_DIM:'] = list(cum_mse_prediction_all_dim[idx])
+        fold['LOSS'] = []
+        fold['VALIDATION_LOSS'] = []
+        fold['MSE_PREDICTION'] = cum_mse_prediction[idx]
+        fold['MSE_PREDICTION_ALL_DIM'] = list(cum_mse_prediction_all_dim[idx])
 
     cum_rand_logging['AVERAGE_MSE_ALL_DIM'] = list(cum_average_mse_all_dim)
     cum_rand_logging['AVERAGE_MSE'] = cum_average_mse
@@ -597,7 +595,7 @@ class EditConfig:
             for emb_type in emb_config:
                 for emb in emb_config[emb_type]:
                     
-                    # TODO: Refactor this to handle random embeddings correctly
+                    # TODO: Refactor
                     if emb_type == 'random_multiseed':
                         emb_part_list = emb_config[emb_type][emb]['embedding_parts']
                         emb_key = 'randEmbConfig'
