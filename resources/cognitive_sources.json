@@ -1,30 +1,34 @@
 {
-    "installed": false,
+    "installed": true,
     "sources": {
         "eeg": {
             "n400": {
                 "dimensionality": 130,
                 "features": "single",
-                "file": "n400_scaled.txt"
+                "file": "n400_scaled.txt",
+                "hypothesis_per_participant": false
             },
             "naturalspeech": {
                 "dimensionality": 130,
                 "features": "single",
-                "file": "naturalspeech_scaled.txt"
+                "file": "naturalspeech_scaled.txt",
+                "hypothesis_per_participant": false
             },
             "ucl": {
                 "dimensionality": 34,
                 "features": "single",
-                "file": "ucl_scaled.txt"
+                "file": "ucl_scaled.txt",
+                "hypothesis_per_participant": false
             },
             "zuco": {
                 "dimensionality": 105,
                 "features": "single",
-                "file": "zuco_scaled.txt"
+                "file": "zuco_scaled.txt",
+                "hypothesis_per_participant": false
             }
         },
         "fmri": {
-            "alice": {
+            "brennan": {
                 "dimensionality": 6,
                 "features": "single",
                 "files": [
@@ -55,157 +59,63 @@
                     "scaled_6_brennan_targets_51.txt",
                     "scaled_6_brennan_targets_52.txt",
                     "scaled_6_brennan_targets_53.txt"
-                ]
-            },
-            "harry-potter": {
-                "dimensionality": [
-                    100,
-                    500,
-                    1000
                 ],
+                "hypothesis_per_participant": true
+            },
+            "wehbe": {
+                "dimensionality": 1000,
                 "features": "single",
                 "files": [
-                    [
-                        "scaled_100_wehbe_targets_1.txt",
-                        "scaled_100_wehbe_targets_2.txt",
-                        "scaled_100_wehbe_targets_3.txt",
-                        "scaled_100_wehbe_targets_4.txt",
-                        "scaled_100_wehbe_targets_5.txt",
-                        "scaled_100_wehbe_targets_6.txt",
-                        "scaled_100_wehbe_targets_7.txt",
-                        "scaled_100_wehbe_targets_8.txt"
-                    ],
-                    [
-                        "scaled_500_wehbe_targets_1.txt",
-                        "scaled_500_wehbe_targets_2.txt",
-                        "scaled_500_wehbe_targets_3.txt",
-                        "scaled_500_wehbe_targets_4.txt",
-                        "scaled_500_wehbe_targets_5.txt",
-                        "scaled_500_wehbe_targets_6.txt",
-                        "scaled_500_wehbe_targets_7.txt",
-                        "scaled_500_wehbe_targets_8.txt"
-                    ],
-                    [
-                        "scaled_1000_wehbe_targets_1.txt",
-                        "scaled_1000_wehbe_targets_2.txt",
-                        "scaled_1000_wehbe_targets_3.txt",
-                        "scaled_1000_wehbe_targets_4.txt",
-                        "scaled_1000_wehbe_targets_5.txt",
-                        "scaled_1000_wehbe_targets_6.txt",
-                        "scaled_1000_wehbe_targets_7.txt",
-                        "scaled_1000_wehbe_targets_8.txt"
-                    ]
-                ]
+                            "scaled_1000_wehbe_targets_1.txt",
+                            "scaled_1000_wehbe_targets_2.txt",
+                            "scaled_1000_wehbe_targets_3.txt",
+                            "scaled_1000_wehbe_targets_4.txt",
+                            "scaled_1000_wehbe_targets_5.txt",
+                            "scaled_1000_wehbe_targets_6.txt",
+                            "scaled_1000_wehbe_targets_7.txt",
+                            "scaled_1000_wehbe_targets_8.txt"
+                        ],
+                "hypothesis_per_participant": true
             },
-            "nouns": {
-                "dimensionality": [
-                    100,
-                    500,
-                    1000
-                ],
+            "mitchell": {
+                "dimensionality": 1000,
                 "features": "single",
                 "files": [
-                    [
-                        "scaled_100_mitchell_targets_1.txt",
-                        "scaled_100_mitchell_targets_2.txt",
-                        "scaled_100_mitchell_targets_3.txt",
-                        "scaled_100_mitchell_targets_4.txt",
-                        "scaled_100_mitchell_targets_5.txt",
-                        "scaled_100_mitchell_targets_6.txt",
-                        "scaled_100_mitchell_targets_7.txt",
-                        "scaled_100_mitchell_targets_8.txt",
-                        "scaled_100_mitchell_targets_9.txt"
-                    ],
-                    [
-                        "scaled_500_mitchell_targets_1.txt",
-                        "scaled_500_mitchell_targets_2.txt",
-                        "scaled_500_mitchell_targets_3.txt",
-                        "scaled_500_mitchell_targets_4.txt",
-                        "scaled_500_mitchell_targets_5.txt",
-                        "scaled_500_mitchell_targets_6.txt",
-                        "scaled_500_mitchell_targets_7.txt",
-                        "scaled_500_mitchell_targets_8.txt",
-                        "scaled_500_mitchell_targets_9.txt"
-                    ],
-                    [
-                        "scaled_1000_mitchell_targets_1.txt",
-                        "scaled_1000_mitchell_targets_2.txt",
-                        "scaled_1000_mitchell_targets_3.txt",
-                        "scaled_1000_mitchell_targets_4.txt",
-                        "scaled_1000_mitchell_targets_5.txt",
-                        "scaled_1000_mitchell_targets_6.txt",
-                        "scaled_1000_mitchell_targets_7.txt",
-                        "scaled_1000_mitchell_targets_8.txt",
-                        "scaled_1000_mitchell_targets_9.txt"
-                    ]
-                ]
+                            "scaled_1000_mitchell_targets_1.txt",
+                            "scaled_1000_mitchell_targets_2.txt",
+                            "scaled_1000_mitchell_targets_3.txt",
+                            "scaled_1000_mitchell_targets_4.txt",
+                            "scaled_1000_mitchell_targets_5.txt",
+                            "scaled_1000_mitchell_targets_6.txt",
+                            "scaled_1000_mitchell_targets_7.txt",
+                            "scaled_1000_mitchell_targets_8.txt",
+                            "scaled_1000_mitchell_targets_9.txt"
+                         ],
+                "hypothesis_per_participant": true
             },
             "pereira": {
-                "dimensionality": [
-                    100,
-                    500,
-                    1000
-                ],
+                "dimensionality": 1000,
                 "features": "single",
                 "files": [
-                    [
-                        "scaled_100_pereira_targets_M01.txt",
-                        "scaled_100_pereira_targets_M02.txt",
-                        "scaled_100_pereira_targets_M03.txt",
-                        "scaled_100_pereira_targets_M04.txt",
-                        "scaled_100_pereira_targets_M05.txt",
-                        "scaled_100_pereira_targets_M06.txt",
-                        "scaled_100_pereira_targets_M07.txt",
-                        "scaled_100_pereira_targets_M08.txt",
-                        "scaled_100_pereira_targets_M09.txt",
-                        "scaled_100_pereira_targets_M10.txt",
-                        "scaled_100_pereira_targets_M11.txt",
-                        "scaled_100_pereira_targets_M12.txt",
-                        "scaled_100_pereira_targets_M13.txt",
-                        "scaled_100_pereira_targets_M14.txt",
-                        "scaled_100_pereira_targets_M15.txt",
-                        "scaled_100_pereira_targets_M16.txt",
-                        "scaled_100_pereira_targets_M17.txt"
-                    ],
-                    [
-                        "scaled_500_pereira_targets_M01.txt",
-                        "scaled_500_pereira_targets_M02.txt",
-                        "scaled_500_pereira_targets_M03.txt",
-                        "scaled_500_pereira_targets_M04.txt",
-                        "scaled_500_pereira_targets_M05.txt",
-                        "scaled_500_pereira_targets_M06.txt",
-                        "scaled_500_pereira_targets_M07.txt",
-                        "scaled_500_pereira_targets_M08.txt",
-                        "scaled_500_pereira_targets_M09.txt",
-                        "scaled_500_pereira_targets_M10.txt",
-                        "scaled_500_pereira_targets_M11.txt",
-                        "scaled_500_pereira_targets_M12.txt",
-                        "scaled_500_pereira_targets_M13.txt",
-                        "scaled_500_pereira_targets_M14.txt",
-                        "scaled_500_pereira_targets_M15.txt",
-                        "scaled_500_pereira_targets_M16.txt",
-                        "scaled_500_pereira_targets_M17.txt"
-                    ],
-                    [
-                        "scaled_1000_pereira_targets_M01.txt",
-                        "scaled_1000_pereira_targets_M02.txt",
-                        "scaled_1000_pereira_targets_M03.txt",
-                        "scaled_1000_pereira_targets_M04.txt",
-                        "scaled_1000_pereira_targets_M05.txt",
-                        "scaled_1000_pereira_targets_M06.txt",
-                        "scaled_1000_pereira_targets_M07.txt",
-                        "scaled_1000_pereira_targets_M08.txt",
-                        "scaled_1000_pereira_targets_M09.txt",
-                        "scaled_1000_pereira_targets_M10.txt",
-                        "scaled_1000_pereira_targets_M11.txt",
-                        "scaled_1000_pereira_targets_M12.txt",
-                        "scaled_1000_pereira_targets_M13.txt",
-                        "scaled_1000_pereira_targets_M14.txt",
-                        "scaled_1000_pereira_targets_M15.txt",
-                        "scaled_1000_pereira_targets_M16.txt",
-                        "scaled_1000_pereira_targets_M17.txt"
-                    ]
-                ]
+                            "scaled_1000_pereira_targets_M01.txt",
+                            "scaled_1000_pereira_targets_M02.txt",
+                            "scaled_1000_pereira_targets_M03.txt",
+                            "scaled_1000_pereira_targets_M04.txt",
+                            "scaled_1000_pereira_targets_M05.txt",
+                            "scaled_1000_pereira_targets_M06.txt",
+                            "scaled_1000_pereira_targets_M07.txt",
+                            "scaled_1000_pereira_targets_M08.txt",
+                            "scaled_1000_pereira_targets_M09.txt",
+                            "scaled_1000_pereira_targets_M10.txt",
+                            "scaled_1000_pereira_targets_M11.txt",
+                            "scaled_1000_pereira_targets_M12.txt",
+                            "scaled_1000_pereira_targets_M13.txt",
+                            "scaled_1000_pereira_targets_M14.txt",
+                            "scaled_1000_pereira_targets_M15.txt",
+                            "scaled_1000_pereira_targets_M16.txt",
+                            "scaled_1000_pereira_targets_M17.txt"
+                        ],
+                "hypothesis_per_participant": true
             }
         },
         "eye-tracking": {
@@ -218,7 +128,8 @@
                     "GPT",
                     "TRT"
                 ],
-                "file": "zuco_scaled.txt"
+                "file": "zuco_scaled.txt",
+                "hypothesis_per_participant": false
             },
             "ucl": {
                 "dimensionality": 1,
@@ -228,7 +139,8 @@
                     "RTrightbound",
                     "RTgopast"
                 ],
-                "file": "ucl_scaled.txt"
+                "file": "ucl_scaled.txt",
+                "hypothesis_per_participant": false
             },
             "provo": {
                 "dimensionality": 1,
@@ -244,7 +156,8 @@
                     "IA_REGRESSION_OUT_FULL_COUNT",
                     "IA_REGRESSION_PATH_DURATION"
                 ],
-                "file": "provo_scaled.txt"
+                "file": "provo_scaled.txt",
+                "hypothesis_per_participant": false
             },
             "geco": {
                 "dimensionality": 1,
@@ -257,7 +170,8 @@
                     "WORD_TOTAL_READING_TIME",
                     "WORD_SKIP"
                 ],
-                "file": "geco_scaled.txt"
+                "file": "geco_scaled.txt",
+                "hypothesis_per_participant": false
             },
             "dundee": {
                 "dimensionality": 1,
@@ -277,21 +191,24 @@
                     "nRegres_from",
                     "nRegres_to"
                 ],
-                "file": "dundee_scaled.txt"
+                "file": "dundee_scaled.txt",
+                "hypothesis_per_participant": false
             },
             "cfilt-scanpath": {
                 "dimensionality": 1,
                 "features": [
                     "Fixation_Duration"
                 ],
-                "file": "cfilt-scanpath_scaled.txt"
+                "file": "cfilt-scanpath_scaled.txt",
+                "hypothesis_per_participant": false
             },
             "cfilt-sarcasm": {
                 "dimensionality": 1,
                 "features": [
                     "Fixation_Duration"
                 ],
-                "file": "cfilt-sarcasm_scaled.txt"
+                "file": "cfilt-sarcasm_scaled.txt",
+                "hypothesis_per_participant": false
             },
             "all": {
                 "dimensionality": 1,
@@ -303,7 +220,8 @@
                     "mfd",
                     "gpt"
                 ],
-                "file": "all_scaled.txt"
+                "file": "all_scaled.txt",
+                "hypothesis_per_participant": false
             }
         }
     }
