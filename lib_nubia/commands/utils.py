@@ -9,7 +9,7 @@ from termcolor import cprint
 def tupleit(t):
     return tuple(map(tupleit, t)) if isinstance(t, (list, tuple)) else t
 
-def _open_config(configuration):
+def _open_config(configuration, quiet=False):
     config_path = Path('resources') / '{}_config.json'.format(configuration)
     try:
         with open(config_path) as f:
@@ -17,16 +17,10 @@ def _open_config(configuration):
     except FileNotFoundError:
         cprint('Error: Configuration file {}_config.json does not yet exist! Execute `edit-config create <filename> to create a new configuration.'.format(configuration), 'red')
         return
-    cprint('Opened configuration file {} ...'.format(str(config_path)), 'green')
+    if not quiet:
+        cprint('Opened configuration file {} ...'.format(str(config_path)), 'green')
     return config_dict
-
-
-def _open_emb_config():
-    emb_path = Path('resources') / 'embedding_registry.json'
-    with open(emb_path) as f:
-        embeddings = json.load(f)
-    return embeddings
-
+    
 
 def _open_cog_config():
     cog_sources_path = Path('resources') / 'cognitive_sources.json'
@@ -59,11 +53,12 @@ def _save_cog_config(config_dict):
         json.dump(config_dict, f, indent=4)
 
 
-def _save_config(config_dict, configuration):
+def _save_config(config_dict, configuration, quiet=False):
     config_path = Path('resources') / '{}_config.json'.format(configuration)
     with open(config_path, 'w') as f:
         json.dump(config_dict, f, indent=4)
-    cprint('Saved configuration file {} ...'.format(str(config_path)), 'green')
+    if not quiet:
+        cprint('Saved configuration file {} ...'.format(str(config_path)), 'green')
 
 
 #Source: https://stackoverflow.com/a/49912639

@@ -107,10 +107,20 @@ EDITOR_DESCRIPTIONS = {"main": {"PATH": "Main working directory for all experime
                                          "truncate_first_line": "Whether to remove the first line upon loading"
                                          }
                         }
-                        # TODO: Why is truncate_first_line included?
 
 class ConfigEditor():
-    def __init__(self, conf_type, config_dict, config_dict_updated, singleton_params=None, skip_params=None, cognitive_sources=None, embeddings=None):
+    def __init__(self,
+                 conf_type,
+                 config_dict,
+                 config_dict_updated,
+                 singleton_params=None,
+                 skip_params=None,
+                 cognitive_sources=None,
+                 embeddings=None,
+                 prefill_fields={'version': 1,
+                                 'seed': 42,
+                                 'cpu_count': os.cpu_count()-1,
+                                 'folds': 5}):
         self.buffers = {}
         self.config_dict_updated = config_dict_updated
         self.singleton_params = singleton_params if singleton_params else []
@@ -120,9 +130,19 @@ class ConfigEditor():
         # Add header information
         self.table_fields.append([Merge(Label("{} (Navigate with <Tab>/<Shift>-<Tab>)".format(EDITOR_TITLES[conf_type]), style="fg:ansigreen bold"), 2)])
         if cognitive_sources:
-            self.table_fields.append([Merge(Label('Cognitive sources: {}'.format(cognitive_sources), style="fg:ansiyellow bold"), 2)])
+            if len(cognitive_sources) > 1:
+                cog_source_label = 'Cognitive sources: {}'
+            else:
+                cog_source_label = 'Cognitive source: {}'
+            cognitive_sources = ", ".join(cognitive_sources)
+            self.table_fields.append([Merge(Label(cog_source_label.format(cognitive_sources), style="fg:ansiyellow bold"), 2)])
         if embeddings:
-            self.table_fields.append([Merge(Label('Embeddings: {}'.format(embeddings), style="fg:ansiyellow bold"), 2)])
+            if len(embeddings) > 1:
+                embedding_label = 'Embeddings: {}'
+            else:
+                embedding_label = 'Embedding: {}'
+            embeddings = ", ".join(embeddings)
+            self.table_fields.append([Merge(Label(embedding_label.format(embeddings), style="fg:ansiyellow bold"), 2)])
 
         self.table_buttons = [[Button('Save', handler=self.save), Button('Abort', handler=self.abort)]]
 
@@ -150,7 +170,6 @@ class ConfigEditor():
                 style = "fg:ansiwhite"
             elif isinstance(v, (list, tuple)):
                 if isinstance(v[0], (list, tuple)):
-                    #TODO: Test this
                     v = "\n".join([", ".join([str(y) for y in x]) for x in v])
                 else:
                     v = ", ".join([str(x) for x in v])
@@ -161,11 +180,16 @@ class ConfigEditor():
                 v = str(v)
                 style = "fg:ansiwhite"
 
+            # Prefill specified empty fields
+            if not v and k in prefill_fields:
+                v = str(prefill_fields[k])
+
             buffer = TextArea(v, style=style)
             self.buffers[k] = buffer
             row = [Label(k, style="fg:ansicyan bold"), Label(EDITOR_DESCRIPTIONS[conf_type][k], style="italic")]
             self.table_fields.append(row)
             self.table_fields.append(Merge(buffer, 2))
+                        
         
         self.layout = Layout(
                         HSplit([
@@ -237,7 +261,6 @@ class ConfigEditor():
                     for v_list in values_list:
                         v_list = self._cast_list(v_list)
                         values_list_cast.append(v_list)
-                    # TODO: Test this
                     values = values_list_cast
                 else:
                     values_list = v.text.replace(' ', '').split(',')    
@@ -253,9 +276,6 @@ def config_editor(conf_type,
                   cognitive_sources,
                   singleton_params=None,
                   skip_params=None):
-    embeddings = ", ".join(embeddings)
-    cognitive_sources = ", ".join(cognitive_sources)
-
     config_dict_updated = {}
 
     result = None
