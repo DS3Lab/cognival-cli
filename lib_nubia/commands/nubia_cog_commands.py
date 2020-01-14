@@ -799,7 +799,7 @@ def generate_random_df(seed, vocabulary, embedding_dim, emb_file, path):
     rand_emb = np.random.uniform(low=-1.0, high=1.0, size=(len(vocabulary), embedding_dim))
     df = pd.DataFrame(rand_emb, columns=['x{}'.format(i+1) for i in range(embedding_dim)])
     df.insert(loc=0, column='word', value=vocabulary)
-    df.to_csv(path / '{}.txt'.format(emb_file), sep=" ", encoding="utf-8", header=False, index=False)
+    df.to_csv(Path('embeddings') / path / '{}.txt'.format(emb_file), sep=" ", encoding="utf-8", header=False, index=False)
 
 
 @command()
@@ -855,7 +855,7 @@ def generate_random(embeddings, no_embeddings=10, seed_func='exp_e_floored'):
         rand_emb_keys = ['{}_{}_{}'.format(rand_emb_name, idx+1, seed) for idx, seed in enumerate(seeds)]
         path = Path('random_multiseed') / '{}_dim'.format(emb_dim) / '{}_seeds'.format(len(seeds))
         try:
-            os.makedirs(path)
+            os.makedirs(Path('embeddings') / path)
         except FileExistsError:
             pass
 
