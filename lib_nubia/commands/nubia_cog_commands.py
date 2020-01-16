@@ -19,6 +19,7 @@ import itertools
 import json
 import gzip
 import os
+import pprint
 import sys
 import requests
 import signal
@@ -203,11 +204,12 @@ def _filter_config(configuration,
     
     emb_to_random_dict = {}
     # Check if embedding installed and registered, get random embeddings
-    for emb in embeddings_list:
-        not_registered_str = ''
-        not_installed_str = ''
-        no_rand_emb_str = ''
     
+    not_registered_str = ''
+    not_installed_str = ''
+    no_rand_emb_str = ''
+    
+    for emb in embeddings_list:    
         if emb not in config_dict['wordEmbConfig']:
             not_registered_str += '- {}\n'.format(emb)
         else:
@@ -505,8 +507,6 @@ def insert_config_dict(config_dict, reference_dict, mode, csource, target_emb, s
     if mode == 'reference':
         try:
             config_dict['cogDataConfig'][csource]["wordEmbSpecifics"][target_emb] = copy.deepcopy(reference_dict['cogDataConfig'][csource]['wordEmbSpecifics'][source_emb])
-            #if target_emb != source_emb:
-            #    breakpoint()
         except KeyError:
             config_dict['cogDataConfig'][csource]["wordEmbSpecifics"][target_emb] = copy.deepcopy(EMBEDDING_PARAMET_TEMPLATE)
     elif mode == 'empty':
@@ -887,56 +887,66 @@ def generate_random(embeddings, no_embeddings=10, seed_func='exp_e_floored'):
 
 @command
 @argument('configuration', type=str, description='Name of configuration file')
-@argument('modality', type=str, description='Modality for which significance is to be termined')
+@argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
 @argument('alpha', type=str, description='Alpha value')
 @argument('test', type=str, description='Significance test')
-def sig_test(configuration, modality, alpha=0.01, test='Wilcoxon'):    
+def sig_test(configuration, modalities=['eye-tracking', 'eeg', 'fmri'], alpha=0.01, test='Wilcoxon'):    
     """
     Test significance of results in the given modality and produced based on the specified configuration.
     """
-    ctx = context.get_context()
-
     config_dict = _open_config(configuration)
     out_dir = config_dict["outputDir"]
     if not os.path.exists(out_dir):
         cprint('Output path {} associated with configuration "{}" does not exist. Have you already performed experimental runs?'.format(out_dir, configuration), "red")
         return
     
-    result_dir = Path(out_dir) / 'sig_test_results' / modality
-    report_dir = Path(out_dir) / 'reports' / modality
-    os.makedirs(result_dir, exist_ok=True)
-    os.makedirs(report_dir, exist_ok=True)
-    os.makedirs(result_dir / 'tmp' / modality, exist_ok=True)
+    for modality in modalities:
+        cprint('\n[{}]\n'.format(modality.upper()), attrs=['bold'], color='green')
+        result_dir = Path(out_dir) / 'sig_test_results' / modality
+        report_dir = Path(out_dir) / 'reports' / modality
+        os.makedirs(result_dir, exist_ok=True)
+        os.makedirs(report_dir, exist_ok=True)
+        os.makedirs(result_dir / 'tmp' / modality, exist_ok=True)
 
-    datasets = [k for (k, v) in config_dict["cogDataConfig"].items() if 'modality' in v and v['modality'] == modality]
-    embeddings = [e for e in config_dict["wordEmbConfig"] if not e.startswith('random')]
-    
-    # TODO: Integrate properly in experiment configuration
-    baselines = [ctx.embedding_registry['proper'][e]["random_embedding"] for e in config_dict["wordEmbConfig"]]
-    baselines = [b for b in baselines if b in config_dict["randEmbSetToParts"]]
+        datasets = [k for (k, v) in config_dict["cogDataConfig"].items() if 'modality' in v and v['modality'] == modality]
+        
+        emb_bl_pairs = [(k, v['random_embedding']) for k, v in config_dict["wordEmbConfig"].items()]
+        embeddings, baselines = zip(*emb_bl_pairs)
 
-    for ds in datasets:
-        for embed, baselines in zip(embeddings, baselines):
-            # TODO: Refactor -> get rid of unneeded directory
-            st_extract_results(modality, embed, baselines, out_dir, result_dir)
+        for ds in datasets:
+            for embed, baselines in zip(embeddings, baselines):
+                # TODO: Refactor -> get rid of unneeded directory
+                st_extract_results(modality, embed, baselines, out_dir, result_dir)
 
-    hypotheses = [1 for filename in os.listdir(result_dir / 'tmp' / modality) if 'embeddings_' in filename]
-    print(len(hypotheses))
-    alpha = bonferroni_correction(alpha, len(hypotheses))
-    print(alpha)
+        hypotheses = sum([1 for filename in os.listdir(result_dir / 'tmp' / modality) if 'embeddings_' in filename])
+        if not hypotheses:
+            cprint('No hypotheses for modality {}, skipping ...'.format(modality), 'yellow')
+            continue
 
-    pvalues = {'alpha': alpha, 'bonferroni_alpha': alpha}
-    report = report_dir / '{}.json'.format(test)
+        cprint('Number of hypotheses: {}'.format(hypotheses), attrs=['bold'])
+        bf_corr_alpha = bonferroni_correction(alpha, hypotheses)
+        print('α (initial/after bonferroni correction): {} / {}'.format(alpha, bf_corr_alpha))
 
-    for filename in os.listdir(result_dir / 'tmp' / modality):
-        if 'embeddings_' in filename:
-            model_file = result_dir / 'tmp' / modality / filename
-            baseline_file = result_dir / 'tmp' / modality / 'baseline_{}'.format(filename.partition('_')[2])
-            output_str, pval, name = test_significance(baseline_file, model_file, alpha, test)
-            pvalues[name] = pval
+        report = report_dir / '{}.json'.format(test)
+        results = []
 
-    with open(report, 'w') as fp:
-        json.dump(pvalues, fp)
+        cprint('\n[Significance tests]:', attrs=['bold'])
+        for filename in os.listdir(result_dir / 'tmp' / modality):
+            if 'embeddings_' in filename:
+                model_file = result_dir / 'tmp' / modality / filename
+                baseline_file = result_dir / 'tmp' / modality / 'baseline_{}'.format(filename.partition('_')[2])
+                significant, pval, name = test_significance(baseline_file, model_file, bf_corr_alpha, test)
+                result = {'experiment': name, 'p_value': pval, 'alpha': alpha, 'bonferroni_alpha': bf_corr_alpha}
+                if significant:
+                    out_str, color = ': significant (p = {:1.3e})'.format(pval), 'green'
+                else:
+                    out_str, color = ': not significant (p = {:1.3e})'.format(pval), 'red'
+                cprint('    - {}'.format(name), attrs=['bold'], color=color, end='')
+                cprint(out_str, color)
+                results.append(result)
+
+        with open(report, 'w') as fp:
+            json.dump(results, fp)
 
 
 @command
