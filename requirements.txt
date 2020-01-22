@@ -13,7 +13,7 @@ scipy==1.2.1
 natsort==6.2.0
 gensim==3.7.3
 bert_serving_client==1.10.0
-tensorflow==1.13.1
+tensorflow==1.15.0
 Keras==2.3.1
 numpy==1.18.0
 allennlp==0.9.0
@@ -21,3 +21,5 @@ pytest==4.6.3
 bert_serving==0.0.1
 consolemenu==1.0.1
 scikit_learn==0.22.1
+gputil==1.4.0
+tabulate==0.8.3
