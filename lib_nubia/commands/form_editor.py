@@ -83,7 +83,7 @@ EDITOR_TITLES = {"main": "General Configuration",
 EDITOR_DESCRIPTIONS = {"main": {"PATH": "Main working directory for all experiments. Set to application directory if empty",
                                 "cpu_count": "Number of CPU cores used for execution",
                                 "folds": "Number of folds evaluated in n-Fold cross-validation (CV)",
-                                "outputDir": "Output directory",
+                                "outputDir": "Output directory as subdirectory of 'results' (automatically prefixed if missing)",
                                 "seed": "Random seed for train-test sampling",
                                 "version": "Configuration version. Normally set to 1 when creating a new configuration file"
                                 },
@@ -117,15 +117,14 @@ class ConfigEditor():
                  skip_params=None,
                  cognitive_sources=None,
                  embeddings=None,
-                 prefill_fields={'version': 1,
-                                 'seed': 42,
-                                 'cpu_count': os.cpu_count()-1,
-                                 'folds': 5}):
+                 prefill_fields=None):
         self.buffers = {}
         self.config_dict_updated = config_dict_updated
         self.singleton_params = singleton_params if singleton_params else []
         self.skip_params = skip_params if skip_params else []
         self.table_fields = []
+        if not prefill_fields:
+            prefill_fields = {}
         
         # Add header information
         self.table_fields.append([Merge(Label("{} (Navigate with <Tab>/<Shift>-<Tab>)".format(EDITOR_TITLES[conf_type]), style="fg:ansigreen bold"), 2)])
@@ -279,7 +278,7 @@ def config_editor(conf_type,
     config_dict_updated = {}
 
     result = None
-    
+
     while True:
         conf_editor = ConfigEditor(conf_type,
                                 config_dict,
@@ -289,6 +288,7 @@ def config_editor(conf_type,
                                 embeddings=embeddings,
                                 skip_params=skip_params)
         result = conf_editor()
+
         if result is True:
             break
         else:

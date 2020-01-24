@@ -2,44 +2,19 @@ import json
 from significance_testing import aggregate_significance
 
 
-def extract_results(result_path):
-    if not result_path == "all":
-        print(result_path)
+def extract_results(combinations,
+                    baselines,
+                    embeddings):
 
-        with open(result_path, 'r') as f:
-            combinations = json.load(f)
+    combination_results = {}
+    for x, y in combinations.items():
+        # print(y['feature'], y['wordEmbedding'])
+        if y['wordEmbedding'] not in combination_results:
+            combination_results[y['wordEmbedding']] = y['AVERAGE_MSE']
+        # else:
+        #   combination_results[y['feature']].append((y['wordEmbedding'], y['AVERAGE_MSE']))
 
-            combination_results = {}
-            for x, y in combinations.items():
-                # print(y['feature'], y['wordEmbedding'])
-                if y['wordEmbedding'] not in combination_results:
-                    combination_results[y['wordEmbedding']] = y['AVERAGE_MSE']
-                # else:
-                #   combination_results[y['feature']].append((y['wordEmbedding'], y['AVERAGE_MSE']))
-
-            return combination_results
-    else:
-        eeg_datasets = ['n400', 'ucl', 'naturalspeech', 'zuco']
-        combination_results = {}
-        for dataset in eeg_datasets:
-            result_path = sig_test_config.result_dir + 'eeg/' + dataset + '/'
-            print(result_path)
-
-            with open(result_path + 'options.json', 'r') as f:
-                combinations = json.load(f)
-
-                for x, y in combinations.items():
-                    # print(y['feature'], y['wordEmbedding'])
-                    if y['wordEmbedding'] not in combination_results:
-                        combination_results[y['wordEmbedding']] = [y['AVERAGE_MSE']]
-                    else:
-                        combination_results[y['wordEmbedding']].append(y['AVERAGE_MSE'])
-
-        avg_results = {}
-        for emb, res in combination_results.items():
-            avg_results[emb] = sum(res) / len(res)
-
-        return avg_results
+    return combination_results
 
 
 def main():

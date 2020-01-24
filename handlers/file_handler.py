@@ -1,6 +1,9 @@
+import collections
 import json
 import os
 import numpy as np
+
+from pathlib import Path
 from handlers.plot_handler import plot_handler
 
 def update_version(configFile):
@@ -39,27 +42,56 @@ def write_results(config, log, word_error, history):
     '''
     if not os.path.exists(config['outputDir']):
         os.mkdir(config['outputDir'])
+
+    mapping_path = Path(config['outputDir']) / 'mapping_{}.json'.format(config["version"])
+    title = log["cognitiveData"] + '_' + log["feature"] + '_' + log["wordEmbedding"] + '_' + str(config["version"])
+    path = Path(log["modality"]) / log["cognitiveData"] / log["feature"] / log["wordEmbedding"] / str(config["version"])
+    rand_emb = None
+    if not log["wordEmbedding"].startswith('random'):
+        rand_emb = config['wordEmbConfig'][log['wordEmbedding']]['random_embedding']
     
-    title = log["cognitiveData"] + '_' + log["feature"] + '_' + log["wordEmbedding"]+'_'+str(config["version"])
+        if rand_emb:
+            rand_path = Path(log["modality"]) / log["cognitiveData"] / log["feature"] / rand_emb / str(config["version"])
 
-    output_dir = config['outputDir'] + "/" + title
+    # Mapping dict patch
+    mapping_key = "{}_{}_{}".format(log["cognitiveData"], log["feature"], log["wordEmbedding"])
+    map_dict_patch = {mapping_key: {'embedding': log["wordEmbedding"],
+                                     'cognitive-source': log["cognitiveData"],
+                                     'modality': log["modality"],
+                                     'feature': log["feature"],
+                                     'proper': str(path),
+                                     }}
+    if rand_emb:
+        map_dict_patch[mapping_key]['random'] = str(rand_path)
+        map_dict_patch[mapping_key]['random_name'] = "{}_{}_{}".format(log["cognitiveData"], log["feature"], rand_emb)
+
+    if not os.path.exists(mapping_path):
+        with open(mapping_path, 'w') as f:
+            json.dump(map_dict_patch, f, indent=4)
+    else:
+        with open(mapping_path,'r') as f:
+            mapping_dict = json.load(f)
+            mapping_dict.update(map_dict_patch)
+        with open(mapping_path, 'w') as f:
+            json.dump(dict(mapping_dict), f, indent=4)
+
+    output_dir = Path(config['outputDir']) / "experiments" / path
+
     if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
+        os.makedirs(output_dir)
 
-    with open(output_dir+"/"+title+'.json','w') as f:
+    with open(output_dir / '{}.json'.format(log["wordEmbedding"]),'w') as f:
         json.dump(log,f,indent=4, sort_keys=True)
 
-    np.savetxt(output_dir + "/" + title + '.txt', word_error, delimiter=" ", fmt="%s")
+    np.savetxt(output_dir / '{}.txt'.format(log["wordEmbedding"]), word_error, delimiter=" ", fmt="%s")
     
     if history:
-        plot_handler(title, history, output_dir)
-    else:
-        print("No history, no plot ...")
+        plot_handler(title, history, log, str(output_dir))
 
     return
 
 
-def write_options(config, run_stats):
+def write_options(config, modality, run_stats):
     '''
     Writes summary information JSONs for given
     experimental runs, for subsequent significance testing
@@ -73,7 +105,7 @@ def write_options(config, run_stats):
     if not os.path.exists(outputDir):
         os.mkdir(outputDir)
 
-    with open(outputDir+"/options"+str(config["version"])+'.json','w') as fileWriter:
-        json.dump(run_stats, fileWriter, indent=4,sort_keys=True)
+    with open(Path(outputDir) / "experiments" / modality / "options_{}.json".format(str(config["version"])),'w') as fileWriter:
+        json.dump(run_stats, fileWriter, indent=4, sort_keys=True)
 
     return

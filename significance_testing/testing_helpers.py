@@ -6,31 +6,48 @@ def bonferroni_correction(alpha, no_hypotheses):
     return float(alpha / no_hypotheses)
 
 
-def test_significance(baseline, model_f_path, alpha, test):
-    command = ["python", "significance_testing/testSignificanceNLP/testSignificance.py", baseline, model_f_path, str(alpha), test]
+def test_significance(baseline, model, alpha, test, debug=False):
+    command = ["python",
+               "significance_testing/testSignificanceNLP/testSignificance.py",
+               baseline,
+               model,
+               str(alpha),
+               test]
+
     process = subprocess.Popen(command, stdout=subprocess.PIPE)
     output, error = process.communicate()
     output_str = output.decode('utf-8')
+    
     try:
-        pvalue = float(output_str.split(": ")[-1].replace("\\n'", ""))
+        result, pvalue_raw = output_str.split(": ")
+        if 'is not significant' in result:
+            significant = False
+        elif 'is significant' in result:
+            significant = True
+        else:
+            raise ValueError()
+        pvalue = float(pvalue_raw.replace("\\n'", ""))
     except ValueError:
         raise ValueError("testSignificance has returned: {}".format(repr(output_str)))
-    model_f_path = str(model_f_path).split('/')[-1]
-    name = model_f_path.split('.')[0]
-    if "not significant" in str(output):
-        print("\t\t", name, "not significant: p =", "{:10.15f}".format(pvalue))
-    else:
-        print("\t\t", name, "significant: p =", "{:10.15f}".format(pvalue))
+    
+    model = str(model).split('/')[-1]
+    name = model.replace('.txt', '').replace('embeddings_scores_', '')
 
-    return output_str, pvalue, name
+    if debug:
+        if "not significant" in str(output):
+            print("\t\t", name, "not significant: p =", "{:10.15f}".format(pvalue))
+        else:
+            print("\t\t", name, "significant: p =", "{:10.15f}".format(pvalue))
+
+    return significant, pvalue, name
 
 
 def save_scores(emb_scores, emb_filename, base_scores, base_filename, output_dir, modality):
     """Save scores to temporary file. Compare embedding scores to baseline
     scores since word order and number of words differ."""
 
-    emb_file = open(Path(output_dir) / 'tmp' / modality / emb_filename, 'w')
-    base_file = open(Path(output_dir) / 'tmp' / modality / base_filename, 'w')
+    emb_file = open(Path(output_dir) / emb_filename, 'w')
+    base_file = open(Path(output_dir) / base_filename, 'w')
     for word, score in emb_scores.items():
         # todo: absolute values or not?
         if word in base_scores:

@@ -22,7 +22,7 @@ def run_parallel(config_dict,
     ##############################################################################
     #   OPTION GENERATION
     ##############################################################################
-    print("\nGENERATING OPTIONS...")
+    print("\nGenerating options ...")
 
     options = []
     #GENERATE all possible case scenarios:
@@ -34,18 +34,15 @@ def run_parallel(config_dict,
                 truncate_first_line = config_dict["wordEmbConfig"][word_embedding]["truncate_first_line"]
                 option = {"cognitiveData": "empty", "feature": "empty", "wordEmbedding": "empty"}
                 option["cognitiveData"] = cognitive_data
+                option["modality"] = config_dict["cogDataConfig"][cognitive_data]["modality"]
                 option["feature"] = feature
                 option["wordEmbedding"] = word_embedding
-                option["random_embeddings"] = emb_to_random_dict.get(word_embedding, None)
+                option["random_embedding"] = emb_to_random_dict.get(word_embedding, None)
                 option["truncate_first_line"] = truncate_first_line
                 options.append(option)
 
-    word_embeddings = []
-    loggings = []
-    word_errors = []
-    histories = []
 
-    print("\nSUCCESSFUL OPTIONS GENERATION")
+    print("\nSuccessful options generation")
 
     ##############################################################################
     #   JOINED DATAFRAMES GENERATION
@@ -55,25 +52,26 @@ def run_parallel(config_dict,
     #   Parallelized version
     ##############################################################################
 
-    print("\nMODELS CREATION, FITTING, PREDICTION...\n ")
+    print("\nModels creation, fitting, prediction ...\n")
 
     if cpu_count:
         proc = cpu_count
     else:
         proc = min(os.cpu_count()-1, config_dict["cpu_count"])
-    print("RUNNING ON " + str(proc) + " PROCESSORS\n")
+    print("Running on " + str(proc) + " processors\n")
     pool = Pool(processes=proc)
     async_results_proper = []
     async_results_random = []
     rand_embeddings = []
 
     for option in options:
-        random_embeddings = option["random_embeddings"]
+        random_embeddings = option["random_embedding"]
         rand_embeddings.append(random_embeddings)
         result_proper = pool.apply_async(cog_evaluate.run_single, args=('proper',
                                                                         config_dict,
                                                                         option["wordEmbedding"],
                                                                         option["cognitiveData"],
+                                                                        option["modality"],
                                                                         option["feature"],
                                                                         option["truncate_first_line"]),)
         
@@ -84,6 +82,7 @@ def run_parallel(config_dict,
                                                                                     config_dict,
                                                                                     random_embedding,
                                                                                     option["cognitiveData"],
+                                                                                    option["modality"],
                                                                                     option["feature"],
                                                                                     option["truncate_first_line"],)))
             
@@ -103,13 +102,19 @@ def run_parallel(config_dict,
     async_results_proper = [p.get() for p in async_results_proper]
     async_results_random = [[p.get() for p in p_list] for p_list in async_results_random]
     
-    return async_results_proper, async_results_random, rand_embeddings
-
-    print("\nSUCCESSFUL MODELS")
+    print("\nExecution complete. Time taken:")
 
     timeTaken = datetime.now() - startTime
     print('\n' + str(timeTaken))
 
+    
+    results_dict = collections.defaultdict(lambda: collections.defaultdict(list))
+    
+    for idx, option in enumerate(options):
+        cog_source = option["modality"]
+        results_dict[cog_source]["proper"].append(async_results_proper[idx])
+        results_dict[cog_source]["random"].append(async_results_random[idx])
+        results_dict[cog_source]["rand_embeddings"].append(rand_embeddings[idx])
+        results_dict[cog_source]["options"].append(option)
 
-if __name__=="__main__":
-    run_parallel("config/c_single_random.json")
+    return results_dict

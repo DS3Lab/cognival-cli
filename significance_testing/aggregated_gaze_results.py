@@ -3,38 +3,28 @@ import numpy as np
 import matplotlib.pyplot as plt
 from significance_testing import aggregate_significance
 
-def extract_results_gaze(result_path,
-                         baselines=['random-embeddings-50', 'random-embeddings-100', 'random-embeddings-200', 'random-embeddings-300',
-                                    'random-embeddings-768', 'random-embeddings-850', 'random-embeddings-1024'],
-                         embeddings=['glove-50', 'glove-100', 'glove-200', 'glove-300', 'word2vec', 'fasttext-crawl',
-                                     'fasttext-wiki-news', 'fasttext-crawl-subword', 'fasttext-wiki-news-subword', 'bert-service-base',
-                                     'wordnet2vec', 'bert-service-large', 'elmo']
-                        ):
-    print(result_path)
+def extract_results_gaze(combinations,
+                         baselines,
+                         embeddings):
+    combination_results = {}
+    for y in combinations.values():
+        if y['feature'] not in combination_results:
+            combination_results[y['feature']] = [(y['wordEmbedding'], y['AVERAGE_MSE'])]
+        else:
+            combination_results[y['feature']].append((y['wordEmbedding'], y['AVERAGE_MSE']))
 
-    with open(result_path, 'r') as f:
-        combinations = json.load(f)
+    avg_results = {}
+    for emb_type in embeddings + baselines:
+        for res in combination_results.values():
+            for r in res:
+                if r[0] == emb_type:
+                    if not emb_type in avg_results:
+                        avg_results[emb_type] = [r[1]]
+                    else:
+                        avg_results[emb_type].append(r[1])
+        avg_results[emb_type] = sum(avg_results[emb_type]) / len(avg_results[emb_type])
 
-        combination_results = {}
-        for x,y in combinations.items():
-            #print(y['feature'], y['wordEmbedding'])
-            if y['feature'] not in combination_results:
-                combination_results[y['feature']] = [(y['wordEmbedding'], y['AVERAGE_MSE'])]
-            else:
-                combination_results[y['feature']].append((y['wordEmbedding'], y['AVERAGE_MSE']))
-
-        avg_results = {}
-        for emb_type in embeddings + baselines:
-            for feat, res in combination_results.items():
-                for r in res:
-                    if r[0] == emb_type:
-                        if not emb_type in avg_results:
-                            avg_results[emb_type] = [r[1]]
-                        else:
-                            avg_results[emb_type].append(r[1])
-            avg_results[emb_type] = sum(avg_results[emb_type]) / len(avg_results[emb_type])
-
-        return avg_results
+    return avg_results
 
 def extract_results_gaze_all():
     gaze_datasets = ['geco', 'zuco', 'provo', 'dundee', 'cfilt-scanpath', 'cfilt-sarcasm', 'ucl']

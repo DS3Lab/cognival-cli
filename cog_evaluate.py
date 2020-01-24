@@ -65,7 +65,7 @@ def run(config,
     return results
 
 
-def run_single(mode, config, word_embedding, cognitive_data, feature, truncate_first_line):
+def run_single(mode, config, word_embedding, cognitive_data, modality, feature, truncate_first_line):
     '''
     Takes a configuration dictionary and keys for a word embedding and cognitive
     data source, runs model, logs results and prepares output for plotting.
@@ -86,6 +86,7 @@ def run_single(mode, config, word_embedding, cognitive_data, feature, truncate_f
 
     logging["wordEmbedding"] = word_embedding
     logging["cognitiveData"] = cognitive_data
+    logging["modality"] = modality
     logging["feature"] = feature
 
     ##############################################################################
