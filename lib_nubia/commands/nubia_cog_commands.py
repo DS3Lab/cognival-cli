@@ -1090,7 +1090,6 @@ def aggregate(configuration,
                               'fmri': aggregate_signi_fmri,
                               'eye-tracking': aggregate_signi_et}
     
-    
     modality_to_experiments = collections.defaultdict(list)
     
     options_dicts = []
@@ -1133,16 +1132,22 @@ def aggregate(configuration,
             continue
         
         df_rows = []
+        df_rows_cli = []
         for idx, (emb, base) in enumerate(zip(embeddings, baselines)):
-            avg_base = results[base]
-            avg_emb = results[emb]
-            df_rows.append({'Embedding': emb, 'Ø MSE Baseline':avg_base, 'Ø MSE Proper':avg_emb, 'Significance': significance[emb]})
+            if modality == 'eye-tracking':
+                avg_base = results[base]
+                avg_emb = results[emb]
+            else:
+                avg_base = results[base]
+                avg_emb = results[emb]
+            df_rows_cli.append({'Embedding':emb, 'Ø MSE Baseline':avg_base, 'Ø MSE Proper':avg_emb, 'Significance':  colored(significance[emb], 'yellow')})
+            df_rows.append({'Embedding':emb, 'Ø MSE Baseline':avg_base, 'Ø MSE Proper':avg_emb, 'Significance': significance[emb]})
 
+        df_cli = pd.DataFrame(df_rows_cli)
         df = pd.DataFrame(df_rows)
         df.set_index('Embedding', drop=True, inplace=True)
         df.to_json(report_dir / modality / 'aggregated_scores.json')
-        print(tabulate.tabulate(df, headers="keys", tablefmt="fancy_grid"))
-
+        print(tabulate.tabulate(df_cli, headers="keys", tablefmt="fancy_grid", showindex=False))
 
 @command
 @argument('configuration', type=str, description='Name of configuration file')
