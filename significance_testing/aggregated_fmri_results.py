@@ -2,52 +2,23 @@ import json
 from significance_testing import aggregate_significance
 
 
-def extract_results(result_path):
-    if not result_path == "all":
-        print(result_path)
+def extract_results(combinations,
+                    baselines,
+                    embeddings):
+    combination_results = {}
+    for x, y in combinations.items():
+        # print(y['feature'], y['wordEmbedding'])
+        if y['wordEmbedding'] not in combination_results:
+            combination_results[y['wordEmbedding']] = [y['AVERAGE_MSE']]
+        else:
+            combination_results[y['wordEmbedding']].append(y['AVERAGE_MSE'])
 
-        with open(result_path, 'r') as f:
-            combinations = json.load(f)
+    # average over subjects:
+    avg_results = {}
+    for emb, res in combination_results.items():
+        avg_results[emb] = sum(res) / len(res)
 
-            combination_results = {}
-            for x, y in combinations.items():
-                # print(y['feature'], y['wordEmbedding'])
-                if y['wordEmbedding'] not in combination_results:
-                    combination_results[y['wordEmbedding']] = [y['AVERAGE_MSE']]
-                else:
-                    combination_results[y['wordEmbedding']].append(y['AVERAGE_MSE'])
-
-            # average over subjects:
-            avg_results = {}
-            for emb, res in combination_results.items():
-                avg_results[emb] = sum(res) / len(res)
-
-            return avg_results
-
-    else:
-        fmri_datasets = ['brennan', 'wehbe', 'mitchell', 'pereira']
-        combination_results = {}
-        for dataset in fmri_datasets:
-            result_dir = sig_test_config.result_dir + 'fmri/' + dataset + '/'
-            print(result_dir)
-
-            with open(result_dir + 'options.json', 'r') as f:
-                combinations = json.load(f)
-
-                for x, y in combinations.items():
-                    if '-1000-' in y['cognitiveData'] or 'brennan' in y['cognitiveData']:
-                        # print('only 100 voxels')
-                        # print(y['feature'], y['wordEmbedding'])
-                        if y['wordEmbedding'] not in combination_results:
-                            combination_results[y['wordEmbedding']] = [y['AVERAGE_MSE']]
-                        else:
-                            combination_results[y['wordEmbedding']].append(y['AVERAGE_MSE'])
-
-        avg_results = {}
-        for emb, res in combination_results.items():
-            avg_results[emb] = sum(res) / len(res)
-
-        return avg_results
+    return avg_results
 
 
 def main():

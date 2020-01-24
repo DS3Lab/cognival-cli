@@ -21,6 +21,7 @@ import gzip
 import os
 import pprint
 import sys
+import re
 import requests
 import signal
 import socket
@@ -39,6 +40,7 @@ from natsort import natsorted
 from nubia import command, argument, context
 import numpy as np
 import pandas as pd
+import tabulate
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.shortcuts import input_dialog, yes_no_dialog, button_dialog, radiolist_dialog, ProgressBar
@@ -46,7 +48,7 @@ from termcolor import cprint, colored
 
 from cog_evaluate import run as run_serial
 from cog_evaluate_parallel import run_parallel as run_parallel
-from handlers.file_handler import write_results, update_version
+from handlers.file_handler import write_results, write_options, update_version
 from handlers.data_handler import chunk
 from handlers.binary_to_text_conversion import bert_to_text, elmo_to_text
 
@@ -55,8 +57,10 @@ from utils import generate_df_with_header, word2vec_bin_to_txt
 #sys.path.insert(0, 'significance_testing/')
 from significance_testing.statisticalTesting import extract_results as st_extract_results
 from significance_testing.aggregated_eeg_results import extract_results as agg_eeg_extr_results
-from significance_testing.aggregated_fmri_results import extract_results as agg_eeg_extr_results
-from significance_testing.aggregated_gaze_results import extract_results_gaze as agg_gaze_extr_results
+from significance_testing.aggregated_fmri_results import extract_results as agg_fmri_extr_results
+from significance_testing.aggregated_gaze_results import extract_results_gaze as agg_et_extr_results
+from significance_testing.aggregate_significance import aggregate_signi_eeg, aggregate_signi_fmri
+from significance_testing.aggregate_significance import aggregate_signi_gaze as aggregate_signi_et
 from significance_testing.testing_helpers import bonferroni_correction, test_significance
 
 from lib_nubia.prompt_toolkit_table import *
@@ -162,6 +166,9 @@ def _filter_config(configuration,
         cognitive_features = [fl.split(';') for fl in cognitive_features]
 
     config_dict = _open_config(configuration)
+    if not config_dict:
+        return
+
     cog_sources_conf = _open_cog_config()
     
     installed_embeddings = []
@@ -196,6 +203,7 @@ def _filter_config(configuration,
     
     if not _check_cog_installed():
         cprint('CogniVal sources not installed! Aborted ...', 'red')
+        return
 
     for csource in cog_sources_list:
         if csource not in config_dict['cogDataConfig']:
@@ -257,8 +265,15 @@ def cumulate_random_emb_results(logging,
                                 cum_rand_counter):
     # Cumulate logging
     mse_prediction = np.array([x['MSE_PREDICTION'] for x in logging['folds']])
-    mse_prediction_all_dim = np.array([x['MSE_PREDICTION_ALL_DIM'] for x in logging['folds']])
-    average_mse_all_dim = np.array(logging['AVERAGE_MSE_ALL_DIM'])
+    
+    # ALL_DIM for single feature sources
+    try:
+        mse_prediction_all_dim = np.array([x['MSE_PREDICTION_ALL_DIM'] for x in logging['folds']])
+        average_mse_all_dim = np.array(logging['AVERAGE_MSE_ALL_DIM'])
+    except KeyError:
+        mse_prediction_all_dim = np.array([])
+        average_mse_all_dim = np.array([])
+    
     average_mse = logging['AVERAGE_MSE']
 
     if not cum_rand_counter:
@@ -316,16 +331,25 @@ def write_random_emb_results(rand_emb,
         fold['LOSS'] = []
         fold['VALIDATION_LOSS'] = []
         fold['MSE_PREDICTION'] = cum_mse_prediction[idx]
-        fold['MSE_PREDICTION_ALL_DIM'] = list(cum_mse_prediction_all_dim[idx])
+        if cum_mse_prediction_all_dim:
+            fold['MSE_PREDICTION_ALL_DIM'] = list(cum_mse_prediction_all_dim[idx])
 
-    cum_rand_logging['AVERAGE_MSE_ALL_DIM'] = list(cum_average_mse_all_dim)
+    if cum_average_mse_all_dim.any():
+        cum_rand_logging['AVERAGE_MSE_ALL_DIM'] = list(cum_average_mse_all_dim)
+
     cum_rand_logging['AVERAGE_MSE'] = cum_average_mse
     cum_rand_logging['wordEmbedding'] = rand_emb
     cum_rand_logging['averagedRuns'] = cum_rand_counter
     write_results(config_dict, cum_rand_logging, cum_rand_word_error , [])
 
 
-def process_and_write_results(results, rand_emb, config_dict):
+def process_and_write_results(proper_result,
+                              random_results,
+                              rand_emb,
+                              config_dict,
+                              options,
+                              id_,
+                              run_stats):
     cum_rand_word_error_df = None
     cum_rand_logging = None
     cum_mse_prediction = None
@@ -333,7 +357,16 @@ def process_and_write_results(results, rand_emb, config_dict):
     cum_average_mse_all_dim = None
     cum_average_mse = None
     cum_rand_counter = 0
-    for emb_label, logging, word_error, history in results:
+
+    # Proper embedding
+    emb_label, logging, word_error, history = proper_result
+    proper_avg_mse = logging["AVERAGE_MSE"]
+
+    # Results proper embedding
+    write_results(config_dict, logging, word_error, history)                        
+
+    # Random embedding
+    for emb_label, logging, word_error, history in random_results:
         if emb_label.startswith('random'):
             cum_rand_word_error_df, \
             cum_rand_logging, \
@@ -354,19 +387,29 @@ def process_and_write_results(results, rand_emb, config_dict):
             # Discard history
             history = []
 
-        else:
-            # Results proper embedding
-            write_results(config_dict, logging, word_error, history)                        
+
             
-    write_random_emb_results(rand_emb,
-                            cum_rand_word_error_df,
-                            cum_rand_logging,
-                            cum_mse_prediction,
-                            cum_mse_prediction_all_dim,
-                            cum_average_mse_all_dim,
-                            cum_average_mse,
-                            cum_rand_counter,
-                            config_dict)
+    if cum_rand_counter:
+        rand_avg_mse = cum_average_mse / cum_rand_counter
+        write_random_emb_results(rand_emb,
+                                cum_rand_word_error_df,
+                                cum_rand_logging,
+                                cum_mse_prediction,
+                                cum_mse_prediction_all_dim,
+                                cum_average_mse_all_dim,
+                                cum_average_mse,
+                                cum_rand_counter,
+                                config_dict)
+    
+    # Collating options/results for aggregation
+    proper_options, rand_options = copy.deepcopy(options), copy.deepcopy(options)
+    rand_options['wordEmbedding'] = rand_options['random_embedding']
+    del rand_options['random_embedding']
+
+    proper_options["AVERAGE_MSE"] = proper_avg_mse
+    rand_options["AVERAGE_MSE"] = rand_avg_mse
+    run_stats['{}_{}_proper'.format(config_dict["version"], id_)] = proper_options
+    run_stats['{}_{}_random'.format(config_dict["version"], id_)] = rand_options
 
 @command
 class Run:
@@ -485,17 +528,21 @@ class Run:
 
 
         # TODO: Check whether all installed!
-        results_proper, results_random, random_embeddings = run_parallel(config_dict,
-                                                                         emb_to_random_dict,
-                                                                         embeddings_list,
-                                                                         cog_sources_list,
-                                                                         cog_source_to_feature,
-                                                                         cpu_count=processes)
- 
-        # From: cog_evaluate_parallel
-        for result_proper, result_random, rand_emb in zip(results_proper, results_random, random_embeddings):
-            result = [result_proper] + result_random
-            process_and_write_results(result, rand_emb, config_dict)
+        results_dict = run_parallel(config_dict,
+                                    emb_to_random_dict,
+                                    embeddings_list,
+                                    cog_sources_list,
+                                    cog_source_to_feature,
+                                    cpu_count=processes)
+        
+        for modality, results in results_dict.items():
+            run_stats = {}
+            for id_, (result_proper, result_random, rand_emb, options) in enumerate(zip(results["proper"],
+                                                                                 results["random"],
+                                                                                 results["rand_embeddings"],
+                                                                                 results["options"])):
+                process_and_write_results(result_proper, result_random, rand_emb, config_dict, options, id_, run_stats)
+            write_options(config_dict, modality, run_stats)
 
         # Increment version
         config_dict['version'] += 1
@@ -532,6 +579,35 @@ def resolve_cog_emb(cognitive_sources, embeddings, cog_config_dict, embedding_re
     return cognitive_sources, embeddings
 
 
+def _edit_config(config_dict, configuration):
+    config_patch = {}
+
+    prefill_fields={'outputDir': configuration,
+                    'version': 1,
+                    'seed': 42,
+                    'cpu_count': os.cpu_count()-1,
+                    'folds': 5}
+
+    conf_editor = ConfigEditor('main',
+                                config_dict,
+                                config_patch,
+                                singleton_params='all',
+                                skip_params=['cogDataConfig', 'wordEmbConfig', 'randEmbConfig', 'randEmbSetToParts'],
+                                prefill_fields=prefill_fields)
+    conf_editor()
+    config_dict.update(config_patch)
+    
+    if not config_dict['outputDir'].startswith('results'):
+        cprint('Prefixing outputDir with results ...', 'yellow')
+        config_dict['outputDir'] = str(Path('results') / config_dict['outputDir'])
+
+    if config_patch:
+        _save_config(config_dict, configuration)
+    else:
+        cprint("Aborting ...", "red")
+        return
+
+
 @command
 class EditConfig:
     """Generate or edit configuration files for experimental combinations (cog. data - embedding type)
@@ -557,19 +633,8 @@ class EditConfig:
         Creates empty configuration file from template.
         '''
         config_dict = copy.deepcopy(MAIN_CONFIG_TEMPLATE)
-        config_patch = {}
-        conf_editor = ConfigEditor('main',
-                                   config_dict,
-                                   config_patch,
-                                   singleton_params='all',
-                                   skip_params=['cogDataConfig', 'wordEmbConfig', 'randEmbConfig', 'randEmbSetToParts'])
-        conf_editor()
-        config_dict.update(config_patch)
-        if config_patch:
-            _save_config(config_dict, configuration)
-        else:
-            cprint("Aborting ...", "red")
-            return
+        _edit_config(config_dict, configuration)
+        
 
     @command
     @argument('configuration', type=str, description='Name of configuration file', positional=True)
@@ -632,12 +697,12 @@ class EditConfig:
                     
                     insert_config_dict(config_dict, reference_dict, mode, csource, emb, emb)
                     
-                    if rand_embeddings:
-                        rand_emb = embedding_registry['proper'][emb]['random_embedding']
-                        if rand_emb:
-                            emb_part_list = ['{}_for_{}'.format(rand_emb_part, emb) for rand_emb_part in embedding_registry['random_multiseed'][rand_emb]['embedding_parts']]
-                            for rand_emb_part in emb_part_list:
-                                insert_config_dict(config_dict, reference_dict, mode, csource, rand_emb_part, emb)
+                if rand_embeddings or config_dict['randEmbConfig']:
+                    rand_emb = embedding_registry['proper'][emb]['random_embedding']
+                    if rand_emb:
+                        emb_part_list = ['{}_for_{}'.format(rand_emb_part, emb) for rand_emb_part in embedding_registry['random_multiseed'][rand_emb]['embedding_parts']]
+                        for rand_emb_part in emb_part_list:
+                            insert_config_dict(config_dict, reference_dict, mode, csource, rand_emb_part, emb)
 
         # Add embedding configurations dicts
         for emb in embeddings:
@@ -645,7 +710,7 @@ class EditConfig:
             emb_dict = copy.deepcopy(embedding_registry['proper'][emb])
             config_dict[emb_key][emb] = copy.deepcopy({k:v for k, v in emb_dict.items() if k in WORD_EMB_CONFIG_FIELDS})
             config_dict[emb_key][emb]['path'] = str(Path('embeddings') / embedding_registry['proper'][emb]['path'] / embedding_registry['proper'][emb]['embedding_file'])
-            if rand_embeddings:
+            if rand_embeddings or config_dict['randEmbConfig']:
                 config_dict[emb_key][emb]['random_embedding'] = '{}_for_{}'.format(config_dict[emb_key][emb]['random_embedding'], emb)
                 rand_emb = embedding_registry['proper'][emb]['random_embedding']
                 if rand_emb:
@@ -665,21 +730,12 @@ class EditConfig:
     def general(self, configuration):
         '''
         Edit general properties
-        '''        
-        # TODO: Refactor, shared mostly with create
+        '''
         config_dict = _open_config(configuration)
         if not config_dict:
             return
-        config_patch = {}
-        conf_editor = ConfigEditor('main',
-                                   config_dict,
-                                   config_patch,
-                                   singleton_params='all',
-                                   skip_params=['cogDataConfig', 'wordEmbConfig', 'randEmbConfig', 'randEmbSetToParts'])
-        conf_editor()
-        config_dict.update(config_patch)
-        _save_config(config_dict, configuration)
-        
+        _edit_config(config_dict, configuration)
+
 
     @command
     @argument('configuration', type=str, description='Name of configuration file', positional=True)
@@ -754,12 +810,6 @@ class EditConfig:
                     main_conf_dict = _open_config(configuration, quiet=True)
                     cog_data_config_dict = main_conf_dict['cogDataConfig']
 
-                if rand_embeddings:
-                    rand_emb = embedding_registry['proper'][emb]['random_embedding']
-                    if rand_emb:
-                        for rand_emb_part in main_conf_dict['randEmbSetToParts']['{}_for_{}'.format(rand_emb, emb)]:
-                            cog_data_config_dict[csource]["wordEmbSpecifics"]['{}_for_{}'.format(rand_emb_part, emb)] = cog_data_config_dict[csource]["wordEmbSpecifics"][emb]
-                
                 emb_config = cog_data_config_dict[csource]["wordEmbSpecifics"][emb]
                 config_dicts.append(emb_config)
             
@@ -788,8 +838,15 @@ class EditConfig:
                 cprint('Aborting ...', 'red')
                 return
 
-            for cdict in config_dicts:
+            for emb, cdict in zip(embeddings, config_dicts):
                 cdict.update(config_patch)
+                if rand_embeddings or main_conf_dict['randEmbConfig']:
+                    rand_emb = embedding_registry['proper'][emb]['random_embedding']
+                    if rand_emb:
+                        for csource in main_conf_dict['cogDataConfig']:
+                            for rand_emb_part in main_conf_dict['randEmbSetToParts']['{}_for_{}'.format(rand_emb, emb)]:
+                                main_conf_dict['cogDataConfig'][csource]["wordEmbSpecifics"][rand_emb_part].update(config_patch)
+                                print(main_conf_dict['cogDataConfig'][csource]["wordEmbSpecifics"][rand_emb_part])
 
             _save_config(main_conf_dict, configuration)
 
@@ -886,7 +943,7 @@ def generate_random(embeddings, no_embeddings=10, seed_func='exp_e_floored'):
     ctx.save_configuration()
 
 @command
-@argument('configuration', type=str, description='Name of configuration file')
+@argument('configuration', type=str, description='Name of configuration file', positional=True)
 @argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
 @argument('alpha', type=str, description='Alpha value')
 @argument('test', type=str, description='Significance test')
@@ -895,32 +952,62 @@ def sig_test(configuration, modalities=['eye-tracking', 'eeg', 'fmri'], alpha=0.
     Test significance of results in the given modality and produced based on the specified configuration.
     """
     config_dict = _open_config(configuration)
-    out_dir = config_dict["outputDir"]
+    if not config_dict:
+        cprint('Aborting ...', 'red')
+        return
+    
+    out_dir = Path(config_dict["outputDir"])
     if not os.path.exists(out_dir):
         cprint('Output path {} associated with configuration "{}" does not exist. Have you already performed experimental runs?'.format(out_dir, configuration), "red")
         return
+
+    # Get mapping of previous version (current not yet executed)
+    version = config_dict['version']-1
+
+    with open(Path(out_dir) / 'mapping_{}.json'.format(version)) as f:
+        mapping_dict = json.load(f)
     
     for modality in modalities:
         cprint('\n[{}]\n'.format(modality.upper()), attrs=['bold'], color='green')
-        result_dir = Path(out_dir) / 'sig_test_results' / modality
-        report_dir = Path(out_dir) / 'reports' / modality
-        os.makedirs(result_dir, exist_ok=True)
+        experiments_dir = out_dir / 'experiments'
+        sig_test_res_dir = out_dir / 'sig_test_results' / modality
+        report_dir = out_dir / 'reports' / modality
+        
+        # Erase previously generated report files and significance test files
+        if os.path.exists(report_dir / '{}.json'.format(test)):
+            os.remove(report_dir / '{}.json'.format(test))
+        if os.path.exists(sig_test_res_dir):
+            shutil.rmtree(sig_test_res_dir)
+        
+        os.makedirs(sig_test_res_dir, exist_ok=True)
         os.makedirs(report_dir, exist_ok=True)
-        os.makedirs(result_dir / 'tmp' / modality, exist_ok=True)
 
         datasets = [k for (k, v) in config_dict["cogDataConfig"].items() if 'modality' in v and v['modality'] == modality]
         
-        emb_bl_pairs = [(k, v['random_embedding']) for k, v in config_dict["wordEmbConfig"].items()]
+        emb_bl_pairs =[]
+        for k, v in config_dict["wordEmbConfig"].items():
+            if v['random_embedding']:
+                emb_bl_pairs.append((k, v['random_embedding']))
+            else:
+                cprint('Embedding {} has no associated random embeddings, no significance test possible, skipping ...', 'yellow')
+
         embeddings, baselines = zip(*emb_bl_pairs)
 
         for ds in datasets:
-            for embed, baselines in zip(embeddings, baselines):
-                # TODO: Refactor -> get rid of unneeded directory
-                st_extract_results(modality, embed, baselines, out_dir, result_dir)
+            for feat in config_dict["cogDataConfig"][ds]["features"]:
+                for embed in embeddings:
+                    experiment = '{}_{}_{}'.format(ds, feat, embed)
+                    try:
+                        # TODO: Refactor -> get rid of unneeded directory
+                        st_extract_results(version, modality, experiment, mapping_dict, experiments_dir, sig_test_res_dir)
+                    except KeyError:
+                        cprint('Skipping combination {}/{}/{} ... (no results)\n'.format(ds, feat, embed), 'yellow')
 
-        hypotheses = sum([1 for filename in os.listdir(result_dir / 'tmp' / modality) if 'embeddings_' in filename])
+        hypotheses = sum([1 for filename in os.listdir(sig_test_res_dir) if 'embeddings_' in filename])
+        
+        # Skip modality if no hypotheses found ...
         if not hypotheses:
-            cprint('No hypotheses for modality {}, skipping ...'.format(modality), 'yellow')
+            cprint('No hypotheses, skipping ...', 'yellow')
             continue
 
         cprint('Number of hypotheses: {}'.format(hypotheses), attrs=['bold'])
@@ -928,25 +1015,141 @@ def sig_test(configuration, modalities=['eye-tracking', 'eeg', 'fmri'], alpha=0.
         print('α (initial/after bonferroni correction): {} / {}'.format(alpha, bf_corr_alpha))
 
         report = report_dir / '{}.json'.format(test)
-        results = []
+        results = collections.defaultdict(dict)
+        results['bonferroni_alpha'] = bf_corr_alpha
 
         cprint('\n[Significance tests]:', attrs=['bold'])
-        for filename in os.listdir(result_dir / 'tmp' / modality):
-            if 'embeddings_' in filename:
-                model_file = result_dir / 'tmp' / modality / filename
-                baseline_file = result_dir / 'tmp' / modality / 'baseline_{}'.format(filename.partition('_')[2])
+        for filename in os.listdir(sig_test_res_dir):
+            if not 'baseline' in filename:
+                experiment = re.sub(r'embeddings_scores_(.*?).txt', r'\1', filename)
+                embedding = mapping_dict[experiment]['embedding']
+                with open(experiments_dir / mapping_dict[experiment]['proper'] / '{}.json'.format(embedding)) as f:
+                    result_json = json.load(f)
+                avg_mse = result_json['AVERAGE_MSE']
+                feature = mapping_dict[experiment]['feature']
+
+                model_file = sig_test_res_dir / filename
+                baseline_file = sig_test_res_dir / 'baseline_{}'.format(filename.partition('_')[2])
                 significant, pval, name = test_significance(baseline_file, model_file, bf_corr_alpha, test)
-                result = {'experiment': name, 'p_value': pval, 'alpha': alpha, 'bonferroni_alpha': bf_corr_alpha}
+                
+                results['hypotheses'][name] = {'p_value': pval,
+                                                'alpha': alpha,
+                                                'significant': significant,
+                                                'wordEmbedding': embedding,
+                                                'feature': feature,
+                                                'AVERAGE_MSE': avg_mse}
+
+                results['hypotheses'][name]['feature'] = feature
+
                 if significant:
                     out_str, color = ': significant (p = {:1.3e})'.format(pval), 'green'
                 else:
                     out_str, color = ': not significant (p = {:1.3e})'.format(pval), 'red'
+                
                 cprint('    - {}'.format(name), attrs=['bold'], color=color, end='')
                 cprint(out_str, color)
-                results.append(result)
 
         with open(report, 'w') as fp:
-            json.dump(results, fp)
+            json.dump(dict(results), fp, indent=4)
+
+@command
+@argument('configuration', type=str, description='Name of configuration file', positional=True)
+@argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
+@argument('test', type=str, description='Significance test')
+def aggregate(configuration,
+              modalities=['eye-tracking', 'eeg', 'fmri'],
+              test="Wilcoxon"):    
+    """
+    Test significance of results in the given modality and produced based on the specified configuration.
+    """
+    config_dict = _open_config(configuration)
+
+    if not config_dict:
+        cprint('Aborting ...', 'red')
+        return
+
+    # Get mapping of previous version (current not yet executed)
+    version = config_dict['version'] - 1
+    out_dir = config_dict['outputDir']
+
+    with open(Path(out_dir) / 'mapping_{}.json'.format(version)) as f:
+        mapping_dict = json.load(f)
+
+    out_dir = config_dict["outputDir"]
+    report_dir = Path(out_dir) / 'reports'
+    
+    if not os.path.exists(out_dir):
+        cprint('Output path {} associated with configuration "{}" does not exist. Have you already performed experimental runs?'.format(out_dir, configuration), "red")
+        return
+
+    extract_results = {'eeg': agg_eeg_extr_results,
+                       'fmri': agg_fmri_extr_results,
+                       'eye-tracking': agg_et_extr_results}
+
+    aggregate_significance = {'eeg': aggregate_signi_eeg,
+                              'fmri': aggregate_signi_fmri,
+                              'eye-tracking': aggregate_signi_et}
+    
+    
+    modality_to_experiments = collections.defaultdict(list)
+    
+    options_dicts = []
+    for modality in modalities:
+        try:
+            with open(Path(out_dir) / 'experiments' / modality / 'options_{}.json'.format(version)) as f:
+                options_dict = json.load(f)
+                options_dicts.append(options_dict)
+        except FileNotFoundError:
+            cprint("No results for modality {}, skipping ...".format(modality), "yellow")
+            continue
+
+        for experiment, properties in mapping_dict.items():
+            if properties['modality'] == modality:
+                modality_to_experiments[modality].append(properties['embedding'])
+
+    emb_bl_pairs =[]
+
+    for k, v in config_dict["wordEmbConfig"].items():
+        if v['random_embedding']:
+            emb_bl_pairs.append((k, v['random_embedding']))
+        else:
+            cprint('Embedding {} has no associated random embeddings, no significance test possible, skipping ...', 'yellow')
+
+    embeddings, baselines = zip(*emb_bl_pairs)
+    
+    for modality, options_dict in zip(modalities, options_dicts):
+        cprint('\n[{}]\n'.format(modality.upper()), attrs=['bold'], color='green')
+
+        
+        results = extract_results[modality](options_dict,
+                                            embeddings=embeddings,
+                                            baselines=baselines)
+
+        try:
+            significance = aggregate_significance[modality](report_dir,
+                                                            test,
+                                                            modality_to_experiments[modality])
+        except FileNotFoundError:
+            continue
+        
+        df_rows = []
+        for idx, (emb, base) in enumerate(zip(embeddings, baselines)):
+            avg_base = results[base]
+            avg_emb = results[emb]
+            df_rows.append({'Embedding': emb, 'Ø MSE Baseline':avg_base, 'Ø MSE Proper':avg_emb, 'Significance': significance[emb]})
+
+        df = pd.DataFrame(df_rows)
+        df.set_index('Embedding', drop=True, inplace=True)
+        df.to_json(report_dir / modality / 'aggregated_scores.json')
+        print(tabulate.tabulate(df, headers="keys", tablefmt="fancy_grid"))
+
+
+@command
+@argument('configuration', type=str, description='Name of configuration file')
+@argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
+@argument('test', type=str, description='Significance test')
+def report(configuration, modalities=['eye-tracking', 'eeg', 'fmri'], test="Wilcoxon"):
+    pass
 
 
 @command
@@ -998,7 +1201,7 @@ class Download:
     @command()
     @argument('x', type=str, description='Force removal and download', positional=True) #choices=list(CTX.embedding_registry['proper']))
     @argument('force', type=bool, description='Force removal and download')
-    def embedding(self, x, force=False, log_only_success=False):
+    def embedding(self, x, force=False, log_only_success=False, are_set=False, associate_rand_emb=None):
         """
         Download and install a default embedding (by name) or custom embedding (from URL)
         """
@@ -1006,14 +1209,18 @@ class Download:
         if not os.path.exists('embeddings'):
             os.mkdir('embeddings')
 
-        associate_rand_emb = yes_no_dialog(title='Random embedding generation',
-                                   text='Do you wish to compare the embeddings with random embeddings of identical dimensionality? \n').run()
+        if not are_set:
+            associate_rand_emb = yes_no_dialog(title='Random embedding generation',
+                                    text='Do you wish to compare the embeddings with random embeddings of identical dimensionality? \n').run()
         local = False                                   
         
         # Download all embeddings
         if x == 'all':
             for emb in ctx.embedding_registry['proper']:
-                self.embedding(emb)
+                self.embedding(emb,
+                               are_set=True,
+                               associate_rand_emb=associate_rand_emb)
+
             # Download random embeddings
             if ctx.debug:
                 for rand_emb in ctx.embedding_registry['random_static']:
@@ -1308,3 +1515,30 @@ def list_embeddings():
                 cprint('installed', 'green', attrs=['bold'])
             else:
                 cprint('not installed', 'red', attrs=['bold'])
+
+
+@command
+def list_cognitive_sources():
+    """
+    List CogniVal cognitive sources (must be installed)
+―
+    """
+    cog_config = _open_cog_config()
+
+    if not cog_config['installed']:
+        cprint('Cognitive sources not installed, aborting ...', 'red')
+
+    for modality in cog_config['sources']:
+        cprint(modality.upper(), attrs=['bold'])
+        cprint('Resource                 Features')
+        for key, value in cog_config['sources'][modality].items():
+            cprint(key, 'cyan', end=' '*(25-len(key)))
+            if isinstance(value["features"], str):
+                cprint(value["features"], 'green')
+            else:
+                cprint(value["features"][0], 'green')
+                for feature in value["features"][1:]:
+                    cprint(' '*25 + feature, 'green')
+            print()
+        print()
+

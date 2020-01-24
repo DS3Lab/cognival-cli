@@ -2,11 +2,7 @@ import json
 
 def aggregate_signi_fmri(result_dir,
                          test,
-                         embeddings = ['glove-50', 'glove-100', 'glove-200', 'glove-300', 'word2vec', 'fasttext-crawl_',
-                                       'fasttext-wiki-news_',
-                                       'fasttext-crawl-subword', 'fasttext-wiki-news-subword', 'bert-service-base', 'wordnet2vec',
-                                       'bert-service-large', 'elmo'],
-                        only_1000_voxels=True):
+                         embeddings):
 
     significance = {}
 
@@ -18,12 +14,11 @@ def aggregate_signi_fmri(result_dir,
         for emb in embeddings:
             significant = 0
             hypotheses = 0
-            for p in data:
-                # take only results from 1000 voxels
-                if emb in p and not only_1000_voxels or ('-1000-' in p or 'brennan' in p):
-                    print(p)
+            for experiment in data['hypotheses']:
+                if emb in experiment:
+                    print(experiment)
                     hypotheses += 1
-                    if data[p] < corrected_alpha:
+                    if data['hypotheses'][experiment]['p_value'] < corrected_alpha:
                         significant += 1
 
             print(hypotheses)
@@ -35,25 +30,21 @@ def aggregate_signi_fmri(result_dir,
 
 def aggregate_signi_eeg(result_dir,
                         test,
-                        embeddings = ['glove-50', 'glove-100', 'glove-200', 'glove-300', 'word2vec', 'fasttext-crawl_',
-                                      'fasttext-wiki-news_',
-                                      'fasttext-crawl-subword', 'fasttext-wiki-news-subword', 'bert-service-base', 'wordnet2vec',
-                                      'bert-service-large', 'elmo']):
+                        embeddings):
 
     significance = {}
 
     with open(result_dir / 'eeg' / '{}.json'.format(test)) as json_file:
         data = json.load(json_file)
-
         corrected_alpha = data['bonferroni_alpha']
 
         for emb in embeddings:
             significant = 0
             hypotheses = 0
-            for p in data:
-                if emb in p:
+            for experiment in data['hypotheses']:
+                if emb in experiment:
                     hypotheses += 1
-                    if data[p] < corrected_alpha:
+                    if data['hypotheses'][experiment]['p_value'] < corrected_alpha:
                         significant += 1
 
             # print(emb, significant, '/', hypotheses)
@@ -64,13 +55,11 @@ def aggregate_signi_eeg(result_dir,
 
 def aggregate_signi_gaze(result_dir,
                          test,
-                         embeddings = ['glove-50', 'glove-100', 'glove-200', 'glove-300', 'word2vec',
-                                       'fasttext-crawl-subword', 'fasttext-wiki-news-subword', 'bert-service-base', 'wordnet2vec',
-                                       'bert-service-large', 'elmo']):
+                         embeddings):
     
     significance = {}
 
-    with open(result_dir / 'gaze' / '{}.json'.format(test)) as json_file:
+    with open(result_dir / 'eye-tracking' / '{}.json'.format(test)) as json_file:
         data = json.load(json_file)
 
         corrected_alpha = data['bonferroni_alpha']
@@ -78,10 +67,10 @@ def aggregate_signi_gaze(result_dir,
         for emb in embeddings:
             significant = 0
             hypotheses = 0
-            for p in data:
-                if emb in p:
+            for experiment in data['hypotheses']:
+                if emb in experiment:
                     hypotheses += 1
-                    if data[p] < corrected_alpha:
+                    if data['hypotheses'][experiment]['p_value'] < corrected_alpha:
                         significant += 1
 
             # print(emb, significant, '/', hypotheses)
