@@ -8,6 +8,8 @@
 #
 
 import argparse
+from pathlib import Path
+
 from lib_nubia.nubia_context import NubiaCognivalContext
 from lib_nubia.nubia_statusbar import NubiaCognivalStatusBar
 from nubia import PluginInterface, CompletionDataSource
@@ -22,7 +24,7 @@ class NubiaCognivalPlugin(PluginInterface):
     """
 
     def __init__(self, *args, **kwargs):
-        self.embedding_registry_path = kwargs.get('embedding_registry_path', None)
+        self.cognival_path = Path(kwargs.get('cognival_path', None))
 
     def create_context(self):
         """
@@ -30,7 +32,7 @@ class NubiaCognivalPlugin(PluginInterface):
         The plugin can return a custom context but it has to inherit from the
         correct parent class.
         """
-        return NubiaCognivalContext(embedding_registry_path=self.embedding_registry_path)
+        return NubiaCognivalContext(cognival_path=self.cognival_path)
 
     def validate_args(self, args):
         """

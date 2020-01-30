@@ -6,16 +6,24 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 #
-
+import pprint
+import os
+import json
 import traceback
 import warnings
 import sys
 
 import numpy as np
+from pathlib import Path
 
 from nubia import Nubia, Options
+
+# Disable HDF5 file locking for ELMo/allennlp
+os.environ['HDF5_USE_FILE_LOCKING'] = 'FALSE'
+
 from lib_nubia.nubia_plugin import NubiaCognivalPlugin
 from lib_nubia import commands
+from lib_nubia.commands import messages
 
 import warnings
 warnings.filterwarnings('ignore', category=DeprecationWarning)
@@ -25,8 +33,6 @@ from tensorflow.python.util import deprecation
 deprecation._PRINT_DEPRECATION_WARNINGS = False
 
 import keras
-import pprint
-import os
 from termcolor import cprint
 
 import tensorflow as tf
@@ -104,21 +110,44 @@ def configure_tf_devices(gpu_ids=None, num_utilize_cpus=None, num_utilize_gpus=N
     cprint("Configuration:", 'magenta')
     pprint.pprint(sess._config)
     
-
-
-if __name__ == "__main__":
+def main():
     configure_tf_devices(gpu_ids=list(range(7)),
                          num_utilize_cpus=1,
                          num_utilize_gpus=1)
 
-    plugin = NubiaCognivalPlugin(embedding_registry_path='resources/embedding_registry.json')
+
+    # Creating config.json (initial run)
+    installation_path = Path(os.path.dirname(__file__))
+    config_path = installation_path / 'config.json'
+    
+    if not os.path.exists(config_path):
+        cprint('No configuration file found, creating ...', 'green')
+        usr_home = Path.home()
+        cognival_usr_dir = usr_home / '.cognival'
+        config_dict = {'cognival_path': str(cognival_usr_dir)}
+        with open(config_path , 'w') as f:
+            json.dump(config_dict, f)
+    else:
+        with open(config_path , 'r') as f:
+            config_dict = json.load(f)
+
+    cognival_path = config_dict['cognival_path']
+
+    plugin = NubiaCognivalPlugin(cognival_path=cognival_path)
     cprint("Launching interactive shell, please wait ...", "magenta")
     shell = Nubia(
-        name="cog_nubia",
+        name="cognival",
         command_pkgs=commands,
         plugin=plugin,
         options=Options(persistent_history=True),
     )
     # Clear screen
     print("\033c")
+    cprint(messages.LOGO_STR, "magenta")
+    cprint(messages.WELCOME_MESSAGE_STR, "green")
+
     sys.exit(shell.run())
+
+
+if __name__ == "__main__":
+    main()

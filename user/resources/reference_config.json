@@ -1,8 +1,8 @@
 {
-    "PATH": "./",
+    "PATH": null,
     "cogDataConfig": {
         "eye-tracking_all": {
-            "dataset": "cognitive_sources/cognival-vectors/eye-tracking/all_scaled.txt",
+            "dataset": "cognitive_sources/eye-tracking/all_scaled.txt",
             "modality": "eye-tracking",
             "features": [
                 "ffd",
@@ -482,7 +482,7 @@
             }
         },
         "fmri_brennan-0": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_18.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_18.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -957,7 +957,7 @@
             }
         },
         "fmri_brennan-1": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_47.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_47.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -1432,7 +1432,7 @@
             }
         },
         "fmri_brennan-10": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_30.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_30.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -1907,7 +1907,7 @@
             }
         },
         "fmri_brennan-11": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_45.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_45.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -2382,7 +2382,7 @@
             }
         },
         "fmri_brennan-12": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_24.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_24.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -2857,7 +2857,7 @@
             }
         },
         "fmri_brennan-13": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_42.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_42.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -3332,7 +3332,7 @@
             }
         },
         "fmri_brennan-14": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_48.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_48.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -3807,7 +3807,7 @@
             }
         },
         "fmri_brennan-15": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_53.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_53.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -4282,7 +4282,7 @@
             }
         },
         "fmri_brennan-16": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_52.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_52.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -4757,7 +4757,7 @@
             }
         },
         "fmri_brennan-17": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_40.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_40.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -5232,7 +5232,7 @@
             }
         },
         "fmri_brennan-18": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_22.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_22.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -5707,7 +5707,7 @@
             }
         },
         "fmri_brennan-19": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_26.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_26.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -6182,7 +6182,7 @@
             }
         },
         "fmri_brennan-2": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_51.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_51.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -6657,7 +6657,7 @@
             }
         },
         "fmri_brennan-20": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_43.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_43.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -7132,7 +7132,7 @@
             }
         },
         "fmri_brennan-21": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_28.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_28.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -7607,7 +7607,7 @@
             }
         },
         "fmri_brennan-22": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_36.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_36.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -8082,7 +8082,7 @@
             }
         },
         "fmri_brennan-23": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_49.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_49.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -8557,7 +8557,7 @@
             }
         },
         "fmri_brennan-24": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_31.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_31.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -9032,7 +9032,7 @@
             }
         },
         "fmri_brennan-25": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_38.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_38.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -9507,7 +9507,7 @@
             }
         },
         "fmri_brennan-26": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_35.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_35.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -9982,7 +9982,7 @@
             }
         },
         "fmri_brennan-3": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_37.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_37.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -10457,7 +10457,7 @@
             }
         },
         "fmri_brennan-4": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_41.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_41.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -10932,7 +10932,7 @@
             }
         },
         "fmri_brennan-5": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_50.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_50.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -11407,7 +11407,7 @@
             }
         },
         "fmri_brennan-6": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_39.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_39.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -11882,7 +11882,7 @@
             }
         },
         "fmri_brennan-7": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_23.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_23.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -12357,7 +12357,7 @@
             }
         },
         "fmri_brennan-8": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_44.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_44.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -12832,7 +12832,7 @@
             }
         },
         "fmri_brennan-9": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/alice/scaled_6_brennan_targets_46.txt",
+            "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_46.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -13307,7 +13307,7 @@
             }
         },
         "eye-tracking_cfilt-sarcasm": {
-            "dataset": "cognitive_sources/cognival-vectors/eye-tracking/cfilt-sarcasm_scaled.txt",
+            "dataset": "cognitive_sources/eye-tracking/cfilt-sarcasm_scaled.txt",
             "modality": "eye-tracking",
             "features": [
                 "Fixation_Duration"
@@ -13782,7 +13782,7 @@
             }
         },
         "eye-tracking_cfilt-scanpath": {
-            "dataset": "cognitive_sources/cognival-vectors/eye-tracking/cfilt-scanpath_scaled.txt",
+            "dataset": "cognitive_sources/eye-tracking/cfilt-scanpath_scaled.txt",
             "modality": "eye-tracking",
             "features": [
                 "Fixation_Duration"
@@ -14257,7 +14257,7 @@
             }
         },
         "eye-tracking_dundee": {
-            "dataset": "cognitive_sources/cognival-vectors/eye-tracking/dundee_scaled.txt",
+            "dataset": "cognitive_sources/eye-tracking/dundee_scaled.txt",
             "modality": "eye-tracking",
             "features": [
                 "First_fix_dur",
@@ -14745,7 +14745,7 @@
             }
         },
         "eye-tracking_geco": {
-            "dataset": "cognitive_sources/cognival-vectors/eye-tracking/geco_scaled.txt",
+            "dataset": "cognitive_sources/eye-tracking/geco_scaled.txt",
             "modality": "eye-tracking",
             "features": [
                 "WORD_FIXATION_COUNT",
@@ -15226,7 +15226,7 @@
             }
         },
         "eeg_n400": {
-            "dataset": "cognitive_sources/cognival-vectors/eeg/n400_scaled.txt",
+            "dataset": "cognitive_sources/eeg/n400_scaled.txt",
             "modality": "eeg",
             "features": [
                 "ALL_DIM"
@@ -15701,7 +15701,7 @@
             }
         },
         "eeg_naturalspeech": {
-            "dataset": "cognitive_sources/cognival-vectors/eeg/naturalspeech_scaled.txt",
+            "dataset": "cognitive_sources/eeg/naturalspeech_scaled.txt",
             "modality": "eeg",
             "features": [
                 "ALL_DIM"
@@ -16176,7 +16176,7 @@
             }
         },
         "eye-tracking_provo": {
-            "dataset": "cognitive_sources/cognival-vectors/eye-tracking/provo_scaled.txt",
+            "dataset": "cognitive_sources/eye-tracking/provo_scaled.txt",
             "modality": "eye-tracking",
             "features": [
                 "IA_FIRST_FIXATION_DURATION",
@@ -16660,7 +16660,7 @@
             }
         },
         "eeg_ucl": {
-            "dataset": "cognitive_sources/cognival-vectors/eeg/ucl_scaled.txt",
+            "dataset": "cognitive_sources/eeg/ucl_scaled.txt",
             "modality": "eeg",
             "features": [
                 "ALL_DIM"
@@ -17135,7 +17135,7 @@
             }
         },
         "eye-tracking_ucl": {
-            "dataset": "cognitive_sources/cognival-vectors/eye-tracking/ucl_scaled.txt",
+            "dataset": "cognitive_sources/eye-tracking/ucl_scaled.txt",
             "modality": "eye-tracking",
             "features": [
                 "RTfirstfix",
@@ -17613,7 +17613,7 @@
             }
         },
         "eeg_zuco": {
-            "dataset": "cognitive_sources/cognival-vectors/eeg/zuco_scaled.txt",
+            "dataset": "cognitive_sources/eeg/zuco_scaled.txt",
             "modality": "eeg",
             "features": [
                 "ALL_DIM"
@@ -18088,7 +18088,7 @@
             }
         },
         "eye-tracking_zuco": {
-            "dataset": "cognitive_sources/cognival-vectors/eye-tracking/zuco_scaled.txt",
+            "dataset": "cognitive_sources/eye-tracking/zuco_scaled.txt",
             "modality": "eye-tracking",
             "features": [
                 "nFixations",
@@ -18567,7 +18567,7 @@
             }
         },
         "fmri_mitchell-0": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_1.txt",
+            "dataset": "cognitive_sources/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_1.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -19042,7 +19042,7 @@
             }
         },
         "fmri_mitchell-1": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_2.txt",
+            "dataset": "cognitive_sources/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_2.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -19517,7 +19517,7 @@
             }
         },
         "fmri_mitchell-2": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_3.txt",
+            "dataset": "cognitive_sources/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_3.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -19992,7 +19992,7 @@
             }
         },
         "fmri_mitchell-3": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_4.txt",
+            "dataset": "cognitive_sources/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_4.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -20467,7 +20467,7 @@
             }
         },
         "fmri_mitchell-4": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_5.txt",
+            "dataset": "cognitive_sources/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_5.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -20942,7 +20942,7 @@
             }
         },
         "fmri_mitchell-5": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_6.txt",
+            "dataset": "cognitive_sources/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_6.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -21417,7 +21417,7 @@
             }
         },
         "fmri_mitchell-6": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_7.txt",
+            "dataset": "cognitive_sources/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_7.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -21892,7 +21892,7 @@
             }
         },
         "fmri_mitchell-7": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_8.txt",
+            "dataset": "cognitive_sources/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_8.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -22367,7 +22367,7 @@
             }
         },
         "fmri_mitchell-8": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_9.txt",
+            "dataset": "cognitive_sources/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_9.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -22842,7 +22842,7 @@
             }
         },
         "fmri_pereira-0": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M01.txt",
+            "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M01.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -23317,7 +23317,7 @@
             }
         },
         "fmri_pereira-1": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M02.txt",
+            "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M02.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -23792,7 +23792,7 @@
             }
         },
         "fmri_pereira-10": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M13.txt",
+            "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M11.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -24267,7 +24267,7 @@
             }
         },
         "fmri_pereira-11": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M14.txt",
+            "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M12.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -24742,7 +24742,7 @@
             }
         },
         "fmri_pereira-12": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M15.txt",
+            "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M13.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -25217,7 +25217,7 @@
             }
         },
         "fmri_pereira-13": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M16.txt",
+            "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M14.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -25692,7 +25692,957 @@
             }
         },
         "fmri_pereira-14": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M17.txt",
+            "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M15.txt",
+            "modality": "fmri",
+            "features": [
+                "ALL_DIM"
+            ],
+            "type": "multivariate_output",
+            "wordEmbSpecifics": {
+                "bert-base": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            400
+                        ],
+                        [
+                            200
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "bert-large": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            600
+                        ],
+                        [
+                            200
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "bert-service-base": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            400
+                        ],
+                        [
+                            200
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "bert-service-large": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            600
+                        ],
+                        [
+                            200
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "elmo": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            600
+                        ],
+                        [
+                            200
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "fasttext-cc": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            50
+                        ],
+                        [
+                            150
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "fasttext-cc-subword": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            50
+                        ],
+                        [
+                            150
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "fasttext-wiki": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            50
+                        ],
+                        [
+                            150
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "fasttext-wiki-subword": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            50
+                        ],
+                        [
+                            150
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "glove.6B.100": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        30
+                    ],
+                    "layers": [
+                        [
+                            50
+                        ],
+                        [
+                            30
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "glove.6B.200": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            100
+                        ],
+                        [
+                            50
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "glove.6B.300": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            50
+                        ],
+                        [
+                            150
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "glove.6B.50": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            26
+                        ],
+                        [
+                            30
+                        ],
+                        [
+                            20
+                        ],
+                        [
+                            5
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "random-embeddings-100": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        30
+                    ],
+                    "layers": [
+                        [
+                            50
+                        ],
+                        [
+                            30
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "random-embeddings-1024": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            600
+                        ],
+                        [
+                            200
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "random-embeddings-200": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            100
+                        ],
+                        [
+                            50
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "random-embeddings-300": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            50
+                        ],
+                        [
+                            150
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "random-embeddings-50": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            26
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "random-embeddings-768": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            400
+                        ],
+                        [
+                            200
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "random-embeddings-850": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            400
+                        ],
+                        [
+                            200
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "word2vec": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            50
+                        ],
+                        [
+                            150
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "wordnet2vec": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            400
+                        ],
+                        [
+                            200
+                        ]
+                    ],
+                    "validation_split": 0.2
+                }
+            }
+        },
+        "fmri_pereira-15": {
+            "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M16.txt",
+            "modality": "fmri",
+            "features": [
+                "ALL_DIM"
+            ],
+            "type": "multivariate_output",
+            "wordEmbSpecifics": {
+                "bert-base": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            400
+                        ],
+                        [
+                            200
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "bert-large": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            600
+                        ],
+                        [
+                            200
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "bert-service-base": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            400
+                        ],
+                        [
+                            200
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "bert-service-large": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            600
+                        ],
+                        [
+                            200
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "elmo": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            600
+                        ],
+                        [
+                            200
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "fasttext-cc": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            50
+                        ],
+                        [
+                            150
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "fasttext-cc-subword": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            50
+                        ],
+                        [
+                            150
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "fasttext-wiki": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            50
+                        ],
+                        [
+                            150
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "fasttext-wiki-subword": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            50
+                        ],
+                        [
+                            150
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "glove.6B.100": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        30
+                    ],
+                    "layers": [
+                        [
+                            50
+                        ],
+                        [
+                            30
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "glove.6B.200": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            100
+                        ],
+                        [
+                            50
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "glove.6B.300": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            50
+                        ],
+                        [
+                            150
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "glove.6B.50": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            26
+                        ],
+                        [
+                            30
+                        ],
+                        [
+                            20
+                        ],
+                        [
+                            5
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "random-embeddings-100": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        30
+                    ],
+                    "layers": [
+                        [
+                            50
+                        ],
+                        [
+                            30
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "random-embeddings-1024": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            600
+                        ],
+                        [
+                            200
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "random-embeddings-200": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            100
+                        ],
+                        [
+                            50
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "random-embeddings-300": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            50
+                        ],
+                        [
+                            150
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "random-embeddings-50": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            26
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "random-embeddings-768": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            400
+                        ],
+                        [
+                            200
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "random-embeddings-850": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            400
+                        ],
+                        [
+                            200
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "word2vec": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            50
+                        ],
+                        [
+                            150
+                        ]
+                    ],
+                    "validation_split": 0.2
+                },
+                "wordnet2vec": {
+                    "activations": [
+                        "relu"
+                    ],
+                    "batch_size": [
+                        128
+                    ],
+                    "cv_split": 3,
+                    "epochs": [
+                        100
+                    ],
+                    "layers": [
+                        [
+                            400
+                        ],
+                        [
+                            200
+                        ]
+                    ],
+                    "validation_split": 0.2
+                }
+            }
+        },
+        "fmri_pereira-16": {
+            "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M17.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -26167,7 +27117,7 @@
             }
         },
         "fmri_pereira-2": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M03.txt",
+            "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M03.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -26642,7 +27592,7 @@
             }
         },
         "fmri_pereira-3": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M04.txt",
+            "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M04.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -27117,7 +28067,7 @@
             }
         },
         "fmri_pereira-4": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M05.txt",
+            "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M05.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -27592,7 +28542,7 @@
             }
         },
         "fmri_pereira-5": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M06.txt",
+            "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M06.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -28067,7 +29017,7 @@
             }
         },
         "fmri_pereira-6": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M07.txt",
+            "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M07.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -28542,7 +29492,7 @@
             }
         },
         "fmri_pereira-7": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M08.txt",
+            "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M08.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -29017,7 +29967,7 @@
             }
         },
         "fmri_pereira-8": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M09.txt",
+            "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M09.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -29492,7 +30442,7 @@
             }
         },
         "fmri_pereira-9": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M10.txt",
+            "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M10.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -29967,7 +30917,7 @@
             }
         },
         "fmri_wehbe-0": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_5.txt",
+            "dataset": "cognitive_sources/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_5.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -30442,7 +31392,7 @@
             }
         },
         "fmri_wehbe-1": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_6.txt",
+            "dataset": "cognitive_sources/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_6.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -30917,7 +31867,7 @@
             }
         },
         "fmri_wehbe-2": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_4.txt",
+            "dataset": "cognitive_sources/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_4.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -31392,7 +32342,7 @@
             }
         },
         "fmri_wehbe-3": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_1.txt",
+            "dataset": "cognitive_sources/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_1.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -31867,7 +32817,7 @@
             }
         },
         "fmri_wehbe-4": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_8.txt",
+            "dataset": "cognitive_sources/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_8.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -32342,7 +33292,7 @@
             }
         },
         "fmri_wehbe-5": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_2.txt",
+            "dataset": "cognitive_sources/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_2.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -32817,7 +33767,7 @@
             }
         },
         "fmri_wehbe-6": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_7.txt",
+            "dataset": "cognitive_sources/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_7.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -33292,7 +34242,7 @@
             }
         },
         "fmri_wehbe-7": {
-            "dataset": "cognitive_sources/cognival-vectors/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_3.txt",
+            "dataset": "cognitive_sources/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_3.txt",
             "modality": "fmri",
             "features": [
                 "ALL_DIM"
@@ -33767,11 +34717,11 @@
             }
         }
     },
-    "cpu_count": 20,
-    "folds": 5,
-    "outputDir": "mitchell-1000",
-    "seed": 123,
-    "version": 3536.0,
+    "cpu_count": null,
+    "folds": null,
+    "outputDir": null,
+    "seed": null,
+    "version": null,
     "wordEmbConfig": {
         "bert-base": {
             "chunked": 0,
@@ -33900,5 +34850,5 @@
         }
     },
     "randEmbConfig": {},
-    "randEmbToParts": {}
+    "randEmbSetToParts": {}
 }

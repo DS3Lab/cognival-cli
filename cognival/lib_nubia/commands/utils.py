@@ -1,4 +1,5 @@
 import json
+import subprocess
 import sys
 
 import requests
@@ -9,8 +10,12 @@ from termcolor import cprint
 def tupleit(t):
     return tuple(map(tupleit, t)) if isinstance(t, (list, tuple)) else t
 
-def _open_config(configuration, quiet=False):
-    config_path = Path('resources') / '{}_config.json'.format(configuration)
+def _open_config(configuration, resources_path, quiet=False, protect_reference=True):
+    if protect_reference and configuration == 'reference':
+        cprint('The reference configuration cannot be edited! Use show-config to display its properties.', 'red')
+        return
+        
+    config_path = resources_path / '{}_config.json'.format(configuration)
     try:
         with open(config_path) as f:
             config_dict = json.load(f)
@@ -22,15 +27,15 @@ def _open_config(configuration, quiet=False):
     return config_dict
     
 
-def _open_cog_config():
-    cog_sources_path = Path('resources') / 'cognitive_sources.json'
+def _open_cog_config(resources_path):
+    cog_sources_path = resources_path / 'cognitive_sources.json'
     with open(cog_sources_path) as f:
         cognitive_sources = json.load(f)
     return cognitive_sources
 
 
-def _check_cog_installed():
-    cog_config = _open_cog_config()
+def _check_cog_installed(resources_path):
+    cog_config = _open_cog_config(resources_path)
     return cog_config['installed']
 
 
@@ -47,14 +52,14 @@ def _check_emb_installed(embedding, embeddings_conf):
                 raise RuntimeError('Embedding "{}" not known.'.format(embedding))
 
 
-def _save_cog_config(config_dict):
-    config_path = Path('resources') / 'cognitive_sources.json'
+def _save_cog_config(config_dict, resources_path):
+    config_path = resources_path / 'cognitive_sources.json'
     with open(config_path, 'w') as f:
         json.dump(config_dict, f, indent=4)
 
 
-def _save_config(config_dict, configuration, quiet=False):
-    config_path = Path('resources') / '{}_config.json'.format(configuration)
+def _save_config(config_dict, configuration, resources_path, quiet=False):
+    config_path = resources_path / '{}_config.json'.format(configuration)
     with open(config_path, 'w') as f:
         json.dump(config_dict, f, indent=4)
     if not quiet:
@@ -184,3 +189,44 @@ def download_file(url, filename):
                 sys.stdout.write('\r[{}{}] [{:.2f}/{:.2f}MB]'.format('█' * done, '.' * (50-done), downloaded/(1024*1024), total/(1024*1024)))
                 sys.stdout.flush()
     sys.stdout.write('\n')
+
+class AbortException(Exception): pass
+
+
+# Source: https://stackoverflow.com/a/312464
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
+
+
+def chunked_list_concat_str(lst, n):
+    return ',\n'.join([', '.join(x) for x in chunks(lst, n)])
+
+
+def field_concat(x):
+    if isinstance(x, list):
+        if x and isinstance(x[0], list):
+            return '\n'.join(', '.join(map(str, y)) for y in x)
+        else:
+            return ',\n'.join(map(str, x))
+    else:
+        return x
+
+
+def page_list(pager_list):
+    try:
+        # args stolen fron git source, see `man less`
+        pager = subprocess.Popen(['less',
+                                '-F',
+                                '-R',
+                                '-S',
+                                '-X',
+                                '-K'], stdin=subprocess.PIPE, stdout=sys.stdout)
+        for line in pager_list:
+            pager.stdin.write(line)
+        pager.stdin.close()
+        pager.wait()
+    except (KeyboardInterrupt, BrokenPipeError):
+        pass
+        # let less handle this, -K will exit cleanly
