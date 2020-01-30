@@ -9,6 +9,7 @@
 
 import collections
 import json
+import sys
 from termcolor import cprint
 
 from natsort import natsorted
@@ -19,15 +20,25 @@ from nubia import eventbus
 class NubiaCognivalContext(context.Context):
     def __init__(self, *args, **kwargs):
         self.state = {}
-        self.embedding_registry_path = kwargs.get('embedding_registry_path', None)
+        self.cognival_path = kwargs.get('cognival_path', None)
+        
+        if self.cognival_path:
+            self.cog_sources_path = self.cognival_path / 'cognitive_sources'
+            self.embeddings_path = self.cognival_path / 'embeddings'
+            self.resources_path = self.cognival_path / 'resources'
+            self.results_path = self.cognival_path / 'embeddings'
+        else:
+            self.cognival_path, self.embeddings_path, \
+                self.resources_path, self.resources_path = [None] * 4
+
         self.embedding_registry = None
         self.path2embeddings = collections.defaultdict(list)
         self._load_configuration()
         super().__init__()
 
     def _load_configuration(self):
-        if self.embedding_registry_path:
-            with open(self.embedding_registry_path) as f:
+        if self.resources_path:
+            with open(self.resources_path / 'embedding_registry.json') as f:
                 self.embedding_registry = json.load(f)
             for embedding_type_dict in self.embedding_registry.values():
                 for embeddings, embedding_params in embedding_type_dict.items():
@@ -35,7 +46,8 @@ class NubiaCognivalContext(context.Context):
             for path, emb_list in self.path2embeddings.items():
                 self.path2embeddings[path] = natsorted(emb_list)
         else:
-            cprint('Warning: Could not load mapping from standard embeddings to URLs. Download functionality not available.', 'red')
+            cprint('Error: Could not load resources path, aborting ...', 'red')
+            sys.exit(1)
         
     def on_connected(self, *args, **kwargs):
         pass
@@ -56,7 +68,7 @@ class NubiaCognivalContext(context.Context):
 
     def save_configuration(self):
         if self.embedding_registry:
-            with open(self.embedding_registry_path, 'w') as f:
+            with open(self.resources_path / 'embedding_registry.json', 'w') as f:
                 json.dump(self.embedding_registry, f, indent=4)
         else:
             raise RuntimeError("No configuration loaded, cannot save!")

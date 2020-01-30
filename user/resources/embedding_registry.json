@@ -11,7 +11,7 @@
             "installed": false,
             "truncate_first_line": false,
             "chunked": false,
-            "random_embedding": "random-50-10"
+            "random_embedding": null
         },
         "glove.6B.100": {
             "url": "http://nlp.stanford.edu/data/glove.6B.zip",
@@ -66,7 +66,7 @@
             "chunk_number": 4,
             "chunked_file": "word2vec",
             "chunk_ending": ".txt",
-            "random_embedding": "random-300-10"
+            "random_embedding": null
         },
         "wnet2vec": {
             "url": "http://lxcenter.di.fc.ul.pt/wn2vec.zip",
@@ -143,7 +143,7 @@
             "chunk_number": 4,
             "chunked_file": "fasttext-cc-subword",
             "chunk_ending": ".txt",
-            "random_embedding": "random-300-10"
+            "random_embedding": null
         },
         "elmo": {
             "url": null,
@@ -156,7 +156,7 @@
             "installed": false,
             "truncate_first_line": false,
             "chunked": false,
-            "random_embedding": "random-1024-10"
+            "random_embedding": null
         },
         "bert-base": {
             "url": "https://storage.googleapis.com/bert_models/2018_10_18/cased_L-12_H-768_A-12.zip",
@@ -236,6 +236,6 @@
             "installed": false
         }
     },
-    "random_multiseed": {
+    "random_multiseed": { 
     }
 }

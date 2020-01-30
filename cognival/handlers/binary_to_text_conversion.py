@@ -68,10 +68,6 @@ from significance_testing.testing_helpers import bonferroni_correction, test_sig
 
 from lib_nubia.prompt_toolkit_table import *
 
-# TODO: Make parametrizable
-BINARY_CONVERSION_LIMIT = 1000
-NUM_BERT_WORKERS = 1
-
 def bert_to_text(vocabulary_file, model_dir, output_path, dimensions, num_worker):
     # Source: https://github.com/hanxiao/bert-as-service
     # Start Bert Model: bert-serving-start -model_dir /tmp/uncased_L-12_H-768_A-12/ -num_worker=4
@@ -95,17 +91,15 @@ def bert_to_text(vocabulary_file, model_dir, output_path, dimensions, num_worker
     with open(vocabulary_file, 'r') as f:
         words = f.readlines()
 
-    print(len(words), ' total words.')
+    # Create directory
+    os.makedirs(output_path.parent, exist_ok=True)
 
     with open(output_path, 'w') as embedding_file:
-        header = ['x'+str(i) for i in range(dimensions)]
-        print('word', ' '.join(header), file=embedding_file)
-
         # Load pre-trained model (weights)
         with BertClient(ignore_all_checks=True) as bc:
 
             count_not_found = 0
-            words_stripped = [word.strip() for word in words[:100]]
+            words_stripped = [word.strip() for word in words]
             print('Obtaining per-word embedding ...')
             output_embedding = bc.encode(words_stripped)
             for idx, word in enumerate(words_stripped):
@@ -130,10 +124,10 @@ def bert_to_text(vocabulary_file, model_dir, output_path, dimensions, num_worker
     shutil.rmtree('tmp')
 
 
-def elmo_to_text(vocabulary_file, output_file, layer='nocontext'):
+def elmo_to_text(vocabulary_file, output_path, layer='nocontext'):
     """
     :param vocabulary_file: Vocabulary file. Note that usually no vocabulary file is provided with ELMo embeddings.
-    :param output_file: Output file path
+    :param output_path: Output file path
     :param layer: Either 'full' which equals to full Elmo after second biLSTM layer or
                   'nocontext' (context-insensitive)
     
@@ -151,12 +145,12 @@ def elmo_to_text(vocabulary_file, output_file, layer='nocontext'):
     with open(vocabulary_file, 'r') as f:
         words = f.readlines()
 
-    with open(output_file, 'w') as embedding_file:
-        header = ['x'+str(i) for i in range(1024)]
-        print('word', ' '.join(header), file=embedding_file)
+    # Create directory
+    os.makedirs(output_path.parent, exist_ok=True)
 
+    with open(output_path, 'w') as embedding_file:
         with ProgressBar() as pb:
-            for word in pb(words[:100]):
+            for word in pb(words):
                 word = word.strip()
                 # print(word)
                 vectors = elmo.embed_sentence(word)

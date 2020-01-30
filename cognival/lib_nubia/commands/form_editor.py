@@ -38,20 +38,11 @@ from nubia import command, argument, context
 import numpy as np
 import pandas as pd
 
-try:
-    from allennlp.commands.elmo import ElmoEmbedder
-except ImportError:
-    cprint('Warning: Package allennlp not found. ELMo conversion unavailable.', 'yellow')
-
-try:
-    from bert_serving.client import BertClient
-except ImportError:
-    cprint('Warning: Package bert_serving.client not found. BERT conversion unavailable.', 'yellow')
+from termcolor import cprint
 
 from prompt_toolkit import prompt, PromptSession
 from prompt_toolkit.shortcuts import input_dialog, yes_no_dialog, button_dialog, radiolist_dialog, ProgressBar
 from prompt_toolkit.application.current import get_app
-from termcolor import cprint
 
 from cog_evaluate import run as run_serial
 from cog_evaluate_parallel import run_parallel as run_parallel
@@ -80,8 +71,8 @@ EDITOR_TITLES = {"main": "General Configuration",
                  "embedding_exp": "Embedding Experiment Configuration",
                  "embedding_conf": "Embedding Parameter Configuration"}
 
-EDITOR_DESCRIPTIONS = {"main": {"PATH": "Main working directory for all experiments. Set to application directory if empty",
-                                "cpu_count": "Number of CPU cores used for execution",
+EDITOR_DESCRIPTIONS = {"main": {"PATH": "Main working directory. Defaults to $HOME/.cognival",
+                                "cpu_count": "Number of CPU cores used for execution, defaults to (1 - number of available logical CPU cores)",
                                 "folds": "Number of folds evaluated in n-Fold cross-validation (CV)",
                                 "outputDir": "Output directory as subdirectory of 'results' (automatically prefixed if missing)",
                                 "seed": "Random seed for train-test sampling",
@@ -168,7 +159,7 @@ class ConfigEditor():
                 v = ""
                 style = "fg:ansiwhite"
             elif isinstance(v, (list, tuple)):
-                if isinstance(v[0], (list, tuple)):
+                if v and isinstance(v[0], (list, tuple)):
                     v = "\n".join([", ".join([str(y) for y in x]) for x in v])
                 else:
                     v = ", ".join([str(x) for x in v])
@@ -268,6 +259,7 @@ class ConfigEditor():
             self.config_dict_updated[k] = values
 
         get_app().exit(result=True)
+
 
 def config_editor(conf_type,
                   config_dict,
