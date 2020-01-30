@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+import sys
+import os
+import pathlib
+from distutils.sysconfig import get_python_lib
+
+sys.path.insert(0, str(pathlib.Path(get_python_lib()) / 'cognival'))
+
+from cognival import main
+
+main()
