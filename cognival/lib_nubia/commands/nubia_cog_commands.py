@@ -579,25 +579,30 @@ def insert_config_dict(config_dict, reference_dict, mode, csource, target_emb, s
         config_dict['cogDataConfig'][csource]["wordEmbSpecifics"][target_emb] = copy.deepcopy(EMBEDDING_PARAMET_TEMPLATE)
 
 
-def resolve_cog_emb(cognitive_sources,
+def resolve_cog_emb(cog_source_groups,
+                    cognitive_sources,
                     embeddings,
                     config_dict,
                     cog_config_dict,
                     embedding_registry,
                     scope=None):
-    all_cog = True if cognitive_sources[0] == 'all' else False
+    all_cog = True if cognitive_sources and cognitive_sources[0] == 'all' else False
     all_emb = True if embeddings and embeddings[0] == 'all' else False
 
-    if all_cog:
+    if not cog_source_groups and all_cog:
+        cog_source_groups = ['eye-tracking', 'fmri', 'eeg']
+    
+    if cog_source_groups:
         if scope == 'all':
             cognitive_sources = []
             for type_, type_dict in cog_config_dict['sources'].items():
-                for source, source_dict in type_dict.items():
-                    if source_dict['hypothesis_per_participant']:
-                        for idx in range(len(source_dict['files'])):
-                            cognitive_sources.append('{}_{}-{}'.format(type_, source, idx))
-                    else:
-                        cognitive_sources.append('{}_{}'.format(type_, source))
+                if type_ in cog_source_groups:
+                    for source, source_dict in type_dict.items():
+                        if source_dict['hypothesis_per_participant']:
+                            for idx in range(len(source_dict['files'])):
+                                cognitive_sources.append('{}_{}-{}'.format(type_, source, idx))
+                        else:
+                            cognitive_sources.append('{}_{}'.format(type_, source))
         elif scope == 'config':
             cognitive_sources = list(config_dict["cogDataConfig"].keys())
     
@@ -612,7 +617,6 @@ def resolve_cog_emb(cognitive_sources,
             cprint('Embedding {} unknown or not installed, aborting ...'.format(x), 'red')
             raise AbortException
 
-    
     cog_source_index = set(cog_config_dict['index'])
     for x in cognitive_sources:
         if x in cog_source_index:
@@ -838,9 +842,10 @@ class EditConfig:
     @command
     @argument('configuration', type=str, description='Name of configuration file', positional=True)
     @argument('rand_embeddings', type=bool, description='Include random embeddings True/False')
+    @argument('cog_source_groups', type=list, description="Groups of cog. sources to install.")
     @argument('cognitive_sources', type=list, description="Either list of cognitive sources or ['all'] (default).")
     @argument('embeddings', type=list, description="Either list of embeddings or ['all'] (default)")
-    def populate(self, configuration, rand_embeddings, cognitive_sources=['all'], embeddings=['all'], mode="reference", quiet=False):
+    def populate(self, configuration, rand_embeddings, cog_source_groups=None, cognitive_sources=['all'], embeddings=['all'], mode="reference", quiet=False):
         '''
         Populates configuration with templates for some or all installed cognitive sources.
         '''
@@ -857,7 +862,8 @@ class EditConfig:
         reference_dict = None
 
         try:
-            cognitive_sources, embeddings = resolve_cog_emb(cognitive_sources,
+            cognitive_sources, embeddings = resolve_cog_emb(cog_source_groups,
+                                                            cognitive_sources,
                                                             embeddings,
                                                             config_dict,
                                                             cog_config_dict,
@@ -878,7 +884,7 @@ class EditConfig:
         cog_sources_config = _open_cog_config(resources_path)
         if not cog_sources_config['cognival_installed']:
             cprint("Error: CogniVal cognitive vectors unavailable!", "red")
-            return
+            raise AbortException
         else:
             cog_sources_config = cog_sources_config["sources"] 
 
@@ -953,11 +959,21 @@ class EditConfig:
 
     @command
     @argument('configuration', type=str, description='Name of configuration file', positional=True)
+    @argument('cog_source_groups', type=list, description="Groups of cog. sources to install.")
     @argument('cognitive_sources', type=list, description="Either list of cognitive sources or ['all'] (default).")
     @argument('embeddings', type=list, description="Either list of embeddings or ['all'] (default)")
     @argument('rand_embeddings', type=bool, description='Include random embeddings True/False')
     @argument('single_edit', type=bool, description='Whether to edit embedding specifics one by one or all at once.')
-    def experiment(self, configuration, rand_embeddings, cognitive_sources=['all'], embeddings=['all'], populate=True, single_edit=False):
+    @argument('edit_cog_source_params', type=bool, description='Whether to edit parameters of the specified cognitive sources.')
+    def experiment(self,
+                   configuration,
+                   rand_embeddings,
+                   cog_source_groups=None,
+                   cognitive_sources=['all'],
+                   embeddings=['all'],
+                   populate=True,
+                   single_edit=False,
+                   edit_cog_source_params=False):
         '''
         Edit configuration of single, multiple or all combinations of embeddings and cognitive sources.
         '''
@@ -977,7 +993,8 @@ class EditConfig:
         edit_all_embeddings = embeddings[0] == 'all'
 
         try:
-            cognitive_sources, embeddings = resolve_cog_emb(cognitive_sources,
+            cognitive_sources, embeddings = resolve_cog_emb(cog_source_groups,
+                                                            cognitive_sources,
                                                             embeddings,
                                                             main_conf_dict,
                                                             cog_data_config_dict,
@@ -992,7 +1009,10 @@ class EditConfig:
             if csource not in cog_data_config_dict:
                 if populate:
                     cprint('Source {} not yet registered, creating ...'.format(csource), 'yellow')
-                    self.populate(configuration, rand_embeddings=rand_embeddings, cognitive_sources=[csource], embeddings=[], quiet=True)
+                    try:
+                        self.populate(configuration, rand_embeddings=rand_embeddings, cognitive_sources=[csource], embeddings=[], quiet=True)
+                    except AbortException:
+                        return
                     main_conf_dict = _open_config(configuration, resources_path, quiet=True)
                     cog_data_config_dict = main_conf_dict['cogDataConfig']
                 else:
@@ -1002,24 +1022,28 @@ class EditConfig:
             if edit_all_embeddings and not populate:
                 embeddings = list(cog_data_config_dict[csource]["wordEmbSpecifics"].keys())
 
-            # Run config editor for cognitive source
-            config_patch = config_editor("cognitive",
-                                         cog_data_config_dict[csource],
-                                         [],
-                                         [csource],
-                                         singleton_params=['dataset', 'type', 'modality'],
-                                         skip_params=['wordEmbSpecifics'])
+            if edit_cog_source_params:
+                # Run config editor for cognitive source
+                config_patch = config_editor("cognitive",
+                                            cog_data_config_dict[csource],
+                                            [],
+                                            [csource],
+                                            singleton_params=['dataset', 'type', 'modality'],
+                                            skip_params=['wordEmbSpecifics'])
 
-            if config_patch:
-                cog_data_config_dict[csource].update(config_patch)
-                _save_config(main_conf_dict, configuration, resources_path)
-            else:
-                return
+                if config_patch:
+                    cog_data_config_dict[csource].update(config_patch)
+                    _save_config(main_conf_dict, configuration, resources_path)
+                else:
+                    return
 
             for emb in embeddings:
                 if not emb in cog_data_config_dict[csource]["wordEmbSpecifics"]:
                     cprint('Experiment {} / {} not yet registered, adding empty template ...'.format(csource, emb), 'yellow')
-                    self.populate(configuration, rand_embeddings=rand_embeddings, cognitive_sources=[csource], embeddings=[emb], quiet=True)
+                    try:
+                        self.populate(configuration, rand_embeddings=rand_embeddings, cognitive_sources=[csource], embeddings=[emb], quiet=True)
+                    except AbortException:
+                        return
                     main_conf_dict = _open_config(configuration, resources_path, quiet=True)
                     cog_data_config_dict = main_conf_dict['cogDataConfig']
 
@@ -1073,13 +1097,13 @@ class EditConfig:
 
     @command
     @argument('configuration', type=str, description='Name of configuration file', positional=True)
+    @argument('cog_source_groups', type=list, description="Groups of cog. sources to install.")
     @argument('cognitive_sources', type=list, description="Either list of cognitive sources or ['all'] (default).")
     @argument('embeddings', type=list, description="Either list of embeddings or ['all'] (default)")
-    def delete(self, configuration, cognitive_sources=None, embeddings=None):        
+    def delete(self, configuration, cog_source_groups=None, cognitive_sources=None, embeddings=None):        
         '''
         Remove cognitive sources or experiments (cog.source - embedding combinations) from specified configuration.
-        '''        
-        #TODO: Delete config
+        '''
         ctx = context.get_context()
         embedding_registry = ctx.embedding_registry
         resources_path = ctx.resources_path
@@ -1087,7 +1111,7 @@ class EditConfig:
         main_conf_dict = _open_config(configuration, resources_path)
         cog_data_config_dict = _open_cog_config(resources_path)
 
-        if not cognitive_sources and not embeddings:
+        if not cognitive_sources and not cog_source_groups and not embeddings:
             delete_config = button_dialog(title='Deletion',
                                 text='You have not specified cognitive sources and embeddings for removal. Do you wish to delete configuration "{}"?'.format(configuration),
                                 buttons=[
@@ -1101,9 +1125,9 @@ class EditConfig:
             else:
                 return
         
-        elif not cognitive_sources:
+        elif not cognitive_sources and not cog_source_groups:
             all_sources = button_dialog(title='Deletion',
-                                text='You have not specified cognitive sources. Do you wish to remove the specified embeddings for all sources?',
+                                text='You have not specified cognitive sources or groups. Do you wish to remove the specified embeddings for all sources?',
                                 buttons=[
                                         ('No', False),
                                         ('Yes', True),
@@ -1118,7 +1142,8 @@ class EditConfig:
             return
         
         try:
-            cognitive_sources, embeddings = resolve_cog_emb(cognitive_sources,
+            cognitive_sources, embeddings = resolve_cog_emb(cog_source_groups,
+                                                            cognitive_sources,
                                                             embeddings,
                                                             main_conf_dict,                                                            
                                                             cog_data_config_dict,
