@@ -117,7 +117,7 @@ def multi_join(mode, config, df_cognitive_data, word_embedding):
     # Join from chunked FILE
     df_join = df_cognitive_data
     chunk_number = config[emb_key][word_embedding]["chunk_number"]
-    file_name = config['PATH'] + config[emb_key][word_embedding]["chunked_file"]
+    file_name = Path(config['PATH']) / config[emb_key][word_embedding]["chunked_file"]
     ending = config[emb_key][word_embedding]["ending"]
 
     for i in range(0, chunk_number):
@@ -193,7 +193,7 @@ def data_handler(mode, config, word_embedding, cognitive_data, feature, truncate
     else:
         emb_key = 'randEmbConfig'
     # READ Datasets into dataframes
-    df_cognitive_data = pd.read_csv(config['PATH'] + config['cogDataConfig'][cognitive_data]['dataset'], sep=" ")
+    df_cognitive_data = pd.read_csv(Path(config['PATH']) / config['cogDataConfig'][cognitive_data]['dataset'], sep=" ")
 
     # In case it's a single output cogData we just need the single feature
     if config['cogDataConfig'][cognitive_data]['type'] == "single_output":
@@ -208,7 +208,7 @@ def data_handler(mode, config, word_embedding, cognitive_data, feature, truncate
         else:
             skip_rows = None
 
-        df_word_embedding = pd.read_csv(config['PATH'] + config[emb_key][word_embedding]["path"], sep=" ",
+        df_word_embedding = pd.read_csv(Path(config['PATH']) / config[emb_key][word_embedding]["path"], sep=" ",
                             encoding="utf-8", quoting=csv.QUOTE_NONE, skiprows=skip_rows, header=None)
 
         df_word_embedding.columns = ['word'] + ['x_{}'.format(idx + 1) for idx in range(df_word_embedding.shape[1] - 1)]
@@ -238,23 +238,3 @@ def data_handler(mode, config, word_embedding, cognitive_data, feature, truncate
         X = np.array(X, dtype='float')
 
     return split_folds(words, X, y, config["folds"], config["seed"])
-
-
-def main():
-    import json
-    
-    with open('../config/example_1.json', 'r') as fr:
-        config = json.load(fr)
-    
-    we = 'glove-50'
-    feat = 'ALL_DIM'
-    cds = []
-    
-    cds = ['zuco-eeg']
-    
-    for cd in cds:
-        words_test, X_train, y_train, X_test, y_test = data_handler(config, we, cd, feat)        
-        print("SUCCESS: " + cd)
-
-if __name__=="__main__":
-    main()

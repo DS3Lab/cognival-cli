@@ -51,7 +51,6 @@ def model_cv(model_constr, config, X_train, y_train):
 
     param_grid = dict(layers=config["layers"], activation=config["activations"], input_dim=[X_train.shape[1]],
                       output_dim=[y_train.shape[1]], batch_size=config["batch_size"], epochs=config["epochs"])
-
     grid = GridSearchCV(estimator=model,param_grid=param_grid,scoring='neg_mean_squared_error', cv=config['cv_split'])
     grid_result = grid.fit(X_train,y_train, verbose=0, validation_split=config["validation_split"])
 

@@ -3,18 +3,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 from significance_testing import aggregate_significance
 
-def extract_results_gaze(combinations,
-                         baselines,
-                         embeddings):
+def extract_results_gaze(combinations):
     combination_results = {}
+    embeddings = set()
     for y in combinations.values():
+        embeddings.add(y['wordEmbedding'])
         if y['feature'] not in combination_results:
             combination_results[y['feature']] = [(y['wordEmbedding'], y['AVERAGE_MSE'])]
         else:
             combination_results[y['feature']].append((y['wordEmbedding'], y['AVERAGE_MSE']))
+    
+    embeddings = list(embeddings)
 
     avg_results = {}
-    for emb_type in embeddings + baselines:
+    for emb_type in embeddings:
         for res in combination_results.values():
             for r in res:
                 if r[0] == emb_type:
