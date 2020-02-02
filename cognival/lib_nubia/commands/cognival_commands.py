@@ -87,7 +87,8 @@ from .process import (_filter_config,
                       resolve_cog_emb,
                       _edit_config,
                       update_emb_config,
-                      generate_random_df)
+                      generate_random_df,
+                      populate)
                       
 from .utils import (tupleit,
                    _open_config,
@@ -389,7 +390,7 @@ def show_config(configuration, details=False, cognitive_source=None, hide_random
 
 
 @command
-class EditConfig:
+class Config:
     """Generate or edit configuration files for experimental combinations (cog. data - embedding type)
     [Sub-commands] 
     - open: Opens existing or creates new configuration edits its general properties.
@@ -442,143 +443,24 @@ class EditConfig:
     
     @command
     @argument('configuration', type=str, description='Name of configuration file', positional=True)
-    @argument('rand_embeddings', type=bool, description='Include random embeddings True/False')
     @argument('modalities', type=list, description="Groups of cog. sources to install.")
     @argument('cognitive_sources', type=list, description="Either list of cognitive sources or ['all'] (default).")
     @argument('embeddings', type=list, description="Either list of embeddings or ['all'] (default)")
-    def populate(self, configuration, rand_embeddings, modalities=None, cognitive_sources=['all'], embeddings=['all'], mode="reference", quiet=False):
-        '''
-        Populates configuration with templates for some or all installed cognitive sources.
-―
-        '''
-        # TODO: Finish; Show dialog for each source, buttons "Use defaults" (filling form), "Save & Next", "Abort"
-        ctx = context.get_context()
-        resources_path = ctx.resources_path
-        embedding_registry = ctx.embedding_registry
-
-        config_dict = _open_config(configuration, resources_path, quiet=quiet)
-        if not config_dict:
-            return
-        cog_config_dict = _open_cog_config(resources_path)
-
-        reference_dict = None
-
-        try:
-            cognitive_sources, embeddings = resolve_cog_emb(modalities,
-                                                            cognitive_sources,
-                                                            embeddings,
-                                                            config_dict,
-                                                            cog_config_dict,
-                                                            embedding_registry,
-                                                            scope="all")
-        except AbortException:
-            return
-
-        if not config_dict:
-            cprint('populate: Configuration {} does not yet exist!'.format(configuration), 'red')
-            return
-
-        if mode == 'reference':
-            reference_path = resources_path / 'reference_config.json'
-            with open(reference_path) as f:
-                reference_dict = json.load(f)
-        
-        cog_sources_config = _open_cog_config(resources_path)
-        if not cog_sources_config['cognival_installed']:
-            cprint("Error: CogniVal cognitive vectors unavailable!", "red")
-            raise AbortException
-        else:
-            cog_sources_config = cog_sources_config["sources"] 
-
-        # Add cognitive source dicts
-        for csource in cognitive_sources:
-            if not csource in config_dict['cogDataConfig']:
-                if mode == 'reference':
-                    key = csource
-                    try:
-                        # Populate from reference config
-                        config_dict['cogDataConfig'][key] = copy.deepcopy(reference_dict['cogDataConfig'][key])
-                        config_dict['cogDataConfig'][key]['wordEmbSpecifics'] = {}
-                    except KeyError:
-                        cprint('Source {} not a CogniVal default source, looking up installed cog. sources ...'.format(csource), 'yellow')
-                        try:
-                            # Populate from installed cognitive sources
-                            modality, csource_suff = csource.split('_')
-                            csource_dict = cog_config_dict['sources'][modality][csource_suff]
-                            cdc_dict = {"dataset": str(Path('cognitive_sources') / modality / csource_dict['file']),
-                                        "modality": modality,
-                                        "features": csource_dict['features'] if not csource_dict['features'] == 'single' else ['ALL_DIM'],
-                                        "type": 'single_output' if csource_dict['dimensionality'] > 1 else 'multivariate_output'
-                                        }
-                            config_dict['cogDataConfig'][key] = copy.deepcopy(cdc_dict)
-                            config_dict['cogDataConfig'][key]['wordEmbSpecifics'] = {}
-                        except KeyError:
-                            cprint('Cognitive source {} is unknown, adding empty ...'.format(csource), 'red')
-                            config_dict['cogDataConfig'][key] = copy.deepcopy(COGNITIVE_CONFIG_TEMPLATE)
-                            config_dict['cogDataConfig'][key]['wordEmbSpecifics'] = {}
-
-                elif mode == 'empty':
-                    config_dict['cogDataConfig'][key] = copy.deepcopy(COGNITIVE_CONFIG_TEMPLATE)
-                    
-        # Add embedding experiments dicts
-        # Dynamic; check if installed
-        for csource in config_dict['cogDataConfig']:
-            for emb in embeddings:
-                if not emb in config_dict['cogDataConfig'][csource]['wordEmbSpecifics']:
-                    if not embedding_registry['proper'][emb]['installed']:
-                        warnings.warn('Skipping {} ... (not installed)'.format(emb), UserWarning)
-                        continue
-                    
-                    insert_config_dict(config_dict, reference_dict, mode, csource, emb, emb)
-                    
-                if rand_embeddings or config_dict['randEmbConfig']:
-                    rand_emb = embedding_registry['proper'][emb]['random_embedding']
-                    if rand_emb:
-                        emb_part_list = ['{}_for_{}'.format(rand_emb_part, emb) for rand_emb_part in embedding_registry['random_multiseed'][rand_emb]['embedding_parts']]
-                        for rand_emb_part in emb_part_list:
-                            insert_config_dict(config_dict, reference_dict, mode, csource, rand_emb_part, emb)
-
-        # Add embedding configurations dicts
-        for emb in embeddings:
-            emb_key = 'wordEmbConfig'
-            emb_dict = copy.deepcopy(embedding_registry['proper'][emb])
-            config_dict[emb_key][emb] = copy.deepcopy({k:v for k, v in emb_dict.items() if k in WORD_EMB_CONFIG_FIELDS})
-            config_dict[emb_key][emb]['path'] = str(Path('embeddings') / embedding_registry['proper'][emb]['path'] / embedding_registry['proper'][emb]['embedding_file'])
-            if rand_embeddings or config_dict['randEmbConfig']:
-                config_dict[emb_key][emb]['random_embedding'] = '{}_for_{}'.format(config_dict[emb_key][emb]['random_embedding'], emb)
-                rand_emb = embedding_registry['proper'][emb]['random_embedding']
-                if rand_emb:
-                    emb_dict = copy.deepcopy(embedding_registry['random_multiseed'][rand_emb])
-                    emb_part_list = natsorted(list(embedding_registry['random_multiseed'][rand_emb]['embedding_parts']))
-                    config_dict['randEmbSetToParts']['{}_for_{}'.format(rand_emb, emb)] = ['{}_for_{}'.format(rand_emb_part, emb) for rand_emb_part in emb_part_list]
-                    for rand_emb_part in emb_part_list:
-                        config_dict['randEmbConfig']['{}_for_{}'.format(rand_emb_part, emb)] = copy.deepcopy({k:v for k, v in emb_dict.items() if k in WORD_EMB_CONFIG_FIELDS})
-                        config_dict['randEmbConfig']['{}_for_{}'.format(rand_emb_part, emb)]['path'] = str(Path('embeddings') / config_dict['randEmbConfig']['{}_for_{}'.format(rand_emb_part, emb)]['path'] / '{}.txt'.format(rand_emb_part))
-                else:
-                    cprint('Embedding {} has no associated random embedding, skipping ...'.format(emb), 'yellow')
-
-        _save_config(config_dict, configuration, resources_path, quiet=quiet)
-
-    @command
-    @argument('configuration', type=str, description='Name of configuration file', positional=True)
-    @argument('modalities', type=list, description="Groups of cog. sources to install.")
-    @argument('cognitive_sources', type=list, description="Either list of cognitive sources or ['all'] (default).")
-    @argument('embeddings', type=list, description="Either list of embeddings or ['all'] (default)")
-    @argument('rand_embeddings', type=bool, description='Include random embeddings True/False')
+    @argument('rand_embeddings', type=bool, description='Include random embeddings. Note that if random embeddings were included previously, changes are applied to them in any case.')
     @argument('single_edit', type=bool, description='Whether to edit embedding specifics one by one or all at once.')
     @argument('edit_cog_source_params', type=bool, description='Whether to edit parameters of the specified cognitive sources.')
     def experiment(self,
                    configuration,
-                   rand_embeddings,
+                   rand_embeddings=False,
                    modalities=None,
                    cognitive_sources=['all'],
                    embeddings=['all'],
-                   populate=True,
                    single_edit=False,
                    edit_cog_source_params=False):
         '''
         Edit configuration of single, multiple or all combinations of embeddings and cognitive sources.
         '''
+        populate_conf = True
         # TODO: Don't open configuration twice, pass dictionary to populate if some non-existent
         ctx = context.get_context()
         embedding_registry = ctx.embedding_registry
@@ -591,6 +473,7 @@ class EditConfig:
             return
         
         config_dicts = []
+        cog_emb_pairs = []
 
         edit_all_embeddings = embeddings[0] == 'all'
 
@@ -609,29 +492,32 @@ class EditConfig:
         
         for csource in cognitive_sources:            
             if csource not in cog_data_config_dict:
-                if populate:
+                if populate_conf:
                     cprint('Source {} not yet registered, creating ...'.format(csource), 'yellow')
                     try:
-                        self.populate(configuration, rand_embeddings=rand_embeddings, cognitive_sources=[csource], embeddings=[], quiet=True)
+                        populate(configuration,
+                                 main_conf_dict,
+                                 rand_embeddings=False,
+                                 cognitive_sources=[csource],
+                                 embeddings=[],
+                                 quiet=True)
                     except AbortException:
                         return
-                    main_conf_dict = _open_config(configuration, resources_path, quiet=True)
-                    cog_data_config_dict = main_conf_dict['cogDataConfig']
                 else:
                     continue
 
             # If populate is False, edit only existing configurations vs. populating missing ones
-            if edit_all_embeddings and not populate:
+            if edit_all_embeddings and not populate_conf:
                 embeddings = list(cog_data_config_dict[csource]["wordEmbSpecifics"].keys())
 
             if edit_cog_source_params:
                 # Run config editor for cognitive source
                 config_patch = config_editor("cognitive",
-                                            cog_data_config_dict[csource],
-                                            [],
-                                            [csource],
-                                            singleton_params=['dataset', 'type', 'modality'],
-                                            skip_params=['wordEmbSpecifics'])
+                                             cog_data_config_dict[csource],
+                                             [],
+                                             [csource],
+                                             singleton_params=['dataset', 'type', 'modality'],
+                                             skip_params=['wordEmbSpecifics'])
 
                 if config_patch:
                     cog_data_config_dict[csource].update(config_patch)
@@ -640,18 +526,23 @@ class EditConfig:
                     return
 
             for emb in embeddings:
-                if not emb in cog_data_config_dict[csource]["wordEmbSpecifics"]:
+                if (not emb in cog_data_config_dict[csource]["wordEmbSpecifics"]) or \
+                   (rand_embeddings and not main_conf_dict["wordEmbConfig"][emb]['random_embedding']):
                     cprint('Experiment {} / {} not yet registered, adding empty template ...'.format(csource, emb), 'yellow')
                     try:
-                        self.populate(configuration, rand_embeddings=rand_embeddings, cognitive_sources=[csource], embeddings=[emb], quiet=True)
+                        populate(configuration,
+                                 main_conf_dict,
+                                 rand_embeddings=rand_embeddings,
+                                 cognitive_sources=[csource],
+                                 embeddings=[emb],
+                                 quiet=True)
                     except AbortException:
                         return
-                    main_conf_dict = _open_config(configuration, resources_path, quiet=True)
-                    cog_data_config_dict = main_conf_dict['cogDataConfig']
 
                 emb_config = cog_data_config_dict[csource]["wordEmbSpecifics"][emb]
                 config_dicts.append(emb_config)
-            
+                cog_emb_pairs.append((csource, emb))
+        
         if config_dicts:            
             if single_edit:
                 for idx, (emb, cdict) in enumerate(zip(embeddings, config_dicts)):
@@ -683,17 +574,25 @@ class EditConfig:
                         else:
                             config_template[key] = values.pop()
                 
+                
+                emb_labels = []
+                for emb in embeddings:
+                    if main_conf_dict['wordEmbConfig'][emb]['random_embedding']:
+                        emb_labels.append('{} (+ rand.)'.format(emb))
+                    else:
+                        emb_labels.append(emb)
+                
                 # Run editor for cognitive source/embedding experiments
                 config_patch = config_editor("embedding_exp",
                                             config_template,
-                                            embeddings,
+                                            emb_labels,
                                             cognitive_sources,
                                             singleton_params=['cv_split', 'validation_split'])
                 if not config_patch:
                     return
                 else:
-                    for emb, cdict in zip(embeddings, config_dicts):
-                        update_emb_config(emb, cdict, config_patch, rand_embeddings, main_conf_dict, embedding_registry)
+                    for (csource, emb), cdict in zip(cog_emb_pairs, config_dicts):
+                        update_emb_config(emb, csource, cdict, config_patch, rand_embeddings, main_conf_dict, embedding_registry)
 
                 _save_config(main_conf_dict, configuration, resources_path)
 
