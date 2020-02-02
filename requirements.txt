@@ -15,10 +15,10 @@ Pygments==2.2.0
 termcolor==1.1.0
 prompt_toolkit==3.0.2
 tableformatter==0.1.4
-tensorflow==1.13.1
+tensorflow==1.15.2
 joblib==0.13.2
 requests==2.19.1
 gdown==3.8.3
 bert_serving==0.0.1
 GPUtil==1.4.0
-scikit_learn==0.22.1
+scikit_learn==0.20.3

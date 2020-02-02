@@ -36,7 +36,7 @@ def _open_cog_config(resources_path):
 
 def _check_cog_installed(resources_path):
     cog_config = _open_cog_config(resources_path)
-    return cog_config['installed']
+    return cog_config['cognival_installed']
 
 
 def _check_emb_installed(embedding, embeddings_conf):

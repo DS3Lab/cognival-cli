@@ -8,7 +8,7 @@ def bonferroni_correction(alpha, no_hypotheses):
 
 def test_significance(baseline, model, alpha, test, debug=False):
     command = ["python",
-               "significance_testing/testSignificanceNLP/testSignificance.py",
+               "cognival/significance_testing/testSignificanceNLP/testSignificance.py",
                baseline,
                model,
                str(alpha),

@@ -210,7 +210,4 @@ def main():
     print(time_taken)
 
     return
-
-
-if __name__ == "__main__":
-    main()
+    

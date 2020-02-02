@@ -40,10 +40,12 @@ def write_results(config, log, word_error, history):
     :param word_error: np.array with word errors
     :param history: np.array with training history (loss)
     '''
-    if not os.path.exists(config['outputDir']):
-        os.mkdir(config['outputDir'])
 
-    mapping_path = Path(config['outputDir']) / 'mapping_{}.json'.format(config["version"])
+    output_dir = Path(config['PATH']) / config['outputDir']
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+
+    mapping_path = output_dir / 'mapping_{}.json'.format(config["version"])
     title = log["cognitiveData"] + '_' + log["feature"] + '_' + log["wordEmbedding"] + '_' + str(config["version"])
     path = Path(log["modality"]) / log["cognitiveData"] / log["feature"] / log["wordEmbedding"] / str(config["version"])
     rand_emb = None
@@ -75,18 +77,18 @@ def write_results(config, log, word_error, history):
         with open(mapping_path, 'w') as f:
             json.dump(dict(mapping_dict), f, indent=4)
 
-    output_dir = Path(config['outputDir']) / "experiments" / path
+    experiments_dir = output_dir / "experiments" / path
 
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    if not os.path.exists(experiments_dir):
+        os.makedirs(experiments_dir)
 
-    with open(output_dir / '{}.json'.format(log["wordEmbedding"]),'w') as f:
+    with open(experiments_dir / '{}.json'.format(log["wordEmbedding"]),'w') as f:
         json.dump(log,f,indent=4, sort_keys=True)
 
-    np.savetxt(output_dir / '{}.txt'.format(log["wordEmbedding"]), word_error, delimiter=" ", fmt="%s")
+    np.savetxt(experiments_dir / '{}.txt'.format(log["wordEmbedding"]), word_error, delimiter=" ", fmt="%s")
     
     if history:
-        plot_handler(title, history, log, str(output_dir))
+        plot_handler(title, history, log, str(experiments_dir))
 
     return
 
@@ -100,12 +102,12 @@ def write_options(config, modality, run_stats):
     :param run_stats: Stats and params for each experimental run
     '''
 
-    outputDir = config['outputDir']
+    outputDir = Path(config['PATH']) / config['outputDir']
 
     if not os.path.exists(outputDir):
         os.mkdir(outputDir)
 
-    with open(Path(outputDir) / "experiments" / modality / "options_{}.json".format(str(config["version"])),'w') as fileWriter:
+    with open(outputDir / "experiments" / modality / "options_{}.json".format(str(config["version"])),'w') as fileWriter:
         json.dump(run_stats, fileWriter, indent=4, sort_keys=True)
 
     return
