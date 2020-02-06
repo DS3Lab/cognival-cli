@@ -105,6 +105,8 @@ from .utils import (tupleit,
                    chunks,
                    page_list)
 
+from .report import generate_report
+
 from .templates import (WORD_EMB_CONFIG_FIELDS,
                         MAIN_CONFIG_TEMPLATE,
                         COGNITIVE_CONFIG_TEMPLATE,
@@ -394,10 +396,8 @@ class Config:
     """Generate or edit configuration files for experimental combinations (cog. data - embedding type)
     [Sub-commands] 
     - open: Opens existing or creates new configuration edits its general properties.
-    - populate: Populates specified configuration with empty templates or default
-                configurations for some or all installed cognitive sources.
     - experiment: Edit configuration of single, multiple or all combinations of embeddings
-                  and cognitive sources of specified configuration.
+                  and cognitive sources of specified configuration. Populates default values from reference configuration.
     - delete: Remove cognitive sources or experiments (cog.source - embedding combinations) from specified configuration
               or delete entire configuration.
 ―
@@ -779,10 +779,16 @@ def generate_random(embeddings, no_embeddings=10, seed_func='exp_e_floored'):
 
 @command
 @argument('configuration', type=str, description='Name of configuration file', positional=True)
+@argument('version', type=int, description='Version to be aggregated. Defaults to 0, treated as last run (version - 1).')
 @argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
 @argument('alpha', type=str, description='Alpha value')
 @argument('test', type=str, description='Significance test')
-def sig_test(configuration, modalities=['eye-tracking', 'eeg', 'fmri'], alpha=0.01, test='Wilcoxon'):    
+def sig_test(configuration,
+             version=0,
+             modalities=['eye-tracking', 'eeg', 'fmri'],
+             alpha=0.01,
+             test='Wilcoxon',
+             quiet=False):    
     '''
     Test significance of results in the given modality and produced based on the specified configuration.
 ―
@@ -790,7 +796,7 @@ def sig_test(configuration, modalities=['eye-tracking', 'eeg', 'fmri'], alpha=0.
     ctx = context.get_context()
     resources_path = ctx.resources_path
 
-    config_dict = _open_config(configuration, resources_path)
+    config_dict = _open_config(configuration, resources_path, quiet=quiet)
     if not config_dict:
         return
     
@@ -801,16 +807,25 @@ def sig_test(configuration, modalities=['eye-tracking', 'eeg', 'fmri'], alpha=0.
         return
 
     # Get mapping of previous version (current not yet executed)
-    version = config_dict['version'] - 1
+    if not version:
+        version = config_dict['version'] - 1
+    elif version >= config_dict['version']:
+        cprint('Version {} exceeds last version for which results were generated ({}), aborting ...'.format(version, config_dict['version'] - 1), 'red')
+        return
 
-    with open(out_dir / 'mapping_{}.json'.format(version)) as f:
-        mapping_dict = json.load(f)
+    try:
+        with open(out_dir / 'mapping_{}.json'.format(version)) as f:
+            mapping_dict = json.load(f)
+    except FileNotFoundError:
+        cprint('No results for version {}, aborting ...'.format(version), 'red')
+        return
     
     for modality in modalities:
-        cprint('\n[{}]\n'.format(modality.upper()), attrs=['bold'], color='green')
+        if not quiet:
+            cprint('\n[{}]\n'.format(modality.upper()), attrs=['bold'], color='green')
         experiments_dir = out_dir / 'experiments'
-        sig_test_res_dir = out_dir / 'sig_test_results' / modality
-        report_dir = out_dir / 'reports' / modality
+        sig_test_res_dir = out_dir / 'sig_test_results' / modality / str(version)
+        report_dir = out_dir / 'reports' / modality / str(version)
         
         # Erase previously generated report files and significance test files
         if os.path.exists(report_dir / '{}.json'.format(test)):
@@ -828,7 +843,8 @@ def sig_test(configuration, modalities=['eye-tracking', 'eeg', 'fmri'], alpha=0.
             if v['random_embedding']:
                 emb_bl_pairs.append((k, v['random_embedding']))
             else:
-                cprint('Embedding {} has no associated random embeddings, no significance test possible, skipping ...', 'yellow')
+                if not quiet:
+                    cprint('Embedding {} has no associated random embeddings, no significance test possible, skipping ...', 'yellow')
 
         embeddings, baselines = zip(*emb_bl_pairs)
 
@@ -845,18 +861,20 @@ def sig_test(configuration, modalities=['eye-tracking', 'eeg', 'fmri'], alpha=0.
         
         # Skip modality if no hypotheses found ...
         if not hypotheses:
-            cprint('No hypotheses, skipping ...', 'yellow')
+            if not quiet:
+                cprint('No hypotheses, skipping ...', 'yellow')
             continue
 
-        cprint('Number of hypotheses: {}'.format(hypotheses), attrs=['bold'])
         bf_corr_alpha = bonferroni_correction(alpha, hypotheses)
-        print('α (initial/after bonferroni correction): {} / {}'.format(alpha, bf_corr_alpha))
+
+        if not quiet:
+            cprint('Number of hypotheses: {}'.format(hypotheses), attrs=['bold'])
+            print('α (initial/after bonferroni correction): {} / {}'.format(alpha, bf_corr_alpha))
+            cprint('\n[Significance tests]:', attrs=['bold'])
 
         report = report_dir / '{}.json'.format(test)
         results = collections.defaultdict(dict)
         results['bonferroni_alpha'] = bf_corr_alpha
-
-        cprint('\n[Significance tests]:', attrs=['bold'])
 
         for filename in os.listdir(sig_test_res_dir):
             if not 'baseline' in filename:
@@ -885,32 +903,37 @@ def sig_test(configuration, modalities=['eye-tracking', 'eeg', 'fmri'], alpha=0.
                 else:
                     out_str, color = ': not significant (p = {:1.3e})'.format(pval), 'red'
                 
-                cprint('    - {}'.format(name), attrs=['bold'], color=color, end='')
-                cprint(out_str, color)
+                if not quiet:
+                    cprint('    - {}'.format(name), attrs=['bold'], color=color, end='')
+                    cprint(out_str, color)
 
-        with open(report, 'w') as fp:
+        with open(report, 'w', encoding='utf-8') as fp:
             json.dump(dict(results), fp, indent=4)
 
 @command
 @argument('configuration', type=str, description='Name of configuration file', positional=True)
+@argument('version', type=int, description='Version to be aggregated. Defaults to 0, treated as last run (version - 1).')
 @argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
 @argument('test', type=str, description='Significance test')
 def aggregate(configuration,
+              version=0,
               modalities=['eye-tracking', 'eeg', 'fmri'],
-              test="Wilcoxon"):    
+              test="Wilcoxon",
+              quiet=False):    
     '''
     Test significance of results in the given modality and produced based on the specified configuration.
 ―
     '''
     ctx = context.get_context()
     resources_path = ctx.resources_path
-    config_dict = _open_config(configuration, resources_path)
+    config_dict = _open_config(configuration, resources_path, quiet=quiet)
 
     if not config_dict:
         return
 
     # Get mapping of previous version (current not yet executed)
-    version = config_dict['version'] - 1
+    if not version:
+        version = config_dict['version'] - 1
     out_dir = Path(config_dict['PATH']) / config_dict['outputDir']
 
     with open(out_dir / 'mapping_{}.json'.format(version)) as f:
@@ -939,7 +962,8 @@ def aggregate(configuration,
                 options_dict = json.load(f)
                 options_dicts.append(options_dict)
         except FileNotFoundError:
-            cprint("No results for modality {}, skipping ...".format(modality), "yellow")
+            if not quiet:
+                cprint("No results for modality {}, skipping ...".format(modality), "yellow")
             options_dicts.append(None)
 
         for experiment, properties in mapping_dict.items():
@@ -952,12 +976,14 @@ def aggregate(configuration,
         if v['random_embedding']:
             emb_bl_pairs.append((k, v['random_embedding']))
         else:
-            cprint('Embedding {} has no associated random embeddings, no significance test possible, skipping ...', 'yellow')
+            if not quiet:
+                cprint('Embedding {} has no associated random embeddings, no significance test possible, skipping ...', 'yellow')
 
     embeddings, baselines = zip(*emb_bl_pairs)
     
     for modality, options_dict in zip(modalities, options_dicts):
-        cprint('\n[{}]\n'.format(modality.upper()), attrs=['bold'], color='green')
+        if not quiet:
+            cprint('\n[{}]\n'.format(modality.upper()), attrs=['bold'], color='green')
     
         if not options_dict:
             continue
@@ -965,6 +991,7 @@ def aggregate(configuration,
         results = extract_results[modality](options_dict)
 
         significance = aggregate_significance[modality](report_dir,
+                                                        version,
                                                         test,
                                                         modality_to_experiments[modality])
         
@@ -979,28 +1006,48 @@ def aggregate(configuration,
                 else:
                     avg_base = results[base]
                     avg_emb = results[emb]
-                df_rows_cli.append({'Embedding':emb, 'Ø MSE Baseline':avg_base, 'Ø MSE Proper':avg_emb, 'Significance':  colored(significance[emb], 'yellow')})
-                df_rows.append({'Embedding':emb, 'Ø MSE Baseline':avg_base, 'Ø MSE Proper':avg_emb, 'Significance': significance[emb]})
+                df_rows_cli.append({'Word embedding':emb, 'Ø MSE Baseline':avg_base, 'Ø MSE Proper':avg_emb, 'Significance':  colored(significance[emb], 'yellow')})
+                df_rows.append({'Word embedding':emb, 'Ø MSE Baseline':avg_base, 'Ø MSE Proper':avg_emb, 'Significance': significance[emb]})
             except KeyError:
                 pass
 
         df_cli = pd.DataFrame(df_rows_cli)
+        df_cli.columns = [colored(col, attrs=['bold']) for col in df_cli.columns]
         df = pd.DataFrame(df_rows)
-        df.set_index('Embedding', drop=True, inplace=True)
-        df.to_json(report_dir / modality / 'aggregated_scores.json')
-        print(tabulate.tabulate(df_cli, headers="keys", tablefmt="fancy_grid", showindex=False))
+        df.set_index('Word embedding', drop=True, inplace=True)
+        df.to_json(report_dir / modality / str(version) / 'aggregated_scores.json')
+        if not quiet:
+            print(tabulate.tabulate(df_cli, headers="keys", tablefmt="fancy_grid", showindex=False))
 
 @command
-@argument('configuration', type=str, description='Name of configuration file')
+@argument('configuration', type=str, description='Name of configuration file', positional=True)
+@argument('version', type=int, description='Version to be aggregated. Defaults to 0, treated as last run (version - 1).')
 @argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
+@argument('alpha', type=str, description='Alpha value')
 @argument('test', type=str, description='Significance test')
-def report(configuration, modalities=['eye-tracking', 'eeg', 'fmri'], test="Wilcoxon"):
+@argument('html', type=str, description='Generate html report.')
+@argument('open_html', type=str, description='Open generated html report.')
+@argument('pdf', type=str, description='Generate pdf report.')
+@argument('open_pdf', type=str, description='Open generated pdf report.')
+def report(configuration,
+           version=0,
+           modalities=['eye-tracking', 'eeg', 'fmri'],
+           alpha=0.01,
+           test="Wilcoxon",
+           html=True,
+           open_html=False,
+           pdf=False,
+           open_pdf=False):
     '''
-    (not yet implemented)
+    Compute significance tests, aggregate results and generate report
 ―
     '''
-    pass
+    ctx = context.get_context()
+    resources_path = ctx.resources_path
 
+    sig_test(configuration, version, modalities, alpha, test, quiet=True)
+    aggregate(configuration, version, modalities, test, quiet=True)
+    generate_report(configuration, version, resources_path, html, pdf, open_html, open_pdf)
 
 @command
 class Install:
