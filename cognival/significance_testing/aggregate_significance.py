@@ -1,12 +1,13 @@
 import json
 
 def aggregate_signi_fmri(result_dir,
+                         version,
                          test,
                          embeddings):
 
     significance = {}
 
-    with open(result_dir / 'fmri' / '{}.json'.format(test)) as json_file:
+    with open(result_dir / 'fmri' / str(version) / '{}.json'.format(test)) as json_file:
         data = json.load(json_file)
 
         corrected_alpha = data['bonferroni_alpha']
@@ -29,12 +30,13 @@ def aggregate_signi_fmri(result_dir,
 
 
 def aggregate_signi_eeg(result_dir,
+                        version,
                         test,
                         embeddings):
 
     significance = {}
 
-    with open(result_dir / 'eeg' / '{}.json'.format(test)) as json_file:
+    with open(result_dir / 'eeg' / str(version) / '{}.json'.format(test)) as json_file:
         data = json.load(json_file)
         corrected_alpha = data['bonferroni_alpha']
 
@@ -54,12 +56,13 @@ def aggregate_signi_eeg(result_dir,
 
 
 def aggregate_signi_gaze(result_dir,
+                         version,
                          test,
                          embeddings):
     
     significance = {}
 
-    with open(result_dir / 'eye-tracking' / '{}.json'.format(test)) as json_file:
+    with open(result_dir / 'eye-tracking' / str(version) / '{}.json'.format(test)) as json_file:
         data = json.load(json_file)
 
         corrected_alpha = data['bonferroni_alpha']
