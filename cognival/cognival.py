@@ -133,8 +133,8 @@ def main():
 
     cognival_path = config_dict['cognival_path']
 
-    plugin = NubiaCognivalPlugin(cognival_path=cognival_path)
-    cprint("Launching interactive shell, please wait ...", "magenta")
+    plugin = NubiaCognivalPlugin(cognival_path=cognival_path, messages=messages)
+    cprint("Launching CogniVal, please wait ...", "magenta")
     shell = Nubia(
         name="cognival",
         command_pkgs=commands,
@@ -143,9 +143,6 @@ def main():
     )
     # Clear screen
     print("\033c")
-    cprint(messages.LOGO_STR, "magenta")
-    cprint(messages.WELCOME_MESSAGE_STR, "green")
-
     sys.exit(shell.run())
 
 if __name__ == "__main__":

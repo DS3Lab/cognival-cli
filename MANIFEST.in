@@ -7,4 +7,5 @@ include user/results/README.md
 include user/resources/cognitive_sources.json
 include user/resources/embedding_registry.json
 include user/resources/reference_config.json
+include user/resources/demo_config.json
 include user/resources/standard_vocab.txt

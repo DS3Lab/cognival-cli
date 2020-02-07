@@ -126,276 +126,167 @@ NUM_BERT_WORKERS = 1
 COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1pWwIiCdB2snIkgJbD1knPQ6akTPW_kx0'
 
 @command
-class Run:
-    """Execute experimental runs based on specified configuration and constraints
-    [Sub-commands]
-    - experiment: Run parallelized evaluation of single, selected or all
-                  combinations of embeddings and cognitive sources.
-    - experiment_serial: Non-parallelized variant, only for debugging purposes.
+@argument("configuration", type=str, description="Configuration for experimental runs", positional=True)
+@argument("processes", type=int, description="No. of CPU cores used for parallelization")
+@argument("embedding", type=str, description="Single embedding")
+@argument("embeddings", type=list, description="List of embeddings")
+@argument("cognitive_source", type=str, description="Single cognitive source")
+@argument("cognitive_sources", type=list, description="List of cognitive sources")
+@argument("cognitive_feature", type=str, description="Single cognitive feature")
+@argument("cognitive_features", type=list, description="List of cognitive features")
+@argument("random_baseline", type=bool, description="Compute random baseline(s) corresponding to specified embedding")
+def run(configuration,
+        embedding='all',
+        embeddings=None,
+        cognitive_source='all',
+        cognitive_sources=None,
+        cognitive_feature=None,
+        cognitive_features=None,
+        processes=None,
+        random_baseline=True):
+    '''
+    Run parallelized evaluation of single, selected or all combinations of embeddings and cognitive sources.
+    Only exists for debugging purposes.
+    '''
+    ctx = context.get_context()
+    resources_path = ctx.resources_path
+
+    parametrization = _filter_config(configuration,
+                                        embedding,
+                                        embeddings,
+                                        cognitive_source,
+                                        cognitive_sources,
+                                        cognitive_feature,
+                                        cognitive_features,
+                                        random_baseline)
+    
+    if not parametrization:
+        return
+
+    config_dict, embeddings_list, emb_to_random_dict, cog_sources_list, cog_source_to_feature = parametrization
+
+
+    # TODO: Check whether all installed!
+    results_dict = run_parallel(config_dict,
+                                emb_to_random_dict,
+                                embeddings_list,
+                                cog_sources_list,
+                                cog_source_to_feature,
+                                cpu_count=processes)
+    
+    for modality, results in results_dict.items():
+        run_stats = {}
+        for id_, (result_proper, result_random, rand_emb, options) in enumerate(zip(results["proper"],
+                                                                                results["random"],
+                                                                                results["rand_embeddings"],
+                                                                                results["options"])):
+            process_and_write_results(result_proper, result_random, rand_emb, config_dict, options, id_, run_stats)
+        write_options(config_dict, modality, run_stats)
+
+    # Increment version
+    config_dict['version'] += 1
+
+    _save_config(config_dict, configuration, resources_path)
+
+
+@command
+class List:
+    """List properties of configurations, embeddings and cognitive sources.
+    [Sub-commands] 
+    - configs: 
+    - embeddings: 
+    - cognitive-sources: 
 ―
     """
+
     def __init__(self) -> None:
         pass
 
     """This is the super command help"""
 
     @command
-    @argument("configuration", type=str, description="Name of configuration", positional=True)
-    @argument("embedding", type=str, description="Single embedding")
-    @argument("embeddings", type=list, description="List of embeddings")
-    @argument("cognitive_source", type=str, description="Single cognitive source")
-    @argument("cognitive_sources", type=list, description="List of cognitive sources")
-    @argument("cognitive_feature", type=str, description="Single cognitive feature")
-    @argument("cognitive_features", type=list, description="List of cognitive features")
-    @argument("random_baseline", type=bool, description="Whether to compute random baseline(s) corresponding to specified embedding")
-    def experiment_serial(self,
-               configuration,
-               embedding=None,
-               embeddings=None,
-               cognitive_source=None,
-               cognitive_sources=None,
-               cognitive_feature='ALL',
-               cognitive_features=None,
-               random_baseline=False):
+    def configs(self):
         '''
-        Run serial evaluation of single, selected or all combinations of embeddings and cognitive sources.
-        Only exists for debugging purposes.
+        List available configurations with general parameters.
+    ―
         '''
-        cprint('Warning: experiment_serial is intended for debugging purposes only, use "run experiment p=1 ..." for single core processing', 'magenta')
         ctx = context.get_context()
         resources_path = ctx.resources_path
+        general_param_dicts = []
+        for entry in os.scandir(resources_path):
+            if entry.name.endswith('config.json'):
+                with open(entry) as f:
+                    config = entry.name.split('_')[0]
+                    if not config == 'reference': 
+                        config_dict = json.load(f)
+                        general_params = {k:v for k, v in config_dict.items() if k not in ['cogDataConfig', 'wordEmbConfig', 'randEmbConfig', 'randEmbSetToParts']}
+                        general_params['config'] = config
+                        general_param_dicts.append(general_params)
 
-        parametrization = _filter_config(configuration,
-                                         embedding,
-                                         embeddings,
-                                         cognitive_source,
-                                         cognitive_sources,
-                                         cognitive_feature,
-                                         cognitive_features,
-                                         random_baseline)
-        
-        if not parametrization:
-            cprint("Aborting ...", "red")
-            return
-        
-        config_dict, embeddings_list, emb_to_random_dict, cog_sources_list, cog_source_to_feature = parametrization
+        fgrid = tform.AlternatingRowGrid()
+        cols = ['config'] + [k for k in general_param_dicts[0].keys() if not k == 'config']
+        rows = [[colored(x['config'], attrs=['bold'], color='yellow')] + [v for k, v in x.items() if not k == 'config'] for x in general_param_dicts]
+        formatted_table = tform.generate_table(rows=rows,
+                                                columns=cols,
+                                                grid_style=fgrid)
+        cprint('List of available configurations. Note that the reference configuration is read-only and not listed.', 'green')
+        print(formatted_table)
 
-        for emb, cog in itertools.product(embeddings_list, cog_sources_list):
-            for feat in cog_source_to_feature[cog]:
-                cprint('Evaluating {}/{}/{} ...'.format(cog, emb, feat), 'green')
-                start_time = datetime.now()
-                truncate_first_line = config_dict['wordEmbConfig'][emb]['truncate_first_line']
-                # Get random embeddings, check if not yet evaluated
-                rand_emb = emb_to_random_dict.get(emb, None)
-                results = run_serial(config_dict,
-                                     emb,
-                                     rand_emb,
-                                     cog,
-                                     feat,
-                                     truncate_first_line)
-                process_and_write_results(results, rand_emb, config_dict)
-                time_taken = datetime.now() - start_time
-                cprint('Finished after {} seconds'.format(time_taken), 'yellow')
-                
-        # Increment version
-        config_dict['version'] += 1
-
-        _save_config(config_dict, configuration, resources_path)
-        cprint('All done.', 'green')
-    
     @command
-    @argument("configuration", type=str, description="Configuration for experimental runs", positional=True)
-    @argument("processes", type=int, description="No. of CPU cores used for parallelization")
-    @argument("embedding", type=str, description="Single embedding")
-    @argument("embeddings", type=list, description="List of embeddings")
-    @argument("cognitive_source", type=str, description="Single cognitive source")
-    @argument("cognitive_sources", type=list, description="List of cognitive sources")
-    @argument("cognitive_feature", type=str, description="Single cognitive feature")
-    @argument("cognitive_features", type=list, description="List of cognitive features")
-    @argument("random_baseline", type=bool, description="Compute random baseline(s) corresponding to specified embedding")
-    def experiment(self,
-                 configuration,
-                 embedding=None,
-                 embeddings=None,
-                 cognitive_source=None,
-                 cognitive_sources=None,
-                 cognitive_feature='ALL',
-                 cognitive_features=None,
-                 processes=None,
-                 random_baseline=True):
-        '''
-        Run parallelized evaluation of single, selected or all combinations of embeddings and cognitive sources.
-        Only exists for debugging purposes.
-        '''
+    def embeddings(self):
+        """
+        List available and installed default embeddings as well as installed custom and random embeddings.
+    ―
+        """
+        ctx = context.get_context()
+        if ctx.debug:
+            emb_types = ['proper', 'random_static', 'random_multiseed']
+        else:
+            emb_types = ['proper', 'random_multiseed']
+
+        for emb_type in emb_types:
+            cprint(emb_type.title(), attrs=['bold'])
+            for key, value in ctx.embedding_registry[emb_type].items():
+                cprint(key, 'cyan', end=' '*(25-len(key)))
+                if value['installed']:
+                    cprint('installed', 'green', attrs=['bold'])
+                else:
+                    cprint('not installed', 'red', attrs=['bold'])
+
+    @command
+    def cognitive_sources(self):
+        """
+        List CogniVal cognitive sources (must be installed)
+    ―
+        """
         ctx = context.get_context()
         resources_path = ctx.resources_path
+        cog_config = _open_cog_config(resources_path)
 
-        parametrization = _filter_config(configuration,
-                                         embedding,
-                                         embeddings,
-                                         cognitive_source,
-                                         cognitive_sources,
-                                         cognitive_feature,
-                                         cognitive_features,
-                                         random_baseline)
-        
-        if not parametrization:
-            cprint("Aborting ...", "red")
-            return
-        
-        config_dict, embeddings_list, emb_to_random_dict, cog_sources_list, cog_source_to_feature = parametrization
-
-
-        # TODO: Check whether all installed!
-        results_dict = run_parallel(config_dict,
-                                    emb_to_random_dict,
-                                    embeddings_list,
-                                    cog_sources_list,
-                                    cog_source_to_feature,
-                                    cpu_count=processes)
-        
-        for modality, results in results_dict.items():
-            run_stats = {}
-            for id_, (result_proper, result_random, rand_emb, options) in enumerate(zip(results["proper"],
-                                                                                 results["random"],
-                                                                                 results["rand_embeddings"],
-                                                                                 results["options"])):
-                process_and_write_results(result_proper, result_random, rand_emb, config_dict, options, id_, run_stats)
-            write_options(config_dict, modality, run_stats)
-
-        # Increment version
-        config_dict['version'] += 1
-
-        _save_config(config_dict, configuration, resources_path)
-
-
-@command
-def list_configs():
-    '''
-    List available configurations with general parameters.
-―
-    '''
-    ctx = context.get_context()
-    resources_path = ctx.resources_path
-    general_param_dicts = []
-    for entry in os.scandir(resources_path):
-        if entry.name.endswith('config.json'):
-            with open(entry) as f:
-                config = entry.name.split('_')[0]
-                if not config == 'reference': 
-                    config_dict = json.load(f)
-                    general_params = {k:v for k, v in config_dict.items() if k not in ['cogDataConfig', 'wordEmbConfig', 'randEmbConfig', 'randEmbSetToParts']}
-                    general_params['config'] = config
-                    general_param_dicts.append(general_params)
-
-    fgrid = tform.AlternatingRowGrid()
-    cols = ['config'] + [k for k in general_param_dicts[0].keys() if not k == 'config']
-    rows = [[colored(x['config'], attrs=['bold'], color='yellow')] + [v for k, v in x.items() if not k == 'config'] for x in general_param_dicts]
-    formatted_table = tform.generate_table(rows=rows,
-                                            columns=cols,
-                                            grid_style=fgrid)
-    cprint('List of available configurations. Note that the reference configuration is read-only and not listed.', 'green')
-    print(formatted_table)
-
-@command
-@argument("configuration", type=str, description="Name of configuration", positional=True)
-@argument("details", type=bool, description="Whether to show details for all cognitive sources. Ignored when cognitive_source is specified.")
-@argument("cognitive_source", type=str, description="Cognitive source for which details should be shown")
-@argument("hide_random", type=str, description="Hide random embeddings from Word embedding specifics")
-def show_config(configuration, details=False, cognitive_source=None, hide_random=True):
-    '''
-    Display an overview for the given configuration.
-―
-    '''
-    ctx = context.get_context()
-    resources_path = ctx.resources_path
-
-    config_dict = _open_config(configuration, resources_path, quiet=True, protect_reference=False)
-    if not config_dict:
-        return
-
-    fgrid = tform.FancyGrid()
-    altgrid = tform.AlternatingRowGrid()
-    if not cognitive_source:
-        cprint("Note: Use 'edit-config open {}' to edit the general properties of this configuration.".format(configuration), attrs=["bold"], color="green")
-        general = [(k, v) for k, v in config_dict.items() if not k in ['cogDataConfig', 'wordEmbConfig', 'randEmbConfig', 'randEmbSetToParts']]
-        print()
-        cprint('General properties', attrs=['bold', 'reverse'], color='green')
-        formatted_table = tform.generate_table(rows=[[x[1] for x in general]],
-                                            columns=[x[0] for x in general],
-                                            grid_style=fgrid,
-                                            #row_tagger=row_stylist,
-                                            transpose=False)
-        print(formatted_table)
-        print()
-        experiment_rows = [chunked_list_concat_str(list(config_dict['cogDataConfig']), 4)]
-        experiment_rows += [chunked_list_concat_str(list(['{} ({})'.format(k, v['random_embedding'] if 'random_embedding' in v and v['random_embedding'] else 'None') \
-                                                            for k, v in config_dict['wordEmbConfig'].items()]), 2)]
-        experiment_rows = [experiment_rows]
-
-        cprint('Experiment properties', attrs=['bold', 'reverse'], color='cyan')
-        formatted_table = tform.generate_table(rows=experiment_rows,
-                                            columns=[colored('Cognitive sources', attrs=['bold']),
-                                                     colored('Embeddings (Rand. emb.)', attrs=['bold'])],
-                                            grid_style=fgrid,
-                                            #row_tagger=row_stylist,
-                                            transpose=True)
-
-        print(formatted_table)
-    
-    if cognitive_source:
-        cognitive_sources = [cognitive_source]
-    elif details:
-        cognitive_sources = list(config_dict['cogDataConfig'].keys())
-    else:
-        cognitive_sources = []
-
-    if cognitive_sources:
-        cprint("Note: Use 'edit-config experiment configuration={} cognitive-sources=[{}] single-edit=True' to edit the properties "
-               "of the specified cognitive source(s) and associated embedding specifics.".format(configuration, ', '.join(cognitive_sources)), attrs=["bold"], color="green")
-
-    for cognitive_source in cognitive_sources:
-        cprint('{}\n'.format(cognitive_source), attrs=['bold', 'reverse'], color='yellow')
-        try:
-            cog_source_config_dict = config_dict['cogDataConfig'][cognitive_source]
-        except KeyError:
-            cprint('Cognitive source {} not registered in configuration {}, aborted ...'.format(cognitive_source, configuration), 'red')
+        if not cog_config['cognival_installed']:
+            cprint('CogniVal cognitive sources not installed, aborting ...', 'red')
             return
 
-        cog_source_properties = [(k, field_concat(v)) for k, v in cog_source_config_dict.items() if k != 'wordEmbSpecifics']
-        cprint('Cognitive source properties ({})'.format(cognitive_source), attrs=['bold', 'reverse'], color='green')
-        formatted_table = tform.generate_table(rows=[[', '.join(x[1]) if isinstance(x[1], list) else x[1] for x in cog_source_properties]],
-                                            columns=[x[0] for x in cog_source_properties],
-                                            grid_style=fgrid,
-                                            #row_tagger=row_stylist,
-                                            transpose=False)
-        print(formatted_table)
-        print()
-        cprint('Word embedding specifics', attrs=['bold', 'reverse'], color='cyan')
-        word_emb_specifics = cog_source_config_dict['wordEmbSpecifics']
-        if hide_random:
-            word_emb_specifics = {k:v for k, v in word_emb_specifics.items() if not k.startswith('random')}
-
-        df = pd.DataFrame.from_dict(word_emb_specifics).transpose()
-        df.reset_index(inplace=True)
-        df = df.rename(columns={"index": "word_embedding",
-                                "activations":"activations (l.)",
-                                "batch_size": "batch_size (l.)",
-                                "epochs": "epochs (l.)",
-                                "layers": "layers (nested l.)",
-                                "validation_split": "validation_split (l.)"})
-        df = df.applymap(field_concat)
-        formatted_table = tform.generate_table(df,
-                                            grid_style=altgrid,
-                                            transpose=False) 
-        print(formatted_table)
-
+        for modality in cog_config['sources']:
+            cprint(modality.upper(), attrs=['bold'])
+            cprint('Resource                 Features')
+            for key, value in cog_config['sources'][modality].items():
+                cprint(key, 'cyan', end=' '*(25-len(key)))
+                if isinstance(value["features"], str):
+                    cprint(value["features"], 'green')
+                else:
+                    cprint(value["features"][0], 'green')
+                    for feature in value["features"][1:]:
+                        cprint(' '*25 + feature, 'green')
+                print()
+            print()
 
 @command
 class Config:
     """Generate or edit configuration files for experimental combinations (cog. data - embedding type)
     [Sub-commands] 
     - open: Opens existing or creates new configuration edits its general properties.
+    - show: Show details of a configuration and experiments.
     - experiment: Edit configuration of single, multiple or all combinations of embeddings
                   and cognitive sources of specified configuration. Populates default values from reference configuration.
     - delete: Remove cognitive sources or experiments (cog.source - embedding combinations) from specified configuration
@@ -440,6 +331,99 @@ class Config:
             if not config_dict:
                 return
             _edit_config(config_dict, configuration)    
+    
+    @command
+    @argument("configuration", type=str, description="Name of configuration", positional=True)
+    @argument("details", type=bool, description="Whether to show details for all cognitive sources. Ignored when cognitive_source is specified.")
+    @argument("cognitive_source", type=str, description="Cognitive source for which details should be shown")
+    @argument("hide_random", type=str, description="Hide random embeddings from Word embedding specifics")
+    def show(self, configuration, details=False, cognitive_source=None, hide_random=True):
+        '''
+        Display an overview for the given configuration.
+    ―
+        '''
+        ctx = context.get_context()
+        resources_path = ctx.resources_path
+
+        config_dict = _open_config(configuration, resources_path, quiet=True, protect_reference=False)
+        if not config_dict:
+            return
+
+        fgrid = tform.FancyGrid()
+        altgrid = tform.AlternatingRowGrid()
+        if not cognitive_source:
+            cprint("Note: Use 'config open {}' to edit the general properties of this configuration.".format(configuration), attrs=["bold"], color="green")
+            general = [(k, v) for k, v in config_dict.items() if not k in ['cogDataConfig', 'wordEmbConfig', 'randEmbConfig', 'randEmbSetToParts']]
+            print()
+            cprint('General properties', attrs=['bold', 'reverse'], color='green')
+            formatted_table = tform.generate_table(rows=[[x[1] for x in general]],
+                                                columns=[x[0] for x in general],
+                                                grid_style=fgrid,
+                                                #row_tagger=row_stylist,
+                                                transpose=False)
+            print(formatted_table)
+            print()
+            experiment_rows = [chunked_list_concat_str(list(config_dict['cogDataConfig']), 4)]
+            experiment_rows += [chunked_list_concat_str(list(['{} ({})'.format(k, v['random_embedding'] if 'random_embedding' in v and v['random_embedding'] else 'None') \
+                                                                for k, v in config_dict['wordEmbConfig'].items()]), 2)]
+            experiment_rows = [experiment_rows]
+
+            cprint('Experiment properties', attrs=['bold', 'reverse'], color='cyan')
+            formatted_table = tform.generate_table(rows=experiment_rows,
+                                                columns=[colored('Cognitive sources', attrs=['bold']),
+                                                        colored('Embeddings (Rand. emb.)', attrs=['bold'])],
+                                                grid_style=fgrid,
+                                                #row_tagger=row_stylist,
+                                                transpose=True)
+
+            print(formatted_table)
+        
+        if cognitive_source:
+            cognitive_sources = [cognitive_source]
+        elif details:
+            cognitive_sources = list(config_dict['cogDataConfig'].keys())
+        else:
+            cognitive_sources = []
+
+        if cognitive_sources:
+            cprint("Note: Use 'edit-config experiment configuration={} cognitive-sources=[{}] single-edit=True' to edit the properties "
+                "of the specified cognitive source(s) and associated embedding specifics.".format(configuration, ', '.join(cognitive_sources)), attrs=["bold"], color="green")
+
+        for cognitive_source in cognitive_sources:
+            cprint('{}\n'.format(cognitive_source), attrs=['bold', 'reverse'], color='yellow')
+            try:
+                cog_source_config_dict = config_dict['cogDataConfig'][cognitive_source]
+            except KeyError:
+                cprint('Cognitive source {} not registered in configuration {}, aborted ...'.format(cognitive_source, configuration), 'red')
+                return
+
+            cog_source_properties = [(k, field_concat(v)) for k, v in cog_source_config_dict.items() if k != 'wordEmbSpecifics']
+            cprint('Cognitive source properties ({})'.format(cognitive_source), attrs=['bold', 'reverse'], color='green')
+            formatted_table = tform.generate_table(rows=[[', '.join(x[1]) if isinstance(x[1], list) else x[1] for x in cog_source_properties]],
+                                                columns=[x[0] for x in cog_source_properties],
+                                                grid_style=fgrid,
+                                                #row_tagger=row_stylist,
+                                                transpose=False)
+            print(formatted_table)
+            print()
+            cprint('Word embedding specifics', attrs=['bold', 'reverse'], color='cyan')
+            word_emb_specifics = cog_source_config_dict['wordEmbSpecifics']
+            if hide_random:
+                word_emb_specifics = {k:v for k, v in word_emb_specifics.items() if not k.startswith('random')}
+
+            df = pd.DataFrame.from_dict(word_emb_specifics).transpose()
+            df.reset_index(inplace=True)
+            df = df.rename(columns={"index": "word_embedding",
+                                    "activations":"activations (l.)",
+                                    "batch_size": "batch_size (l.)",
+                                    "epochs": "epochs (l.)",
+                                    "layers": "layers (nested l.)",
+                                    "validation_split": "validation_split (l.)"})
+            df = df.applymap(field_concat)
+            formatted_table = tform.generate_table(df,
+                                                grid_style=altgrid,
+                                                transpose=False) 
+            print(formatted_table)
     
     @command
     @argument('configuration', type=str, description='Name of configuration file', positional=True)
@@ -599,8 +583,8 @@ class Config:
     @command
     @argument('configuration', type=str, description='Name of configuration file', positional=True)
     @argument('modalities', type=list, description="Groups of cog. sources to install.")
-    @argument('cognitive_sources', type=list, description="Either list of cognitive sources or ['all'] (default).")
-    @argument('embeddings', type=list, description="Either list of embeddings or ['all'] (default)")
+    @argument('cognitive_sources', type=list, description="Either list of cognitive sources or None (for all)")
+    @argument('embeddings', type=list, description="Either list of embeddings or None (for all)")
     def delete(self, configuration, modalities=None, cognitive_sources=None, embeddings=None):        
         '''
         Remove cognitive sources or experiments (cog.source - embedding combinations) from specified configuration or
@@ -636,6 +620,8 @@ class Config:
                                         ]).run()
             if all_sources:
                 cognitive_sources = ['all']
+            else:
+                return
 
         elif not embeddings:
             embeddings = []
@@ -671,12 +657,23 @@ class Config:
                         if rand_emb:
                             for rand_emb_part in main_conf_dict["randEmbSetToParts"][rand_emb]:
                                 del cog_data_config_dict[csource]["wordEmbSpecifics"][rand_emb_part]
+
+                        # Delete embedding config and associated random embedding configs if not longer used by any cognitive source
+                        if not any(emb in cog_data_dict["wordEmbSpecifics"] for cog_data_dict in cog_data_config_dict.values()):
+                            cprint("Embedding {} no longer used by any cognitive source, removing (and associated random embeddings if applicable and unused)".format(emb), 'yellow')
+                            assoc_rand_emb = main_conf_dict["wordEmbConfig"][emb]["random_embedding"]
+                            if assoc_rand_emb:
+                                for rand_emb_part in main_conf_dict["randEmbSetToParts"][assoc_rand_emb]:
+                                    if not any(rand_emb_part in cog_data_dict["wordEmbSpecifics"] for cog_data_dict in cog_data_config_dict.values()):
+                                        del main_conf_dict["randEmbConfig"][rand_emb_part]
+                                del main_conf_dict["randEmbSetToParts"][assoc_rand_emb]
+                            del main_conf_dict["wordEmbConfig"][emb]
                     else:
                         cprint ("Combination {}/{} not found, skipping ...".format(csource, emb), 'yellow')
             
             # Remove source if empty
             if not cog_data_config_dict[csource]["wordEmbSpecifics"]:
-                cprint("Deleting now empty source {} ...", 'yellow')
+                cprint("Deleting now empty source {} ...".format(csource), 'yellow')
                 del cog_data_config_dict[csource]
 
         # Remove complete cognitive source
@@ -690,105 +687,18 @@ class Config:
         _save_config(main_conf_dict, configuration, resources_path)
 
 
-@command()
-@argument('embeddings',
-          type=str,
-          description='Name of embeddings that have been registered (not necessarily installed).',
-          positional=True)
-@argument('no_embeddings',
-          type=int,
-          description='Number of random embeddings to be generated (and across which performance will later be averaged).')
-@argument('seed_func',
-          type=str,
-          description='Number of random embeddings to be generated (and across which performance will later be averaged).')
-def generate_random(embeddings, no_embeddings=10, seed_func='exp_e_floored'):
-    """
-    Generate random embeddings for specified proper embeddings.
-―
-    """
-    ctx = context.get_context()
-    resources_path = ctx.resources_path
-    embeddings_path = ctx.embeddings_path
-
-    if embeddings.startswith('random'):
-        cprint('✗ Reference embedding must be non-random! Aborting ...'. format(embeddings), 'red')
-        return
-    
-    ctx = context.get_context()
-    emb_properties = ctx.embedding_registry['proper'].get(embeddings, None)
-    if not emb_properties:
-        cprint('✗ No specifications set for embeddings {}! Install custom embeddings or register them manually. Aborting ...'. format(embeddings), 'red')
-        return
-
-    emb_dim = emb_properties['dimensions']
-
-    available_dims = set()
-    for _, parameters in ctx.embedding_registry['random_multiseed'].items():
-        if parameters['installed']:
-            available_dims.add(parameters['dimensions'])
-
-    # Obtain seed values from non-linear function
-    if seed_func == 'exp_e_floored':
-        seeds = [int(np.floor((k+1)**np.e)) for k in range(no_embeddings)]
-    else:
-        raise NotImplementedError('Only floor(x**e) (exp_e_floored) currently implemented')
-    
-    rand_emb_name = 'random-{}-{}'.format(emb_dim, len(seeds))
-    
-    # Generate random embeddings if not already present
-    if emb_dim not in available_dims:
-        cprint('No pre-existing random embeddings of dimensionality {}, generating ...'.format(emb_dim), 'yellow')
-
-        with open(resources_path / 'standard_vocab.txt') as f:
-            vocabulary = f.read().split('\n')
-        cprint('Generating {}-dim. random embeddings using standard CogniVal vocabulary ({} tokens)...'.format(emb_dim, len(vocabulary)), 'yellow')
-
-        # Generate random embeddings
-        rand_emb_keys = ['{}_{}_{}'.format(rand_emb_name, idx+1, seed) for idx, seed in enumerate(seeds)]
-        path = embeddings_path / 'random_multiseed' / '{}_dim'.format(emb_dim) / '{}_seeds'.format(len(seeds))
-        try:
-            os.makedirs(path)
-        except FileExistsError:
-            pass
-
-        with ProgressBar() as pb:
-            # TODO: Make n_jobs parametrizable
-            Parallel(n_jobs=(os.cpu_count()-1))(delayed(generate_random_df)(seed, vocabulary, emb_dim, emb_file, path) for seed, emb_file in pb(list(zip(seeds, rand_emb_keys))))
-                
-        ctx.embedding_registry['random_multiseed'][rand_emb_name] = {'url': 'locally generated',
-                                                                    'dimensions': emb_dim,
-                                                                    'path':str(path),
-                                                                    'embedding_parts':{},
-                                                                    'installed': True,
-                                                                    'chunked': False,
-                                                                    'associated_with':[embeddings]}
-        for rand_emb_key in rand_emb_keys:
-            ctx.embedding_registry['random_multiseed'][rand_emb_name]['embedding_parts'][rand_emb_key] = '{}.txt'.format(rand_emb_key)
-        
-    else:
-        if not embeddings in ctx.embedding_registry['random_multiseed'][rand_emb_name]['associated_with']:
-            cprint('Random embeddings of dimensionality {} already present, associating ...'.format(emb_dim), 'green')
-            ctx.embedding_registry['random_multiseed'][rand_emb_name]['associated_with'].append(embeddings)
-        else:
-            cprint('Random embeddings of dimensionality {} already present and associated.'.format(emb_dim), 'green')
-    
-    # Associate random embeddings with proper embeddings
-    emb_properties['random_embedding'] = rand_emb_name
-    cprint('✓ Generated random embeddings (Naming scheme: random-<dimensionality>-<no. seeds>-<#seed>-<seed_value>)', 'green')
-    ctx.save_configuration()
-
 @command
 @argument('configuration', type=str, description='Name of configuration file', positional=True)
 @argument('version', type=int, description='Version to be aggregated. Defaults to 0, treated as last run (version - 1).')
 @argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
 @argument('alpha', type=str, description='Alpha value')
 @argument('test', type=str, description='Significance test')
-def sig_test(configuration,
-             version=0,
-             modalities=['eye-tracking', 'eeg', 'fmri'],
-             alpha=0.01,
-             test='Wilcoxon',
-             quiet=False):    
+def significance(configuration,
+                 version=0,
+                 modalities=['eye-tracking', 'eeg', 'fmri'],
+                 alpha=0.01,
+                 test='Wilcoxon',
+                 quiet=False):
     '''
     Test significance of results in the given modality and produced based on the specified configuration.
 ―
@@ -1045,16 +955,18 @@ def report(configuration,
     ctx = context.get_context()
     resources_path = ctx.resources_path
 
-    sig_test(configuration, version, modalities, alpha, test, quiet=True)
+    significance(configuration, version, modalities, alpha, test, quiet=True)
     aggregate(configuration, version, modalities, test, quiet=True)
     generate_report(configuration, version, resources_path, html, pdf, open_html, open_pdf)
 
 @command
 class Install:
-    """Install CogniVal cognitive vectors, default embeddings (proper and random) and custom embeddings.
+    """Install CogniVal cognitive vectors, default embeddings (proper and random), custom embeddings and
+    generate random embeddings
     [Sub-commands]
     - cognitive_sources: Install the entire batch of preprocessed CogniVal and other cognitive sources.
-    - embedding: Download and install a default embedding (by name) or custom embedding (from URL)
+    - embeddings: Download and install a default embedding (by name) or custom embedding (from URL)
+    - random_embeddings: Generate and install random embeddings for specified proper embeddings.
 ―
     """
 
@@ -1172,7 +1084,7 @@ class Install:
     @command()
     @argument('x', type=str, description='Force removal and download', positional=True) #choices=list(CTX.embedding_registry['proper']))
     @argument('force', type=bool, description='Force removal and download')
-    def embedding(self, x, force=False, log_only_success=False, are_set=False, associate_rand_emb=None):
+    def embeddings(self, x, force=False, log_only_success=False, are_set=False, associate_rand_emb=None):
         """
         Download and install a default embedding (by name) or custom embedding (from URL)
         """
@@ -1205,7 +1117,7 @@ class Install:
                     self.embedding(rand_emb, log_only_success=True)
                 folder = ctx.embedding_registry['random_static'][name]['path']
             else:
-                cprint('Error: Random embeddings must be generated using "generate_random"', 'red')
+                cprint('Error: Random embeddings must be generated using "install random-embeddings"', 'red')
                 return
 
         # Download a set of static random embeddings
@@ -1216,7 +1128,7 @@ class Install:
                 path = 'random_static'
                 folder = ctx.embedding_registry['random_static'][name]['path']
             else:
-                cprint('Error: Random embeddings must be generated using "generate_random"', 'red')
+                cprint('Error: Random embeddings must be generated using "install random-embeddings"', 'red')
                 return
 
         # Download a set of default embeddings
@@ -1238,7 +1150,7 @@ class Install:
                 local = True
             elif not x.startswith('http') and x is not None:
                 cprint("Specified value is neither a default embedding, valid URL or path of an existing file, aborting ...", "red")
-                list_embeddings()
+                List.embeddings(None)
                 return
 
             url = x
@@ -1457,7 +1369,7 @@ class Install:
             cprint('Finished installing embedding "{}"'.format(name), 'green')
 
             if associate_rand_emb:                                                
-                generate_random(name)
+                self.random_embeddings(name)
         
         if name.startswith('random'):
             ctx.embedding_registry['random_static'][name]['installed'] = True
@@ -1466,56 +1378,96 @@ class Install:
                 ctx.embedding_registry['proper'][name]['installed'] = True
         ctx.save_configuration()
 
+    @command()
+    @argument('embeddings',
+            type=str,
+            description='Name of embeddings that have been registered (not necessarily installed).',
+            positional=True)
+    @argument('no_embeddings',
+            type=int,
+            description='Number of random embeddings to be generated (and across which performance will later be averaged).')
+    @argument('seed_func',
+            type=str,
+            description='Number of random embeddings to be generated (and across which performance will later be averaged).')
+    def random_embeddings(self, embeddings, no_embeddings=10, seed_func='exp_e_floored', force=False):
+        """
+        Generate and install random embeddings for specified proper embeddings.
+    ―
+        """
+        ctx = context.get_context()
+        resources_path = ctx.resources_path
+        embeddings_path = ctx.embeddings_path
 
-@command
-def list_embeddings():
-    """
-    List available and installed default embeddings as well as installed custom and random embeddings.
-―
-    """
-    ctx = context.get_context()
-    if ctx.debug:
-        emb_types = ['proper', 'random_static', 'random_multiseed']
-    else:
-        emb_types = ['proper', 'random_multiseed']
+        if embeddings.startswith('random'):
+            cprint('✗ Reference embedding must be non-random! Aborting ...'. format(embeddings), 'red')
+            return
+        
+        ctx = context.get_context()
+        emb_properties = ctx.embedding_registry['proper'].get(embeddings, None)
+        if not emb_properties:
+            cprint('✗ No specifications set for embeddings {}! Install custom embeddings or register them manually. Aborting ...'. format(embeddings), 'red')
+            return
 
-    for emb_type in emb_types:
-        cprint(emb_type.title(), attrs=['bold'])
-        for key, value in ctx.embedding_registry[emb_type].items():
-            cprint(key, 'cyan', end=' '*(25-len(key)))
-            if value['installed']:
-                cprint('installed', 'green', attrs=['bold'])
+        emb_dim = emb_properties['dimensions']
+
+        available_dims = set()
+        for _, parameters in ctx.embedding_registry['random_multiseed'].items():
+            if parameters['installed']:
+                available_dims.add(parameters['dimensions'])
+
+        # Obtain seed values from non-linear function
+        if seed_func == 'exp_e_floored':
+            seeds = [int(np.floor((k+1)**np.e)) for k in range(no_embeddings)]
+        else:
+            raise NotImplementedError('Only floor(x**e) (exp_e_floored) currently implemented')
+        
+        rand_emb_name = 'random-{}-{}'.format(emb_dim, len(seeds))
+        
+        # Generate random embeddings if not already present
+        if emb_dim not in available_dims or force:
+            if emb_dim in available_dims:
+                cprint('Replacing existing random embeddings of dimensionality {}, generating ...'.format(emb_dim), 'yellow')
             else:
-                cprint('not installed', 'red', attrs=['bold'])
+                cprint('No pre-existing random embeddings of dimensionality {}, generating ...'.format(emb_dim), 'yellow')
 
+            with open(resources_path / 'standard_vocab.txt') as f:
+                vocabulary = f.read().split('\n')
+            cprint('Generating {}-dim. random embeddings using standard CogniVal vocabulary ({} tokens)...'.format(emb_dim, len(vocabulary)), 'yellow')
 
-@command
-def list_cognitive_sources():
-    """
-    List CogniVal cognitive sources (must be installed)
-―
-    """
-    ctx = context.get_context()
-    resources_path = ctx.resources_path
-    cog_config = _open_cog_config(resources_path)
+            # Generate random embeddings
+            rand_emb_keys = ['{}_{}_{}'.format(rand_emb_name, idx+1, seed) for idx, seed in enumerate(seeds)]
+            rand_emb_path = Path('random_multiseed') / '{}_dim'.format(emb_dim) / '{}_seeds'.format(len(seeds))
+            fullpath = embeddings_path / rand_emb_path
+            try:
+                os.makedirs(fullpath)
+            except FileExistsError:
+                pass
 
-    if not cog_config['cognival_installed']:
-        cprint('CogniVal cognitive sources not installed, aborting ...', 'red')
-        return
-
-    for modality in cog_config['sources']:
-        cprint(modality.upper(), attrs=['bold'])
-        cprint('Resource                 Features')
-        for key, value in cog_config['sources'][modality].items():
-            cprint(key, 'cyan', end=' '*(25-len(key)))
-            if isinstance(value["features"], str):
-                cprint(value["features"], 'green')
+            with ProgressBar() as pb:
+                # TODO: Make n_jobs parametrizable
+                Parallel(n_jobs=(os.cpu_count()-1))(delayed(generate_random_df)(seed, vocabulary, emb_dim, emb_file, fullpath) for seed, emb_file in pb(list(zip(seeds, rand_emb_keys))))
+                    
+            ctx.embedding_registry['random_multiseed'][rand_emb_name] = {'url': 'locally generated',
+                                                                        'dimensions': emb_dim,
+                                                                        'path':str(rand_emb_path),
+                                                                        'embedding_parts':{},
+                                                                        'installed': True,
+                                                                        'chunked': False,
+                                                                        'associated_with':[embeddings]}
+            for rand_emb_key in rand_emb_keys:
+                ctx.embedding_registry['random_multiseed'][rand_emb_name]['embedding_parts'][rand_emb_key] = '{}.txt'.format(rand_emb_key)
+            
+        else:
+            if not embeddings in ctx.embedding_registry['random_multiseed'][rand_emb_name]['associated_with']:
+                cprint('Random embeddings of dimensionality {} already present, associating ...'.format(emb_dim), 'green')
+                ctx.embedding_registry['random_multiseed'][rand_emb_name]['associated_with'].append(embeddings)
             else:
-                cprint(value["features"][0], 'green')
-                for feature in value["features"][1:]:
-                    cprint(' '*25 + feature, 'green')
-            print()
-        print()
+                cprint('Random embeddings of dimensionality {} already present and associated.'.format(emb_dim), 'green')
+        
+        # Associate random embeddings with proper embeddings
+        emb_properties['random_embedding'] = rand_emb_name
+        cprint('✓ Generated random embeddings (Naming scheme: random-<dimensionality>-<no. seeds>-<#seed>-<seed_value>)', 'green')
+        ctx.save_configuration()
 
 
 @command
