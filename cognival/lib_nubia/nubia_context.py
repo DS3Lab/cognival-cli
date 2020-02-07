@@ -20,6 +20,7 @@ from nubia import eventbus
 class NubiaCognivalContext(context.Context):
     def __init__(self, *args, **kwargs):
         self.state = {}
+        self.messages = kwargs.get('messages', None)
         self.cognival_path = kwargs.get('cognival_path', None)
         
         if self.cognival_path:
@@ -54,17 +55,24 @@ class NubiaCognivalContext(context.Context):
 
     def on_cli(self, cmd, args):
         # dispatch the on connected message
+        self.debug = args.debug
         self.verbose = args.verbose
         self.registry.dispatch_message(eventbus.Message.CONNECTED)
 
     def on_interactive(self, args):
-        self.verbose = args.verbose
         self.debug = args.debug
+        self.verbose = args.verbose
+        self.no_welcome = args.no_welcome
+        if not self.no_welcome:
+            cprint(self.messages.LOGO_STR, "magenta")
+            cprint(self.messages.WELCOME_MESSAGE_STR, "green")
+        
         ret = self._registry.find_command("connect").run_cli(args)
         if ret:
             raise exceptions.CommandError("Failed starting interactive mode")
         # dispatch the on connected message
         self.registry.dispatch_message(eventbus.Message.CONNECTED)
+
 
     def save_configuration(self):
         if self.embedding_registry:

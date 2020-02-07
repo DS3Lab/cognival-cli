@@ -25,6 +25,8 @@ class NubiaCognivalPlugin(PluginInterface):
 
     def __init__(self, *args, **kwargs):
         self.cognival_path = Path(kwargs.get('cognival_path', None))
+        self.messages = kwargs.get('messages', None)
+        self.blacklisted_commands = []
 
     def create_context(self):
         """
@@ -32,7 +34,7 @@ class NubiaCognivalPlugin(PluginInterface):
         The plugin can return a custom context but it has to inherit from the
         correct parent class.
         """
-        return NubiaCognivalContext(cognival_path=self.cognival_path)
+        return NubiaCognivalContext(cognival_path=self.cognival_path, messages=self.messages)
 
     def validate_args(self, args):
         """
@@ -46,13 +48,20 @@ class NubiaCognivalPlugin(PluginInterface):
 
     def get_opts_parser(self, add_help=True):
         """
-        Builds the ArgumentParser that will be passed to , use this to
+        Builds the ArgumentParser that will be passed to, use this to
         build your list of arguments that you want for your shell.
         """
         opts_parser = argparse.ArgumentParser(
             description="Nubia Example Utility",
             formatter_class=argparse.ArgumentDefaultsHelpFormatter,
             add_help=add_help,
+        )
+        
+        opts_parser.add_argument(
+            "--no-welcome",
+            "-nw",
+            action="store_true",
+            help="Don't display logo/welcome message in interactive shell."
         )
         
         opts_parser.add_argument(
@@ -101,7 +110,8 @@ class NubiaCognivalPlugin(PluginInterface):
 
     def getBlacklistPlugin(self):
         blacklister = CommandBlacklist()
-        blacklister.add_blocked_command("be-blocked")
+        for blk_command in self.blacklisted_commands:
+            blacklister.add_blocked_command(blk_command)
         return blacklister
 
 

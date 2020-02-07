@@ -99,6 +99,14 @@ EDITOR_DESCRIPTIONS = {"main": {"PATH": "Main working directory. Defaults to $HO
                                          }
                         }
 
+# Adapted from: https://stackoverflow.com/a/42033176
+def is_jsonable(x):
+    try:
+        json.dumps(x)
+        return True
+    except TypeError:
+        return False
+
 class ConfigEditor():
     def __init__(self,
                  conf_type,
@@ -115,7 +123,9 @@ class ConfigEditor():
         self.skip_params = skip_params if skip_params else []
         self.table_fields = []
         if not prefill_fields:
-            prefill_fields = {}
+            self.prefill_fields = {}
+        else:
+            self.prefill_fields = prefill_fields
         
         # Add header information
         self.table_fields.append([Merge(Label("{} (Navigate with <Tab>/<Shift>-<Tab>)".format(EDITOR_TITLES[conf_type]), style="fg:ansigreen bold"), 2)])
@@ -171,8 +181,8 @@ class ConfigEditor():
                 style = "fg:ansiwhite"
 
             # Prefill specified empty fields
-            if not v and k in prefill_fields:
-                v = str(prefill_fields[k])
+            if not v and k in self.prefill_fields:
+                v = str(self.prefill_fields[k])
 
             buffer = TextArea(v, style=style)
             self.buffers[k] = buffer
@@ -227,34 +237,41 @@ class ConfigEditor():
         for k, v in self.buffers.items():
             v.text = v.text.strip()
 
-            if v.text == '<multiple values>':
-                continue
+            if v.text:
+                if v.text == '<multiple values>':
+                    continue
 
-            if k in self.singleton_params or self.singleton_params == 'all':
-                if ',' in v.text:
-                    get_app().exit(result="Field '{}' does not support lists of values. "
-                                          "Press Enter to reopen editor.".format(k))
-                    return
-
-                values = self._cast_single(v)
-                
-            else:
-                if '\n' in v.text:
-                    if k not in _2D_FIELDS:
-                        get_app().exit(result="Field '{}' does not support multiple levels of nesting. "
-                                              "Press Enter to reopen editor.".format(k))
+                if k in self.singleton_params or self.singleton_params == 'all':
+                    if ',' in v.text:
+                        get_app().exit(result="Field '{}' does not support lists of values. "
+                                            "Press Enter to reopen editor.".format(k))
                         return
-                        
-                    values_split = v.text.split('\n')
-                    values_list = [v.replace(' ', '').split(',') for v in values_split]
-                    values_list_cast = []
-                    for v_list in values_list:
-                        v_list = self._cast_list(v_list)
-                        values_list_cast.append(v_list)
-                    values = values_list_cast
+
+                    values = self._cast_single(v)
+                    
                 else:
-                    values_list = v.text.replace(' ', '').split(',')    
-                    values = self._cast_list(values_list)
+                    if '\n' in v.text:
+                        if k not in _2D_FIELDS:
+                            get_app().exit(result="Field '{}' does not support multiple levels of nesting. "
+                                                "Press Enter to reopen editor.".format(k))
+                            return
+                            
+                        values_split = v.text.split('\n')
+                        values_list = [v.replace(' ', '').split(',') for v in values_split]
+                        values_list_cast = []
+                        for v_list in values_list:
+                            v_list = self._cast_list(v_list)
+                            values_list_cast.append(v_list)
+                        values = values_list_cast
+                    else:
+                        values_list = v.text.replace(' ', '').split(',')    
+                        values = self._cast_list(values_list)
+            else:
+                if k in self.prefill_fields:
+                    cprint('Repopulating empty field {}...'.format(k), 'magenta')
+                    values = self.prefill_fields[k]
+                    if not is_jsonable(values):
+                        values = str(values)
 
             self.config_dict_updated[k] = values
 
@@ -273,12 +290,12 @@ def config_editor(conf_type,
 
     while True:
         conf_editor = ConfigEditor(conf_type,
-                                config_dict,
-                                config_dict_updated,
-                                singleton_params=singleton_params,
-                                cognitive_sources=cognitive_sources,
-                                embeddings=embeddings,
-                                skip_params=skip_params)
+                                   config_dict,
+                                   config_dict_updated,
+                                   singleton_params=singleton_params,
+                                   cognitive_sources=cognitive_sources,
+                                   embeddings=embeddings,
+                                   skip_params=skip_params)
         result = conf_editor()
 
         if result is True:

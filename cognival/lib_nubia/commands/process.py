@@ -130,7 +130,12 @@ def _filter_config(configuration,
         cognitive_features = [fl.split(';') for fl in cognitive_features]
 
     config_dict = _open_config(configuration, resources_path)
+    
     if not config_dict:
+        cprint("Configuration does not exist, aborting ...", "red")
+        return
+    if not config_dict['cogDataConfig']:
+        cprint("No cognitive sources specified in configuration, aborting ...", "red")
         return
 
     cog_sources_conf = _open_cog_config(resources_path)
@@ -149,8 +154,7 @@ def _filter_config(configuration,
         embeddings_list = embeddings
 
     if cognitive_source == 'all':
-        cog_sources_list = []
-        cog_feat_list = []
+        cog_sources_list, cog_feat_list = zip(*[(k, v['features']) for k, v in config_dict['cogDataConfig'].items()])
     elif isinstance(cognitive_source, str):
         cog_sources_list = [cognitive_source]
         cog_feat_list = [cognitive_feature] if cognitive_feature else []
@@ -419,18 +423,21 @@ def resolve_cog_emb(modalities,
         elif scope == 'config':
             embeddings = list(config_dict["wordEmbConfig"])
 
-    for x in embeddings:
-        if not x in embedding_registry['proper'] or not embedding_registry['proper'][x]['installed']:
-            cprint('Embedding {} unknown or not installed, aborting ...'.format(x), 'red')
-            raise AbortException
+    if embeddings:
+        for x in embeddings:
+            if not x in embedding_registry['proper'] or not embedding_registry['proper'][x]['installed']:
+                cprint('Embedding {} unknown or not installed, aborting ...'.format(x), 'red')
+                raise AbortException
 
     cog_source_index = set(cog_config_dict['index'])
-    for x in cognitive_sources:
-        if x in cog_source_index:
-            break
-        else:
-            cprint('Cognitive source {} unknown, aborting ...'.format(x), 'red')
-            raise AbortException
+    
+    if cognitive_sources:
+        for x in cognitive_sources:
+            if x in cog_source_index:
+                break
+            else:
+                cprint('Cognitive source {} unknown, aborting ...'.format(x), 'red')
+                raise AbortException
 
     return cognitive_sources, embeddings
 
