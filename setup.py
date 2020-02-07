@@ -26,6 +26,7 @@ class PostInstallCommand(install):
                                 ('cognitive_sources', 'README.md'),
                                 ('results', 'README.md'),
                                 ('resources', 'cognitive_sources.json'),
+                                ('resources', 'demo_config.json'),
                                 ('resources', 'embedding_registry.json'),
                                 ('resources', 'reference_config.json'),
                                 ('resources', 'standard_vocab.txt')
@@ -42,7 +43,7 @@ class PostInstallCommand(install):
 
 setuptools.setup(
     name="cognival", # Replace with your own username
-    version="0.0.1",
+    version="0.0.2",
     author="Multiple authors",
     author_email="foo@bar.com",
     description="CogniVal cognitive embedding evaluation",
