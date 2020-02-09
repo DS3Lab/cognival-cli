@@ -135,7 +135,7 @@ def _filter_config(configuration,
         cprint("Configuration does not exist, aborting ...", "red")
         return
     if not config_dict['cogDataConfig']:
-        cprint("No cognitive sources specified in configuration, aborting ...", "red")
+        cprint("No cognitive sources specified in configuration. Have you populated the configuration via 'config experiment ...'? Aborting ...", "red")
         return
 
     cog_sources_conf = _open_cog_config(resources_path)
