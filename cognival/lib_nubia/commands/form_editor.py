@@ -66,12 +66,14 @@ NUM_BERT_WORKERS = 1
 
 _2D_FIELDS = set(['layers'])
 
-EDITOR_TITLES = {"main": "General Configuration",
+EDITOR_TITLES = {"properties": "CogniVal properties",
+                 "main": "General Configuration",
                  "cognitive": "Cognitive Source Configuration",
                  "embedding_exp": "Embedding Experiment Configuration",
                  "embedding_conf": "Embedding Parameter Configuration"}
 
-EDITOR_DESCRIPTIONS = {"main": {"PATH": "Main working directory. Defaults to $HOME/.cognival",
+EDITOR_DESCRIPTIONS = { "properties": {"cognival_path": "Path for storing user data (configurations, embeddings, cognitive sources and results)."},
+                        "main": {"PATH": "Main working directory. Defaults to $HOME/.cognival",
                                 "cpu_count": "Number of CPU cores used for execution, defaults to (1 - number of available logical CPU cores)",
                                 "folds": "Number of folds evaluated in n-Fold cross-validation (CV)",
                                 "outputDir": "Output directory as subdirectory of 'results' (automatically prefixed if missing)",

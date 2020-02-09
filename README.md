@@ -1,62 +1,185 @@
 # CogniVal
+
+### Requirements
+- Python 3.7.4 or newer
+- For PDF generation of reports: wkhtmltopdf version 0.12.5 or newer (available from https://wkhtmltopdf.org/)
+- 16+ GB of RAM recommended
+- When using an NVIDIA GPU:
+    - CUDA >= 10.1
+    - CuDNN >= 7.6.5
+    - NVIDIA drivers >= 418.39 (can be determined with nvidia-smi)
+
+
 ### A framework for cognitive word embedding evaluation
 
-This repository contains the code for all experiments in the following paper:  
+This tool is based on the framework described in the following paper:  
 Nora Hollenstein, Antonio de la Torre, Ce Zhang & Nicolas Langer. "CogniVal: A Framework for Cognitive Word Embedding Evaluation". _CoNLL_ (2019).
 
+## Overview of functionality
+
+The CogniVal interactive shell allows:
+
+- Importing and preprocessing embeddings
+- Generating corresponding random embedding sets for significance testing
+- Evaluating embeddings against the readily preprocessed CogniVal cognitive sources or any (preprocessed) user-provided cognitive sources
+- Setting up regression experiments of cognitive source and embedding pairs (grid search and training parameters)
+- Performing regression experiments on CPUs and GPUs in a parallelized fashion
+- Computing significance statistics for the results
+- Aggregating MSE and significance statistic
+- Generating an interactive HTML or static PDF report, showing both aggregate and detail statistics in tabular and plot form,
+  as well as plots visualizing the training history and history of key statistics over different experimental runs.
+
+## Terminology
+
+- Embedding: Word embedding in textual format, with a single vector per word. Context-sensitive embedding types like BERT and ELMo thus require preprocessing
+- Cognitive source: per-word cognitive signal vectors (e.g. EEG electrodes or eye-tracking statistics)
+- Experiment: Combination of an embedding and associated set of random embeddings and a cognitive source.
+
+In the cases of fMRI and EEG, we want to predict a vector representing the data and not a specific feature.
+
+In case of big word embeddings like word2vec, files are chunked into several pieces to avoid a MemoryError.
+
+## Overview of commands
+`<Tab>` shows all available commands, subcommands and parameters at the given position, as well as argument types and default values where applicable.
+By pressing `<Left>`, previously executed commands can be auto-completed. When a command is executed with only one argument, it can be
+provided in a positional manner: `command argument`. Otherwise, each parameter must be named: `command parameter1=argument2 parameter2=argument2`.
+
+Note that the syntax is a simplified version of Python's, as strings and ints can be provided without quotes, however lists must be
+enclosed in brackets: `list-param=[value1, value2]`. List parameters require lists even for single values (`list-param=[value]`) and the special value `all`, indicating all possbile values (`list-param=[all]`).
+
+### Basic commands
+- clear: Clears the shell
+- history: Shows the history of executed commands in descending order. The history is stored in $HOME/.cognival_history
+- readme: Shows this README file in less
+- welcome: Shows the welcome message in less
+- help / ?: Shows a brief overview over all commands
+- quit / exit: Terminates the shell session.
+
+### Main commands and subcommands
+
+- config
+    - properties: Edit general CogniVal properties (user directory, etc.). This is mainly used to set the directory for user
+                  data (embeddings, cognitive sources, configurations and results), in case this data should not reside
+                  in $HOME (e.g. due to quota restrictions).
+
+      Call: `config properties`
+
+    - open: Opens the general parameters of the specified configuration if it already exists or creates an empty configuration file.
+            In the editor, default values are provided for most fields (cpu_count corresponds to number of CPU cores - 1) and reset
+            automatically for all empty fields upon saving. Configurations can be overwritten with the `overwrite` flag.
+
+      Call: `config open configuration=demo [overwrite=False]`
+
+    - show: Shows details of a configuration, associated cognitive sources and embeddings as well as experiments. The basic view shows
+            general configuration properties (editable by `config open`) and lists cognitive sources and embeddings/random embeddings (without informations about how they are paired):
+            `config show demo`
+            
+        Experiment details can either be viewed for a single cognitive source or for the entire configuration (this can be quite verbose!):
+
+        `config show configuration=demo details=True`
+        `config show configuration=demo details=True cognitive-source=eeg_zuco`
+            
+      Call: `config show configuration=demo [details=False] [cognitive-source=None] [hide-random=True]`
+
+    - experiment: Edits one or multiple experiments (arbitrary combinations of cognitive sources and embeddings). Allows to set grid                  search parameters for activations, batch size, epochs and layers (both number of layers and sizes per layer) as well                as the cross-validation folds and validation split during training.
+                  
+        Call: `config experiment configuration=demo [rand-embeddings=False] [modalities=None] [cognitive-sources=[all]] [embeddings= [all] [single-edit=False] [edit-cog-source-params=False]`
+        
+        Parameter details:
+        
+        - rand-embeddings: Whether to include random embeddings in the configuration. Note that this parameter is ignored if the combination(s) have already been associated with random embeddings. In this case, changes to the proper embeddings
+        are always propagated to the random embeddings.
+        - modalities: Allows to populate or edit combinations of cognitive-sources of an entire modality and corresponding embeddings
+        - cognitive-sources: Specifies either single, multiple or all installed cognitive sources (`[all]`) for editing or population.
+        - embeddings: Specifies either single, multiple or all installed cognitive sources (`[all]`) for editing or population.
+        - single-edit: When editing combinations featuring multiple embeddings, whether to edit the embeddings specifics for all embeddings at once (`False`) or one by one. Note that when specifying multiple cognitive sources, specifics are adjusted across all sources at once. Thus, the command must be called for each source individually if separate
+        parametrizations are required
+        - edit-cog-source-params: Whether to edit parameters of the cognitive source. In general, this is only required when
+                                in the case of a multi-feature source, not all features are to be evaluated.
+
+            
+    
+    - delete: Deletes experiments, cognitive sources (along with experiments) or the entire configuration.
+    
+      Deleting experiments(s):
+      `config delete configuration=demo cognitive-sources=[eeg_zuco] embeddings=[glove.6B.50]`
+
+      Deleting cognitive sources:
+      `config delete configuration=demo cognitive-sources=[eeg_zuco]`
+      `config delete configuration=demo modalities=[eeg_zuco]`
+
+      Deleting configurations:
+      `config delete demo`
+
+      Call: `config delete configuration=demo [modalities=None'] [cognitive-sources=None] [embeddings=None]`
+
+- install
+    - cognitive-sources: Install the entire batch of preprocessed CogniVal cognitive sources or a custom cognitive source.
+                         Custom sources must be manually placed in the path indicated by the assistant.
+                         
+        CogniVal sources: `install cognitive-sources`
+        Custom source: `install cognitive-sources source=yoursource`
+    
+    - embeddings: Install and preprocess default embeddings (see CogniVal paper) as well as custom embeddings (word2vec compliant text/               binary or BERT compliant). Allows to directly associate random embeddings with the embeddings.
+
+      Default embedding: `install embeddings glove.6B.50`
+      Custom embedding: `install embeddings http://example.org/example.zip`
+    
+    - random embeddings: Associate or re-associate (`force` parameter) embeddings with a set of random embeddings. Random embeddings of                      a set are generated with different seeds and results are averaged during evaluation to increase robustness of                       significance testing.
+
+                         The parameter `no-embeddings` specifies the number of "folds" to generate (default: 10). Generation is parallelized greedily across available CPU cores - 1.
+      
+      Call: `install random-embeddings embeddings=glove.6B.50 [no-embeddings=10] [seed-func=exp_e_floored] [force=False]`
+    
+-  list
+    - configs: List available configurations. Note that the reference configuration cannot be edited as it is used to populate newly
+               created configurations with default values.
+    - embeddings: List available and installed default embeddings as well as installed custom embeddings and generated random embeddings.
+    - cognitive-sources: Lists installed cognitive sources along with their features (where applicable).
+    
+- run: Run all or a subset of experiments specified in a configuration. The parameters `embeddings`, `modalities` and `cognitive-sources` correspond to `config experiment`. Note that `cognitive-features` is a nested list that must specify features
+for all cognitive-sources
+    Call: `run configuration=demo [embeddings=[all]] [modalities=None] [cognitive-sources=[all]] [cognitive-features=None]`
+
+- significance:  Compute the significance of results of an experimental run. Note that this requires that random embedding have been
+                 associated and evaluated during the run. Evaluates the results of the last run by default. Results are printed to the
+                 shell and stored in the reports directory of the results path.
+
+    Call: `significance configuration=demo [version=0] [modalities=[eye-tracking, eeg, fmri]] [alpha=0.01 test=Wilcoxon]`
+
+    Parameters:
+    - version: Either 0 for the last experimental run or any version before the current version of the configuration.
+    - modalities: Modalities for which significane is to be termined
+    - alpha: Alpha for significance computation
+    - test: Significance test. Currently, only the Wilcoxon rank-sum test is implemented (implementation of the Wilcoxon test for NLP           provided by [Dror et al. (2018)](https://github.com/rtmdrr/testSignificanceNLP)).
+
+- aggregate: Aggregate the significance test results of an ecxperimental run. This will output how many of your hypotheses are accepted              under the Bonferroni correction (see paper for detailed description).
+     
+     Call: `aggregate configuration=demo [version=0] [modalities=[eye-tracking, eeg, fmri]] [test=Wilcoxon]`
+     
+     Parameters:
+    - version: Either 0 for the last experimental run or any version before the current version of the configuration.
+    - modalities: Modalities for which significane is to be termined
+    - test: Significance test. Currently, only the Wilcoxon rank-sum test is implemented
+
+- report: Perform significance testing and result aggregation, and generate a HTML or PDF report tabulating and plotting statistics.
+     
+     Call: `significance configuration=demo [version=0] [modalities=[eye-tracking, eeg, fmri]] [alpha=0.01] [test=Wilcoxon] [html=True] [open-html=False] [pdf=False] [open-pdf=False]`
+
+     Parameters:
+    - version: Either 0 for the last experimental run or any version before the current version of the configuration.
+    - modalities: Modalities for which significane is to be termined
+    - alpha: Alpha for significance computation
+    - test: Significance test. Currently, only the Wilcoxon rank-sum test is implemented
+    - html: Whether to generate a HTML report (stored in the reports directory of the results path)
+    - open-html: Whether to open the HTML report with the default browser. Note: In case of remote access, this requires a server-side installation of a browser and X11 forwarding.
+    - pdf: Whether to generate a PDF version of the HTML report (stored in the reports directory of the results path)
+    - open-pdf: Whether to open the PDF report with the default document viewer. Note: In case of remote access, this requires a server-side installation of a document viewer and X11 forwarding.
 
 ## Regression models
 
-The following set of scripts generates and fits a neural network model to predict cognitive data such as fMRI, eye-tracking 
+The tool generates and fits a neural network model to predict cognitive data such as fMRI, eye-tracking 
 and EEG from word embedding inputs.
-
-This process is divided into 4 different handlers to facilitate code reading, debugging and modularity:
-
-- The ``dataHandler.py`` receives the input data used to fit, predict and validate the model. It takes care of parsing, joining and dividing it into training and
-testing sets.
-
-- The ``fileHandler.py`` organizes the different configurations, and handles the reading and writing into them. 
-
-- The ``modelHandler.py`` is the core of the project, where the models are generated, fitted and prediction is done.
-
-- Finally, the ``plotHandler.py`` comes into play to generate visually understandable results.
-
-
-There are two main ways to run the scripts:
-
-1. If using ``script.py`` arguments can be direclty passed to run the model.
- In case no arguments are passed, a command line interface will start and ask for the necessary inputs. These are:
-- word embedding
-- cognitive data
-- feature of the cognitive data
-
-In the cases of fMRI and EEG, we want to predict a vector representing the data and not a specific feature. Thus the cli will 
-not ask for a particular feature to be predicted.    
-
-In order for the script to run properly the necessary information has to be previously stored inside the setupConfig.json 
-file. This information consists of the names of the datafiles, the path to where they are stored, the number of hidden layers and nodes for the neural network
-etc.
-
-Example:
-
-We want to run: "dundee" with the feature "First_fix_dur" and the word embedding "glove-50".
-
-Command to run:
-
-``python script.py path/to/setupConfig.json -c dundee  -f First_fix_dur  -w glove-50``
-
-An example of the ``setupConfig.json`` with the necessary information to run this case is stored in ``config/example_1.json``.
-
-In ``example_1.json`` we have the necessary information to run dundee with any of its features and two different word embeddings: glove-50 and word2vec. Further word embeddings 
-or cognitive datasets can be added in a similar fashion. 
-
-In case of big word embeddings like word2vec, the datafiles are chunked into several pieces to avoid a MemoryError. This has 
-to be performed separately using the chunker method inside of dataHandler.
-
-2. The second way of running the code is to pass a ``controller.json`` to the ``scriptController.py``.
-
-This will in turn have the same effect as ``script.py``, however multiple combinations and models can be run in parallel. An example of
-a ``controllerConfig.json`` is found inside ``config/``.
 
 ### Input data format
 
@@ -82,15 +205,3 @@ Eye-tracking example:
 ``the 0.1168531943034873 0.11272377054039184 0.25456297601240524 ...`` 
 
 All cognitive data sources are freely available for you to download and preprocess. However, if you prefer the fully preprocessed vectors as described in the publication, you can download them [here](https://drive.google.com/open?id=1pWwIiCdB2snIkgJbD1knPQ6akTPW_kx0).
-
-## Significance testing
-
-To run the statistical significance tests on the regression results as described in the paper, place your result files in `significance_testing/results/`.
-We use the implementation of the Wilcoxon test for NLP provided by [Dror et al. (2018)](https://github.com/rtmdrr/testSignificanceNLP).
-
-Then you can set the specific configuration in `significance_testing/sig_test_config.py` and run these scripts in the following order:
-1. `statisticalTesting.py`  
-This will create and test all test results for the chosen modalities in `significance_testing/reports/`.
-2. `aggregated_eeg_results.py` or fMRI or eye-tracking (scripts differ slightly)  
-This will output how many of your hypotheses are accepted under the Bonferroni correction (see paper for detailed description).
-

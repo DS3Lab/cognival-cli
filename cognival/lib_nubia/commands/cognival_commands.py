@@ -284,7 +284,8 @@ class List:
 @command
 class Config:
     """Generate or edit configuration files for experimental combinations (cog. data - embedding type)
-    [Sub-commands] 
+    [Sub-commands]
+    - properties: Edit general CogniVal properties (user directory, etc.).
     - open: Opens existing or creates new configuration edits its general properties.
     - show: Show details of a configuration and experiments.
     - experiment: Edit configuration of single, multiple or all combinations of embeddings
@@ -298,6 +299,31 @@ class Config:
         pass
 
     """This is the super command help"""
+
+
+    @command
+    def properties(self):
+        '''
+        Edit general CogniVal properties (user directory, etc.).
+        '''
+        # Creating config.json (initial run)
+        installation_path = Path(os.path.dirname(__file__)) / '..' / '..'
+        config_path = installation_path / 'config.json'
+        with open(config_path , 'r') as f:
+            config_dict = json.load(f)
+
+        config_patch = {}
+
+        conf_editor = ConfigEditor('properties',
+                                    config_dict,
+                                    config_patch,
+                                    singleton_params='all')
+        conf_editor()
+        if config_patch:
+            config_dict.update(config_patch)
+            with open(config_path , 'w') as f:
+                json.dump(config_dict, f)
+            cprint('Saved CogniVal properties.', 'green')
 
     @command
     @argument('configuration', type=str, description='Name of configuration', positional=True)
@@ -540,7 +566,7 @@ class Config:
                     if not config_patch:
                         return
                     else:
-                        update_emb_config(emb, cdict, config_patch, rand_embeddings, main_conf_dict, embedding_registry)
+                        update_emb_config(emb, csource, cdict, config_patch, rand_embeddings, main_conf_dict, embedding_registry)
                         _save_config(main_conf_dict, configuration, resources_path)
                         
             else:
