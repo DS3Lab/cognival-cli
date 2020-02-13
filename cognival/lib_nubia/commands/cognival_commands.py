@@ -564,7 +564,7 @@ class Config:
                 else:
                     emb_labels.append(emb)
             if single_edit:
-                for idx, (emb, cdict, emb_label) in enumerate(zip(embeddings, config_dicts, emb_labels)):
+                for idx, ((emb, csource), cdict, emb_label) in enumerate(zip(cog_emb_pairs, config_dicts, emb_labels)):
                     config_template = copy.deepcopy(config_dicts[idx])
                     # Run editor for cognitive source/embedding experiments
                     config_patch = config_editor("embedding_exp",
@@ -575,8 +575,7 @@ class Config:
                     if config_patch is None:
                         return
                     else:
-                        for csource in cognitive_sources:
-                            update_emb_config(emb, csource, cdict, config_patch, rand_embeddings, main_conf_dict, embedding_registry)
+                        update_emb_config(emb, csource, cdict, config_patch, rand_embeddings, main_conf_dict, embedding_registry)
                         _save_config(main_conf_dict, configuration, resources_path)
             else:
                 config_template = copy.deepcopy(config_dicts[0])
