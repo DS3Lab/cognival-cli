@@ -31,6 +31,7 @@ def run_parallel(config_dict,
         gpu_ids_list = gpu_ids
         gpu_ids = cycle(gpu_ids)
     else:
+        gpu_ids_list = []
         gpu_ids = cycle([None])
 
     startTime = datetime.now()
