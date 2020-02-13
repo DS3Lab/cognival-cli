@@ -536,7 +536,7 @@ class Config:
                 for emb in embeddings:
                     do_populate = False
                     if not emb in cog_data_config_dict[csource]["wordEmbSpecifics"]:
-                        cprint('Experiment {} / {} not yet registered, adding empty template ...'.format(csource, emb), 'yellow')
+                        cprint('Experiment {} / {} not yet registered, populating from reference config if possible ...'.format(csource, emb), 'yellow')
                         do_populate = True
                     if rand_embeddings and (emb not in main_conf_dict["wordEmbConfig"] or not main_conf_dict["wordEmbConfig"][emb]['random_embedding']):
                         cprint('Random embeddings not yet associated with {}, adding ...'.format(emb), 'yellow')
