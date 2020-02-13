@@ -45,7 +45,7 @@ def run_single(mode, config, word_embedding, cognitive_data, modality, feature, 
     import tensorflow as tf
     from tensorflow.compat.v1.keras.backend import set_session, clear_session
 
-    if gpu_id:
+    if gpu_id is not None:
         gpu_count = 1
         soft_placement = True
     else:
@@ -54,7 +54,7 @@ def run_single(mode, config, word_embedding, cognitive_data, modality, feature, 
 
     tf_config = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1,
                                          inter_op_parallelism_threads=1,
-                                         allow_soft_placement=False,
+                                         allow_soft_placement=soft_placement,
                                          device_count={'GPU': gpu_count, 'CPU': 1})
     if gpu_id:
         tf_config.gpu_options.allow_growth = True
