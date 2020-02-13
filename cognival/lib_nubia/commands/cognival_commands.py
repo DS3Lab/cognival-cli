@@ -53,7 +53,6 @@ from pygments.lexers import MarkdownLexer
 from pygments.formatters import TerminalFormatter
 from termcolor import cprint, colored
 
-from cog_evaluate import run_serial
 from cog_evaluate_parallel import run_parallel
 from handlers.file_handler import write_results, write_options, update_version
 from handlers.data_handler import chunk
