@@ -556,55 +556,56 @@ class Config:
                     config_dicts.append(emb_config)
                     cog_emb_pairs.append((csource, emb))
 
-            if config_dicts:
-                emb_labels = []
-                for emb in embeddings:
-                    if main_conf_dict['wordEmbConfig'][emb]['random_embedding']:
-                        emb_labels.append('{} (+ rand.)'.format(emb))
-                    else:
-                        emb_labels.append(emb)
-                if single_edit:
-                    for idx, (emb, cdict, emb_label) in enumerate(zip(embeddings, config_dicts, emb_labels)):
-                        config_template = copy.deepcopy(config_dicts[idx])
-                        # Run editor for cognitive source/embedding experiments
-                        config_patch = config_editor("embedding_exp",
-                                                    config_template,
-                                                    [emb_label],
-                                                    cognitive_sources,
-                                                    singleton_params=['cv_split', 'validation_split'])
-                        if config_patch is None:
-                            return
-                        else:
-                            update_emb_config(emb, csource, cdict, config_patch, rand_embeddings, main_conf_dict, embedding_registry)
-                            _save_config(main_conf_dict, configuration, resources_path)
+        if config_dicts:
+            emb_labels = []
+            for emb in embeddings:
+                if main_conf_dict['wordEmbConfig'][emb]['random_embedding']:
+                    emb_labels.append('{} (+ rand.)'.format(emb))
                 else:
-                    config_template = copy.deepcopy(config_dicts[0])
-                    # Generate template for multi-editing
-                    if len(config_dicts) > 1:
-                        config_aggregated = collections.defaultdict(set)
-                        for key in config_template:
-                            for cdict in config_dicts:
-                                config_aggregated[key].add(tupleit(cdict[key]))
-                        
-                        for key, values in config_aggregated.items():
-                            if len(values) > 1:
-                                config_template[key] = '<multiple values>'
-                            else:
-                                config_template[key] = values.pop()
-                    
+                    emb_labels.append(emb)
+            if single_edit:
+                for idx, (emb, cdict, emb_label) in enumerate(zip(embeddings, config_dicts, emb_labels)):
+                    config_template = copy.deepcopy(config_dicts[idx])
                     # Run editor for cognitive source/embedding experiments
                     config_patch = config_editor("embedding_exp",
                                                 config_template,
-                                                emb_labels,
+                                                [emb_label],
                                                 cognitive_sources,
                                                 singleton_params=['cv_split', 'validation_split'])
                     if config_patch is None:
                         return
                     else:
-                        for (csource, emb), cdict in zip(cog_emb_pairs, config_dicts):
+                        for csource in cognitive_sources:
                             update_emb_config(emb, csource, cdict, config_patch, rand_embeddings, main_conf_dict, embedding_registry)
+                        _save_config(main_conf_dict, configuration, resources_path)
+            else:
+                config_template = copy.deepcopy(config_dicts[0])
+                # Generate template for multi-editing
+                if len(config_dicts) > 1:
+                    config_aggregated = collections.defaultdict(set)
+                    for key in config_template:
+                        for cdict in config_dicts:
+                            config_aggregated[key].add(tupleit(cdict[key]))
+                    
+                    for key, values in config_aggregated.items():
+                        if len(values) > 1:
+                            config_template[key] = '<multiple values>'
+                        else:
+                            config_template[key] = values.pop()
+                
+                # Run editor for cognitive source/embedding experiments
+                config_patch = config_editor("embedding_exp",
+                                            config_template,
+                                            emb_labels,
+                                            cognitive_sources,
+                                            singleton_params=['cv_split', 'validation_split'])
+                if config_patch is None:
+                    return
+                else:
+                    for (csource, emb), cdict in zip(cog_emb_pairs, config_dicts):
+                        update_emb_config(emb, csource, cdict, config_patch, rand_embeddings, main_conf_dict, embedding_registry)
 
-                    _save_config(main_conf_dict, configuration, resources_path)
+                _save_config(main_conf_dict, configuration, resources_path)
 
     @command
     @argument('configuration', type=str, description='Name of configuration file', positional=True)

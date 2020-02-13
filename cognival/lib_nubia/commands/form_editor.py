@@ -169,7 +169,7 @@ class ConfigEditor():
         return Application(self.layout, key_bindings=self.kb, full_screen=True).run()
     
     def abort(self):
-        get_app().exit(result=True)
+        get_app().exit(result=None)
 
     def _cast_single(self, v):
         try:
@@ -231,6 +231,8 @@ class ConfigEditor():
                     values = self.prefill_fields[k]
                     if not is_jsonable(values):
                         values = str(values)
+                else:
+                    values = None
 
             self.config_dict_updated[k] = values
 
@@ -259,6 +261,8 @@ def config_editor(conf_type,
 
         if result is True:
             break
+        elif result is None:
+            return
         else:
             cprint('Error: {}'.format(result), 'red')
             prompt()
