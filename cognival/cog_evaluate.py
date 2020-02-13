@@ -56,7 +56,7 @@ def run_single(mode, config, word_embedding, cognitive_data, modality, feature, 
                                          inter_op_parallelism_threads=1,
                                          allow_soft_placement=soft_placement,
                                          device_count={'GPU': gpu_count, 'CPU': 1})
-    if gpu_id:
+    if gpu_id is not None:
         tf_config.gpu_options.allow_growth = True
         tf_config.gpu_options.per_process_gpu_memory_fraction = 0.25
         tf_config.gpu_options.visible_device_list = str(gpu_id)
