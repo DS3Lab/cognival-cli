@@ -1,4 +1,3 @@
-import json
 import io
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='3'  #disable tensorflow debugging
@@ -10,7 +9,6 @@ import cog_evaluate
 
 from contextlib import redirect_stdout
 
-from handlers.file_handler import get_config
 from handlers.file_handler import *
 from utils import animated_loading
 

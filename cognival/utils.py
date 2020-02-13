@@ -7,7 +7,7 @@ import warnings
 import pandas as pd
 import numpy as np
 
-from numpy import fromfile, dtype
+from numpy import fromfile
 from gensim.models.keyedvectors import KeyedVectors
 
 #
@@ -85,26 +85,3 @@ def create_table(CONFIG):
 def fill_table(PATH, table):
 
     pass
-
-#def main():
-#    #OPTIONS = "../test_final/options.json"
-#    CONFIG = "../config/example_1.json"
-#    createTable(CONFIG)
-#    pass
-
-#if __name__=="__main__":
-#    main()
-
-# def main(binPath,binName,outputName, dim):
-#     header = [('word','str')] + [('x%s'%i,'float64') for i in range(1,dim+1)]
-#     dt = dtype(header)
-#     print(bin_to_df(binPath+binName,dt))
-#     #bin_to_txt(binPath,binName,outputName)
-
-# if __name__=="__main__":
-#     main('/Users/delatan/Dropbox/university/ETH/4fs/projektArbeit/datasets/embeddings/word2vec/',
-#                   "GoogleNews-vectors-negative300.bin", 'word2vec.txt',300)
-
-if __name__=="__main__":
-    fileName = "../embeddings/glove-6B/glove.6B.50d_nohead.txt"
-    print(header_gen(fileName))

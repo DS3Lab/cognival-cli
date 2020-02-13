@@ -17,12 +17,13 @@ from subprocess import Popen, DEVNULL
 import matplotlib.pyplot as plt
 import seaborn as sns
 import random
-random.seed(48)
 
 from termcolor import cprint
+from .utils import _open_config
 
 # Set seaborn figure size and font scale
 xkcd_colors = [v for k, v in sns.xkcd_rgb.items() if not any([prop in k for prop in ['faded', 'light', 'pale', 'dark']])]
+random.seed(48)
 random.shuffle(xkcd_colors)
 
 # Set style
@@ -158,6 +159,17 @@ def generate_report(configuration,
     # Get mapping of previous version (current not yet executed)
     if not version:
         version = config_dict['version'] - 1
+    elif version >= config_dict['version']:
+        cprint('Version {} exceeds last version for which results were generated ({}), aborting ...'.format(version, config_dict['version'] - 1), 'red')
+        return
+    if not version:
+        cprint('No experimental runs performed yet for configuration {}, aborting ...'.format(configuration), 'red')
+        return
+
+    if not html and not pdf:
+        cprint('No output format enabled, aborting ...', 'red')
+        return
+
     out_dir = Path(config_dict['PATH']) / config_dict['outputDir']
 
     with open(out_dir / 'mapping_{}.json'.format(version)) as f:
@@ -325,7 +337,7 @@ def generate_report(configuration,
     f_path_html = report_dir / 'cognival_report_{}_{}.html'.format(version, timestamp)
     with open(f_path_html, 'w') as f:
         f.write(html_str)
-    
+
     if html:
         cprint('Saved HTML report in: {}'.format(f_path_html), 'green')
 

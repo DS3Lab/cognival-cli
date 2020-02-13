@@ -75,8 +75,8 @@ class NubiaCognivalPlugin(PluginInterface):
             "--max-gpus",
             "-mg",
             type=int,
-            default=1,
-            help="Maximum number of GPUs to use. Defaults to 1. If set to 0, all visible GPUs are used."
+            default=0,
+            help="Maximum number of GPUs to use. Defaults to 0 (all visible GPUs are used)."
         )
         
         opts_parser.add_argument(
