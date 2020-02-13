@@ -8,6 +8,8 @@ from termcolor import cprint
 
 import GPUtil
 
+NO_NVIDIA_GPUS = 'Note: No NVIDIA graphics cards found, leaving tensorflow at default settings for CPU-only computation.'
+
 #http://stackoverflow.com/questions/1014352/how-do-i-convert-a-nested-tuple-of-tuples-and-lists-to-lists-of-lists-in-python
 def tupleit(t):
     return tuple(map(tupleit, t)) if isinstance(t, (list, tuple)) else t
