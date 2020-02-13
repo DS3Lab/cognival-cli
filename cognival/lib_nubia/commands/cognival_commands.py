@@ -11,30 +11,19 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action="ignore", category=DeprecationWarning)
 
-import asyncio
 import collections
-import csv
 import copy
 import itertools
 import json
 import gzip
 import os
-import pprint
 import sys
 import re
-import requests
-import signal
-import socket
 import shutil
 import subprocess
-import time
-import typing
 import zipfile
 
-from datetime import datetime
-from distutils.sysconfig import get_python_lib
 from pathlib import Path
-from subprocess import Popen, PIPE
 from textwrap import fill
 
 import gdown
@@ -46,7 +35,6 @@ import pandas as pd
 import tabulate
 import tableformatter as tform
 
-from prompt_toolkit import PromptSession
 from prompt_toolkit.shortcuts import input_dialog, button_dialog, yes_no_dialog, message_dialog, radiolist_dialog, ProgressBar
 from pygments import highlight
 from pygments.lexers import MarkdownLexer
@@ -54,11 +42,11 @@ from pygments.formatters import TerminalFormatter
 from termcolor import cprint, colored
 
 from cog_evaluate_parallel import run_parallel
-from handlers.file_handler import write_results, write_options, update_version
+from handlers.file_handler import write_options
 from handlers.data_handler import chunk
 from handlers.binary_to_text_conversion import bert_to_text, elmo_to_text
 
-from utils import generate_df_with_header, word2vec_bin_to_txt
+from utils import word2vec_bin_to_txt
 
 #sys.path.insert(0, 'significance_testing/')
 from significance_testing.statisticalTesting import extract_results as st_extract_results
@@ -80,10 +68,7 @@ deprecation._PRINT_DEPRECATION_WARNINGS = False
 
 from .form_editor import ConfigEditor, config_editor
 from .process import (_filter_config,
-                      cumulate_random_emb_results,
-                      write_random_emb_results,
                       process_and_write_results,
-                      insert_config_dict,
                       resolve_cog_emb,
                       _edit_config,
                       update_emb_config,
@@ -93,8 +78,6 @@ from .process import (_filter_config,
 from .utils import (tupleit,
                    _open_config,
                    _open_cog_config,
-                   _check_cog_installed,
-                   _check_emb_installed,
                    _save_cog_config,
                    _save_config,
                    DisplayablePath,
@@ -108,11 +91,7 @@ from .utils import (tupleit,
 
 from .report import generate_report
 
-from .templates import (WORD_EMB_CONFIG_FIELDS,
-                        MAIN_CONFIG_TEMPLATE,
-                        COGNITIVE_CONFIG_TEMPLATE,
-                        EMBEDDING_PARAMET_TEMPLATE,
-                        EMBEDDING_CONFIG_TEMPLATE)
+from .templates import MAIN_CONFIG_TEMPLATE
 
 from .strings import EXAMPLE_COMMANDS
 
@@ -481,7 +460,6 @@ class Config:
         Edit configuration of single, multiple or all combinations of embeddings and cognitive sources.
         '''
         populate_conf = True
-        # TODO: Don't open configuration twice, pass dictionary to populate if some non-existent
         ctx = context.get_context()
         embedding_registry = ctx.embedding_registry
         resources_path = ctx.resources_path
@@ -519,7 +497,7 @@ class Config:
 
         cog_data_config_dict = main_conf_dict['cogDataConfig']
         
-        for csource in cognitive_sources:            
+        for csource in cognitive_sources:
             if csource not in cog_data_config_dict:
                 if populate_conf:
                     cprint('Source {} not yet registered, creating ...'.format(csource), 'yellow')
@@ -554,87 +532,79 @@ class Config:
                 else:
                     return
 
-            for emb in embeddings:
-                do_populate = False
-                if not emb in cog_data_config_dict[csource]["wordEmbSpecifics"]:
-                    cprint('Experiment {} / {} not yet registered, adding empty template ...'.format(csource, emb), 'yellow')
-                    do_populate = True
-                if rand_embeddings and (emb not in main_conf_dict["wordEmbConfig"] or not main_conf_dict["wordEmbConfig"][emb]['random_embedding']):
-                    cprint('Random embeddings not yet associated with {}, adding ...'.format(emb), 'yellow')
-                
-                # Force random embeddings if present for other embeddings
-                #try:
-                #    random_embedding = main_conf_dict["wordEmbConfig"][emb]['random_embedding']
-                #    if random_embedding and not rand_embeddings and main_conf_dict['randEmbSetToParts'][random_embedding][0] not in cog_data_config_dict[csource]["wordEmbSpecifics"]:
-                #        cprint('Forcing random embedding linking for experiment {} / {} (cannot have heterogenous configuration!)'.format(csource, emb), 'magenta')
-                #except KeyError:
-                #    pass
+            if not edit_cog_source_params or not edit_all_embeddings:
+                for emb in embeddings:
+                    do_populate = False
+                    if not emb in cog_data_config_dict[csource]["wordEmbSpecifics"]:
+                        cprint('Experiment {} / {} not yet registered, adding empty template ...'.format(csource, emb), 'yellow')
+                        do_populate = True
+                    if rand_embeddings and (emb not in main_conf_dict["wordEmbConfig"] or not main_conf_dict["wordEmbConfig"][emb]['random_embedding']):
+                        cprint('Random embeddings not yet associated with {}, adding ...'.format(emb), 'yellow')
 
-                if do_populate:
-                    try:
-                        populate(configuration,
-                                 main_conf_dict,
-                                 rand_embeddings=rand_embeddings,
-                                 cognitive_sources=[csource],
-                                 embeddings=[emb],
-                                 quiet=True)
-                    except AbortException:
-                        return
+                    if do_populate:
+                        try:
+                            populate(configuration,
+                                    main_conf_dict,
+                                    rand_embeddings=rand_embeddings,
+                                    cognitive_sources=[csource],
+                                    embeddings=[emb],
+                                    quiet=True)
+                        except AbortException:
+                            return
 
-                emb_config = cog_data_config_dict[csource]["wordEmbSpecifics"][emb]
-                config_dicts.append(emb_config)
-                cog_emb_pairs.append((csource, emb))
-        
-        if config_dicts:
-            emb_labels = []
-            for emb in embeddings:
-                if main_conf_dict['wordEmbConfig'][emb]['random_embedding']:
-                    emb_labels.append('{} (+ rand.)'.format(emb))
+                    emb_config = cog_data_config_dict[csource]["wordEmbSpecifics"][emb]
+                    config_dicts.append(emb_config)
+                    cog_emb_pairs.append((csource, emb))
+
+            if config_dicts:
+                emb_labels = []
+                for emb in embeddings:
+                    if main_conf_dict['wordEmbConfig'][emb]['random_embedding']:
+                        emb_labels.append('{} (+ rand.)'.format(emb))
+                    else:
+                        emb_labels.append(emb)
+                if single_edit:
+                    for idx, (emb, cdict, emb_label) in enumerate(zip(embeddings, config_dicts, emb_labels)):
+                        config_template = copy.deepcopy(config_dicts[idx])
+                        # Run editor for cognitive source/embedding experiments
+                        config_patch = config_editor("embedding_exp",
+                                                    config_template,
+                                                    [emb_label],
+                                                    cognitive_sources,
+                                                    singleton_params=['cv_split', 'validation_split'])
+                        if config_patch is None:
+                            return
+                        else:
+                            update_emb_config(emb, csource, cdict, config_patch, rand_embeddings, main_conf_dict, embedding_registry)
+                            _save_config(main_conf_dict, configuration, resources_path)
                 else:
-                    emb_labels.append(emb)
-            if single_edit:
-                for idx, (emb, cdict, emb_label) in enumerate(zip(embeddings, config_dicts, emb_labels)):
-                    config_template = copy.deepcopy(config_dicts[idx])
+                    config_template = copy.deepcopy(config_dicts[0])
+                    # Generate template for multi-editing
+                    if len(config_dicts) > 1:
+                        config_aggregated = collections.defaultdict(set)
+                        for key in config_template:
+                            for cdict in config_dicts:
+                                config_aggregated[key].add(tupleit(cdict[key]))
+                        
+                        for key, values in config_aggregated.items():
+                            if len(values) > 1:
+                                config_template[key] = '<multiple values>'
+                            else:
+                                config_template[key] = values.pop()
+                    
                     # Run editor for cognitive source/embedding experiments
                     config_patch = config_editor("embedding_exp",
-                                                 config_template,
-                                                 [emb_label],
-                                                 cognitive_sources,
-                                                 singleton_params=['cv_split', 'validation_split'])
-                    if not config_patch:
+                                                config_template,
+                                                emb_labels,
+                                                cognitive_sources,
+                                                singleton_params=['cv_split', 'validation_split'])
+                    if config_patch is None:
                         return
                     else:
-                        update_emb_config(emb, csource, cdict, config_patch, rand_embeddings, main_conf_dict, embedding_registry)
-                        _save_config(main_conf_dict, configuration, resources_path)
-                        
-            else:
-                config_template = copy.deepcopy(config_dicts[0])
-                # Generate template for multi-editing
-                if len(config_dicts) > 1:
-                    config_aggregated = collections.defaultdict(set)
-                    for key in config_template:
-                        for cdict in config_dicts:
-                            config_aggregated[key].add(tupleit(cdict[key]))
-                    
-                    for key, values in config_aggregated.items():
-                        if len(values) > 1:
-                            config_template[key] = '<multiple values>'
-                        else:
-                            config_template[key] = values.pop()
-                
-                # Run editor for cognitive source/embedding experiments
-                config_patch = config_editor("embedding_exp",
-                                            config_template,
-                                            emb_labels,
-                                            cognitive_sources,
-                                            singleton_params=['cv_split', 'validation_split'])
-                if not config_patch:
-                    return
-                else:
-                    for (csource, emb), cdict in zip(cog_emb_pairs, config_dicts):
-                        update_emb_config(emb, csource, cdict, config_patch, rand_embeddings, main_conf_dict, embedding_registry)
+                        for (csource, emb), cdict in zip(cog_emb_pairs, config_dicts):
+                            update_emb_config(emb, csource, cdict, config_patch, rand_embeddings, main_conf_dict, embedding_registry)
 
-                _save_config(main_conf_dict, configuration, resources_path)
+                    _save_config(main_conf_dict, configuration, resources_path)
 
     @command
     @argument('configuration', type=str, description='Name of configuration file', positional=True)
@@ -669,7 +639,7 @@ class Config:
         
         elif not cognitive_sources and not modalities:
             all_sources = button_dialog(title='Deletion',
-                                text='You have not specified cognitive sources or groups. Do you wish to remove the specified embeddings for all sources?',
+                                text='You have not specified cognitive sources or modalities. Do you wish to remove the specified embeddings for all sources?',
                                 buttons=[
                                         ('No', False),
                                         ('Yes', True),
@@ -725,7 +695,7 @@ class Config:
                                 del main_conf_dict["randEmbSetToParts"][assoc_rand_emb]
                             del main_conf_dict["wordEmbConfig"][emb]
                     else:
-                        cprint ("Combination {}/{} not found, skipping ...".format(csource, emb), 'yellow')
+                        cprint ("Combination {}/{} not found in configuration {}, skipping ...".format(csource, emb, configuration), 'yellow')
             
             # Remove source if empty
             if not cog_data_config_dict[csource]["wordEmbSpecifics"]:
@@ -739,6 +709,8 @@ class Config:
                 if csource in cog_data_config_dict:
                     cprint ("Deleting {} ...".format(csource), 'green')
                     del cog_data_config_dict[csource]
+                else:
+                    cprint ("Cognitive source {} not found in configuration {}, skipping ...".format(csource, configuration), 'yellow')
     
         _save_config(main_conf_dict, configuration, resources_path)
 
@@ -768,22 +740,29 @@ def significance(configuration,
     
     out_dir = Path(config_dict["PATH"]) / config_dict["outputDir"]
 
-    if not os.path.exists(out_dir):
-        cprint('Output path {} associated with configuration "{}" does not exist. Have you already performed experimental runs?'.format(out_dir, configuration), "red")
-        return
-
     # Get mapping of previous version (current not yet executed)
     if not version:
         version = config_dict['version'] - 1
     elif version >= config_dict['version']:
-        cprint('Version {} exceeds last version for which results were generated ({}), aborting ...'.format(version, config_dict['version'] - 1), 'red')
+        if not quiet:
+            cprint('Version {} exceeds last version for which results were generated ({}), aborting ...'.format(version, config_dict['version'] - 1), 'red')
+        return
+    if not version:
+        if not quiet:
+            cprint('No experimental runs performed yet for configuration {}, aborting ...'.format(configuration), 'red')
+        return
+
+    if not os.path.exists(out_dir):
+        if not quiet:
+            cprint('Output path {} associated with configuration "{}" does not exist. Have you already performed experimental runs?'.format(out_dir, configuration), "red")
         return
 
     try:
         with open(out_dir / 'mapping_{}.json'.format(version)) as f:
             mapping_dict = json.load(f)
     except FileNotFoundError:
-        cprint('No results for version {}, aborting ...'.format(version), 'red')
+        if not quiet:
+            cprint('No results for version {}, aborting ...'.format(version), 'red')
         return
     
     for modality in modalities:
@@ -900,7 +879,21 @@ def aggregate(configuration,
     # Get mapping of previous version (current not yet executed)
     if not version:
         version = config_dict['version'] - 1
+    elif version >= config_dict['version']:
+        if not quiet:
+            cprint('Version {} exceeds last version for which results were generated ({}), aborting ...'.format(version, config_dict['version'] - 1), 'red')
+        return
+    if not version:
+        if not quiet:
+            cprint('No experimental runs performed yet for configuration {}, aborting ...'.format(configuration), 'red')
+        return
+
     out_dir = Path(config_dict['PATH']) / config_dict['outputDir']
+
+    if not os.path.exists(out_dir):
+        if not quiet:
+            cprint('Output path {} associated with configuration "{}" does not exist. Have you already performed experimental runs?'.format(out_dir, configuration), "red")
+        return
 
     with open(out_dir / 'mapping_{}.json'.format(version)) as f:
         mapping_dict = json.load(f)
@@ -908,7 +901,8 @@ def aggregate(configuration,
     report_dir = out_dir / 'reports'
     
     if not os.path.exists(out_dir):
-        cprint('Output path {} associated with configuration "{}" does not exist. Have you already performed experimental runs?'.format(out_dir, configuration), "red")
+        if not quiet:
+            cprint('Output path {} associated with configuration "{}" does not exist. Have you already performed experimental runs?'.format(out_dir, configuration), "red")
         return
 
     extract_results = {'eeg': agg_eeg_extr_results,
@@ -991,10 +985,10 @@ def aggregate(configuration,
 @argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
 @argument('alpha', type=str, description='Alpha value')
 @argument('test', type=str, description='Significance test')
-@argument('html', type=str, description='Generate html report.')
-@argument('open_html', type=str, description='Open generated html report.')
-@argument('pdf', type=str, description='Generate pdf report.')
-@argument('open_pdf', type=str, description='Open generated pdf report.')
+@argument('html', type=bool, description='Generate html report.')
+@argument('open_html', type=bool, description='Open generated html report.')
+@argument('pdf', type=bool, description='Generate pdf report.')
+@argument('open_pdf', type=bool, description='Open generated pdf report.')
 def report(configuration,
            version=0,
            modalities=['eye-tracking', 'eeg', 'fmri'],
@@ -1126,9 +1120,8 @@ class Install:
                                                        'dimensionality': dimensionality,
                                                        'hypothesis_per_participant': False}
             index = cog_config['index']
-            index.append(source)
+            index.append('{}_{}'.format(modality, source))
             cog_config['index'] = natsorted(list(set(index)))
-        
         
             message_dialog(title='Cognitive source registration',
                             text='Please ensure that the file has the following path and name after installation:\n'
@@ -1461,7 +1454,10 @@ class Install:
             description='Number of random embeddings to be generated (and across which performance will later be averaged).')
     @argument('seed_func',
             type=str,
-            description='Number of random embeddings to be generated (and across which performance will later be averaged).')
+            description='Seed generation function. Currently only "exp_e_floored" (np.floor((k+i)**np.e))) supported.')
+    @argument('force',
+            type=str,
+            description='Force regeneration and association of random embeddings with specified embeddings.')
     def random_embeddings(self, embeddings, no_embeddings=10, seed_func='exp_e_floored', force=False):
         """
         Generate and install random embeddings for specified proper embeddings.
@@ -1530,18 +1526,18 @@ class Install:
             for rand_emb_key in rand_emb_keys:
                 ctx.embedding_registry['random_multiseed'][rand_emb_name]['embedding_parts'][rand_emb_key] = '{}.txt'.format(rand_emb_key)
             
+            cprint('✓ Generated random embeddings (Naming scheme: random-<dimensionality>-<no. seeds>-<#seed>-<seed_value>)', 'green')
         else:
             if not embeddings in ctx.embedding_registry['random_multiseed'][rand_emb_name]['associated_with']:
                 cprint('Random embeddings of dimensionality {} already present, associating ...'.format(emb_dim), 'green')
                 ctx.embedding_registry['random_multiseed'][rand_emb_name]['associated_with'].append(embeddings)
             else:
                 cprint('Random embeddings of dimensionality {} already present and associated.'.format(emb_dim), 'green')
+                return
         
         # Associate random embeddings with proper embeddings
         emb_properties['random_embedding'] = rand_emb_name
-        cprint('✓ Generated random embeddings (Naming scheme: random-<dimensionality>-<no. seeds>-<#seed>-<seed_value>)', 'green')
         ctx.save_configuration()
-
 
 @command
 def history():
@@ -1607,12 +1603,11 @@ def example_calls(command=None):
     table_rows = []
     
     def get_table_rows(cmd, parametrization):
-        print(cmd, parametrization)
         if isinstance(parametrization, list):
             for example in parametrization:
                 if example['example']:
                     example['command'] = cmd
-                    example['example'] = colored(example['example'], 'yellow')
+                    example['example'] = fill(example['example'], 80).replace('[nl]', '\n\n')
                     example['subcommand'] = ''
                     example['description'] = fill(example['description'], 20)
                     table_rows.append(example)
@@ -1621,7 +1616,7 @@ def example_calls(command=None):
                 for example in subparametrization:
                     if example['example']:
                         example['command'] = cmd
-                        example['example'] = colored(example['example'], 'yellow')
+                        example['example'] = fill(example['example'], 80).replace('[nl]', '\n\n')
                         example['subcommand'] = subcommand
                         example['description'] = fill(example['description'], 20)
                         table_rows.append(example)
@@ -1630,7 +1625,7 @@ def example_calls(command=None):
         for command, parametrization in EXAMPLE_COMMANDS.items():
             get_table_rows(command, parametrization)
     else:
-        get_table_rows(command, EXAMPLE_COMMANDS[parametrization])
+        get_table_rows(command, EXAMPLE_COMMANDS[command])
         
     df_cli = pd.DataFrame(table_rows)
     df_cli = df_cli[['command', 'subcommand', 'example', 'description']]

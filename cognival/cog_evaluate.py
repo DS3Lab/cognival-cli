@@ -1,8 +1,4 @@
-import argparse
 from datetime import datetime
-
-from prompt_toolkit.shortcuts import ProgressBar
-from termcolor import cprint
 
 #own modules
 from handlers.data_handler import data_handler

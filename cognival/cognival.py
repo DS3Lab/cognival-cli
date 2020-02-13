@@ -6,14 +6,11 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 #
-import pprint
 import os
 import json
-import traceback
 import warnings
 import sys
 
-import numpy as np
 from pathlib import Path
 
 from nubia import Nubia, Options
@@ -25,18 +22,13 @@ from lib_nubia.nubia_plugin import NubiaCognivalPlugin
 from lib_nubia import commands
 from lib_nubia.commands import messages
 
-import warnings
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
 
 from tensorflow.python.util import deprecation
 deprecation._PRINT_DEPRECATION_WARNINGS = False
 
-import keras
 from termcolor import cprint
-
-import tensorflow as tf
-import GPUtil
 
 #warnings.filterwarnings("error", category=RuntimeWarning)
 
