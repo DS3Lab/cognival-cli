@@ -557,19 +557,20 @@ class Config:
                     cog_emb_pairs.append((csource, emb))
 
         if config_dicts:
-            emb_labels = []
+            emb_to_label = {}
             for emb in embeddings:
                 if main_conf_dict['wordEmbConfig'][emb]['random_embedding']:
-                    emb_labels.append('{} (+ rand.)'.format(emb))
+                    emb_to_label[emb] = '{} (+ rand.)'.format(emb)
                 else:
-                    emb_labels.append(emb)
+                    emb_to_label[emb] = emb
+
             if single_edit:
-                for idx, ((emb, csource), cdict, emb_label) in enumerate(zip(cog_emb_pairs, config_dicts, emb_labels)):
+                for idx, ((csource, emb), cdict) in enumerate(zip(cog_emb_pairs, config_dicts)):
                     config_template = copy.deepcopy(config_dicts[idx])
                     # Run editor for cognitive source/embedding experiments
                     config_patch = config_editor("embedding_exp",
                                                 config_template,
-                                                [emb_label],
+                                                [emb_to_label[emb]],
                                                 cognitive_sources,
                                                 singleton_params=['cv_split', 'validation_split'])
                     if config_patch is None:
@@ -595,7 +596,7 @@ class Config:
                 # Run editor for cognitive source/embedding experiments
                 config_patch = config_editor("embedding_exp",
                                             config_template,
-                                            emb_labels,
+                                            list(emb_to_label.values()),
                                             cognitive_sources,
                                             singleton_params=['cv_split', 'validation_split'])
                 if config_patch is None:
