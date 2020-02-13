@@ -154,10 +154,13 @@ def run(configuration,
 
     _gpu_ids_all = configure_tf_devices()
     
-    if max_gpus:
-        gpu_ids = _gpu_ids_all[:max_gpus]
+    if _gpu_ids_all:
+        if max_gpus:
+            gpu_ids = _gpu_ids_all[:max_gpus]
+        else:
+            gpu_ids = _gpu_ids_all
     else:
-        gpu_ids = _gpu_ids_all
+        gpu_ids = None
 
     parametrization = _filter_config(configuration,
                                         embeddings,
@@ -329,7 +332,8 @@ class Config:
             config_dict.update(config_patch)
             with open(config_path , 'w') as f:
                 json.dump(config_dict, f)
-            cprint('Saved CogniVal properties.', 'green')
+            cprint('Saved CogniVal properties, please restart the interactive shell. Quitting ...', 'green')
+            sys.exit(1)
 
     @command
     @argument('configuration', type=str, description='Name of configuration', positional=True)
