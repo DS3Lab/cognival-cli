@@ -3,12 +3,13 @@
 ### Requirements
 - Python 3.7.4 or newer
 - For PDF generation of reports: wkhtmltopdf version 0.12.5 or newer (available from https://wkhtmltopdf.org/)
+- For manual browsing and viewing of user files: vim (any recent version)
 - 16+ GB of RAM recommended
 - When using an NVIDIA GPU:
     - CUDA >= 10.1
     - CuDNN >= 7.6.5
     - NVIDIA drivers >= 418.39 (can be determined with nvidia-smi)
-
+    - NVIDIA SMI (for scheduling and monitoring)
 
 ### A framework for cognitive word embedding evaluation
 
@@ -39,13 +40,38 @@ In the cases of fMRI and EEG, we want to predict a vector representing the data 
 
 In case of big word embeddings like word2vec, files are chunked into several pieces to avoid a MemoryError.
 
+## Custom embedding installation
+
+Custom embeddings can be directly downloaded from a specified URL and extracted from an archive (if applicable).
+The assistant is started by executing `install embedding "<some URL or local path>"`.
+
+The following criteria must be met:
+
+- The passed value is either a local path or an URL representing a direct HTTP(S) link to the file or a Google Drive link.
+- The file is either a ZIP archive, gzipped file or usable as-is.
+
+Other modes of hosting and archival are currently NOT supported and will cause the installation to fail.                        
+In those instances, please manually download, extract and preprocess the files in the "embeddings" directory.
+The last dialog box of the assistant will prompt the user regarding manual installation (defaulting to "No").
+
+First, a name must be specified for addressing the embeddings in subsequent commands. Next, the name of the main embedding file must be specified. Optionally, the name of the embedding path can be customized. Following, the user is prompted with respect to the embedding dimensionality, whether the embedding is binary or textual. In the binary case, conversion from word2vec- and BERT-compliant formats can be performed (Note: BERT conversion requires at least 16GB of RAM). Embeddings can also be chunked to avoid memory errors, with the number of chunks being parametrizable.
+
+## Custom cognitive source installation
+
+Custom cognitive sources can be installed in a semi-automatic manner, in that the associated file must be placed manually in the corresponding path (shown by the assistant). 
+
+Call: `install cognitive-sources source=<name of the source>`
+
+Custom cognitive sources MUST conform to the CogniVal format (space-separated, columns word, feature or dimension columns (named e[i], see below)) and be put manually in the corresponding directory (`.cognival/<cognitive_sources/<modality>/`) after running this assistant. The specified name must match the corresponding text file! Multi-hypothesis (multi-file) sources must currently be added manually.
+
+The assistant prompts the user to specify the cognitive source modality (either EEG, Eye-Tracking or fMRI). It will the then specify in which path to place the file and how to name it. Subsequently, the dimensionality of the source has to be specified, if it is not subdivided into features (Note: Multi-dimensional multi-feature sources are not supported). If the source has multiple features, the column names must be given, separated by comma.
+
 ## Overview of commands
 `<Tab>` shows all available commands, subcommands and parameters at the given position, as well as argument types and default values where applicable.
 By pressing `<Left>`, previously executed commands can be auto-completed. When a command is executed with only one argument, it can be
 provided in a positional manner: `command argument`. Otherwise, each parameter must be named: `command parameter1=argument2 parameter2=argument2`.
 
-Note that the syntax is a simplified version of Python's, as strings and ints can be provided without quotes, however lists must be
-enclosed in brackets: `list-param=[value1, value2]`. List parameters require lists even for single values (`list-param=[value]`) and the special value `all`, indicating all possbile values (`list-param=[all]`).
+Note that the syntax is a simplified version of Python's, as strings and ints can be provided without quotes (except for URLs in the context of custom embedding installation), however lists must be enclosed in brackets: `list-param=[value1, value2]`. List parameters require lists even for single values (`list-param=[value]`) and the special value `all`, indicating all possbile values (`list-param=[all]`).
 
 ### Basic commands
 - clear: Clears the shell
@@ -54,6 +80,8 @@ enclosed in brackets: `list-param=[value1, value2]`. List parameters require lis
 - welcome: Shows the welcome message in less
 - help / ?: Shows a brief overview over all commands
 - quit / exit: Terminates the shell session.
+- example-calls: Lists example calls for a single or all commands.
+- browse: Browses the user directory and view files using vim, per default in read-only mode. (requires that vim is installed).
 
 ### Main commands and subcommands
 
@@ -138,7 +166,7 @@ enclosed in brackets: `list-param=[value1, value2]`. List parameters require lis
     - cognitive-sources: Lists installed cognitive sources along with their features (where applicable).
     
 - run: Run all or a subset of experiments specified in a configuration. The parameters `embeddings`, `modalities` and `cognitive-sources` correspond to `config experiment`. Note that `cognitive-features` is a nested list that must specify features
-for all cognitive-sources
+for all cognitive-sources. Each inner list must be specified as semicolon-separated string within quotes.
     Call: `run configuration=demo [embeddings=[all]] [modalities=None] [cognitive-sources=[all]] [cognitive-features=None]`
 
 - significance:  Compute the significance of results of an experimental run. Note that this requires that random embedding have been

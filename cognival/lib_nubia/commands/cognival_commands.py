@@ -35,6 +35,7 @@ from datetime import datetime
 from distutils.sysconfig import get_python_lib
 from pathlib import Path
 from subprocess import Popen, PIPE
+from textwrap import fill
 
 import gdown
 from joblib import Parallel, delayed
@@ -52,8 +53,8 @@ from pygments.lexers import MarkdownLexer
 from pygments.formatters import TerminalFormatter
 from termcolor import cprint, colored
 
-from cog_evaluate import run as run_serial
-from cog_evaluate_parallel import run_parallel as run_parallel
+from cog_evaluate import run_serial
+from cog_evaluate_parallel import run_parallel
 from handlers.file_handler import write_results, write_options, update_version
 from handlers.data_handler import chunk
 from handlers.binary_to_text_conversion import bert_to_text, elmo_to_text
@@ -103,7 +104,8 @@ from .utils import (tupleit,
                    chunked_list_concat_str,
                    field_concat,
                    chunks,
-                   page_list)
+                   page_list,
+                   configure_tf_devices)
 
 from .report import generate_report
 
@@ -112,6 +114,8 @@ from .templates import (WORD_EMB_CONFIG_FIELDS,
                         COGNITIVE_CONFIG_TEMPLATE,
                         EMBEDDING_PARAMET_TEMPLATE,
                         EMBEDDING_CONFIG_TEMPLATE)
+
+from .strings import EXAMPLE_COMMANDS
 
 # Pretty warnings
 import warnings
@@ -127,36 +131,38 @@ COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1pWwIiCdB2snIkgJbD1knPQ6a
 
 @command
 @argument("configuration", type=str, description="Configuration for experimental runs", positional=True)
-@argument("processes", type=int, description="No. of CPU cores used for parallelization")
-@argument("embedding", type=str, description="Single embedding")
+@argument("processes", type=int, description="No. of processes")
+@argument("n_gpus", type=int, description="No. of processes")
 @argument("embeddings", type=list, description="List of embeddings")
-@argument("cognitive_source", type=str, description="Single cognitive source")
 @argument("cognitive_sources", type=list, description="List of cognitive sources")
-@argument("cognitive_feature", type=str, description="Single cognitive feature")
 @argument("cognitive_features", type=list, description="List of cognitive features")
 @argument("random_baseline", type=bool, description="Compute random baseline(s) corresponding to specified embedding")
 def run(configuration,
-        embedding='all',
-        embeddings=None,
-        cognitive_source='all',
-        cognitive_sources=None,
-        cognitive_feature=None,
+        embeddings=['all'],
+        cognitive_sources=['all'],
         cognitive_features=None,
         processes=None,
+        n_gpus=None,
         random_baseline=True):
     '''
     Run parallelized evaluation of single, selected or all combinations of embeddings and cognitive sources.
-    Only exists for debugging purposes.
     '''
     ctx = context.get_context()
     resources_path = ctx.resources_path
+    
+    # max_gpus overrides n_gpus if smaller
+    max_gpus = ctx.max_gpus if (ctx.max_gpus and (not n_gpus or (n_gpus and (ctx.max_gpus < n_gpus)))) else n_gpus if n_gpus else None
+
+    _gpu_ids_all = configure_tf_devices()
+    
+    if max_gpus:
+        gpu_ids = _gpu_ids_all[:max_gpus]
+    else:
+        gpu_ids = _gpu_ids_all
 
     parametrization = _filter_config(configuration,
-                                        embedding,
                                         embeddings,
-                                        cognitive_source,
                                         cognitive_sources,
-                                        cognitive_feature,
                                         cognitive_features,
                                         random_baseline)
     
@@ -165,14 +171,14 @@ def run(configuration,
 
     config_dict, embeddings_list, emb_to_random_dict, cog_sources_list, cog_source_to_feature = parametrization
 
-
     # TODO: Check whether all installed!
     results_dict = run_parallel(config_dict,
                                 emb_to_random_dict,
                                 embeddings_list,
                                 cog_sources_list,
                                 cog_source_to_feature,
-                                cpu_count=processes)
+                                n_jobs=processes,
+                                gpu_ids=gpu_ids)
     
     for modality, results in results_dict.items():
         run_stats = {}
@@ -193,9 +199,9 @@ def run(configuration,
 class List:
     """List properties of configurations, embeddings and cognitive sources.
     [Sub-commands] 
-    - configs: 
-    - embeddings: 
-    - cognitive-sources: 
+    - configs: List available configurations (except reference configuration, which is read-only)
+    - embeddings: List available and installed default embeddings, generated random embeddings and installed custom embeddings
+    - cognitive-sources: List installed cognitive sources.
 ―
     """
 
@@ -269,15 +275,16 @@ class List:
 
         for modality in cog_config['sources']:
             cprint(modality.upper(), attrs=['bold'])
-            cprint('Resource                 Features')
+            cprint('Resource                           Features')
             for key, value in cog_config['sources'][modality].items():
-                cprint(key, 'cyan', end=' '*(25-len(key)))
+                label = '{}_{}'.format(modality, key)
+                cprint(label, 'cyan', end=' '*(35-len(label)))
                 if isinstance(value["features"], str):
                     cprint(value["features"], 'green')
                 else:
                     cprint(value["features"][0], 'green')
                     for feature in value["features"][1:]:
-                        cprint(' '*25 + feature, 'green')
+                        cprint(' '*35 + feature, 'green')
                 print()
             print()
 
@@ -481,6 +488,15 @@ class Config:
 
         if not main_conf_dict:
             return
+
+        # Never add random embeddings if not yet present
+        if main_conf_dict['wordEmbConfig'] and rand_embeddings and not main_conf_dict['randEmbConfig']:
+            cprint('Cannot add random embeddings to existing configuration without random embeddings! Aborting ...', 'red')
+            return
+
+        # Always add random embeddings if already present
+        if main_conf_dict['randEmbConfig']:
+            rand_embeddings = True
         
         config_dicts = []
         cog_emb_pairs = []
@@ -536,9 +552,22 @@ class Config:
                     return
 
             for emb in embeddings:
-                if (not emb in cog_data_config_dict[csource]["wordEmbSpecifics"]) or \
-                   (rand_embeddings and not main_conf_dict["wordEmbConfig"][emb]['random_embedding']):
+                do_populate = False
+                if not emb in cog_data_config_dict[csource]["wordEmbSpecifics"]:
                     cprint('Experiment {} / {} not yet registered, adding empty template ...'.format(csource, emb), 'yellow')
+                    do_populate = True
+                if rand_embeddings and (emb not in main_conf_dict["wordEmbConfig"] or not main_conf_dict["wordEmbConfig"][emb]['random_embedding']):
+                    cprint('Random embeddings not yet associated with {}, adding ...'.format(emb), 'yellow')
+                
+                # Force random embeddings if present for other embeddings
+                #try:
+                #    random_embedding = main_conf_dict["wordEmbConfig"][emb]['random_embedding']
+                #    if random_embedding and not rand_embeddings and main_conf_dict['randEmbSetToParts'][random_embedding][0] not in cog_data_config_dict[csource]["wordEmbSpecifics"]:
+                #        cprint('Forcing random embedding linking for experiment {} / {} (cannot have heterogenous configuration!)'.format(csource, emb), 'magenta')
+                #except KeyError:
+                #    pass
+
+                if do_populate:
                     try:
                         populate(configuration,
                                  main_conf_dict,
@@ -553,14 +582,20 @@ class Config:
                 config_dicts.append(emb_config)
                 cog_emb_pairs.append((csource, emb))
         
-        if config_dicts:            
+        if config_dicts:
+            emb_labels = []
+            for emb in embeddings:
+                if main_conf_dict['wordEmbConfig'][emb]['random_embedding']:
+                    emb_labels.append('{} (+ rand.)'.format(emb))
+                else:
+                    emb_labels.append(emb)
             if single_edit:
-                for idx, (emb, cdict) in enumerate(zip(embeddings, config_dicts)):
+                for idx, (emb, cdict, emb_label) in enumerate(zip(embeddings, config_dicts, emb_labels)):
                     config_template = copy.deepcopy(config_dicts[idx])
                     # Run editor for cognitive source/embedding experiments
                     config_patch = config_editor("embedding_exp",
                                                  config_template,
-                                                 [emb],
+                                                 [emb_label],
                                                  cognitive_sources,
                                                  singleton_params=['cv_split', 'validation_split'])
                     if not config_patch:
@@ -583,14 +618,6 @@ class Config:
                             config_template[key] = '<multiple values>'
                         else:
                             config_template[key] = values.pop()
-                
-                
-                emb_labels = []
-                for emb in embeddings:
-                    if main_conf_dict['wordEmbConfig'][emb]['random_embedding']:
-                        emb_labels.append('{} (+ rand.)'.format(emb))
-                    else:
-                        emb_labels.append(emb)
                 
                 # Run editor for cognitive source/embedding experiments
                 config_patch = config_editor("embedding_exp",
@@ -990,9 +1017,9 @@ class Install:
     """Install CogniVal cognitive vectors, default embeddings (proper and random), custom embeddings and
     generate random embeddings
     [Sub-commands]
-    - cognitive_sources: Install the entire batch of preprocessed CogniVal and other cognitive sources.
+    - cognitive-sources: Install the entire batch of preprocessed CogniVal and other cognitive sources.
     - embeddings: Download and install a default embedding (by name) or custom embedding (from URL)
-    - random_embeddings: Generate and install random embeddings for specified proper embeddings.
+    - random-embeddings: Generate and install random embeddings for specified proper embeddings.
 ―
     """
 
@@ -1046,10 +1073,12 @@ class Install:
             # Specify path
             message_dialog(title='Cognitive source registration',
                            text='Custom cognitive sources MUST conform to the CogniVal format (space-separated, columns word, feature\n'
-                                'or dimension columns (named e[i])) '
-                                'and be put manually in the corresponding directory (cognitive_sources/<modality>/) after running this assistant.\n'
+                                'or dimension columns (named e[i])) and be put manually in the corresponding directory \n'
+                                'after running this assistant:\n\n'
+                                '{}/cognitive_sources/<modality>/\n\n'
                                 'The specified name ({}) must match the corresponding text file! \n'
-                                'Multi-hypothesis (multi-file) sources must currently be added manually. '.format(source)).run()
+                                'Multi-hypothesis (multi-file) sources must currently be added manually to: \n\n'
+                                '{}/cognitive_sources/resources/cognitive_sources.json'.format(str(cognival_path), source, str(cognival_path))).run()
 
 
             modality = radiolist_dialog(title='Cognitive source registration',
@@ -1062,10 +1091,6 @@ class Install:
             if modality is None:
                 return
 
-            message_dialog(title='Cognitive source registration',
-                           text='Please ensure that the file has the following path and name after installation:\n'
-                                'cognitive_sources/{}/{}.txt'.format(modality, source)).run()
-            
             dimensionality = input_dialog(title='Cognitive source registration',
                                     text='Specify the dimensionality of the cognitive source. Leave empty if each dimension constitutes a separate \n'
                                          'feature. Multi-dimensional multi-feature sources are not supported.').run()
@@ -1078,8 +1103,11 @@ class Install:
 
             dimensionality = int(dimensionality)
 
-            features = input_dialog(title='Cognitive source registration',
-                                    text='If the source has multiple features, specify below, separated by comma. Leave empty otherwise.').run()
+            if dimensionality == 1:
+                features = input_dialog(title='Cognitive source registration',
+                                        text='If the source has multiple features, specify below, separated by comma. Leave empty otherwise.').run()
+            else:
+                features = ''
             
             if features is None:
                 return
@@ -1097,6 +1125,11 @@ class Install:
             index = cog_config['index']
             index.append(source)
             cog_config['index'] = natsorted(list(set(index)))
+        
+        
+            message_dialog(title='Cognitive source registration',
+                            text='Please ensure that the file has the following path and name after installation:\n'
+                                    '{}/cognitive_sources/{}/{}.txt'.format(str(cognival_path), modality, source)).run()
         
         cprint("Completed installing cognitive sources ({})".format(source), "green")
 
@@ -1120,27 +1153,27 @@ class Install:
 
         if not are_set:
             associate_rand_emb = yes_no_dialog(title='Random embedding generation',
-                                    text='Do you wish to compare the embeddings with random embeddings of identical dimensionality? \n').run()
+                                               text='Do you wish to compare the embeddings with random embeddings of identical dimensionality? \n').run()
         local = False                                   
         
         # Download all embeddings
         if x == 'all':
             for emb in ctx.embedding_registry['proper']:
-                self.embedding(emb,
+                self.embeddings(emb,
                                are_set=True,
                                associate_rand_emb=associate_rand_emb)
 
             # Download random embeddings
             if ctx.debug:
                 for rand_emb in ctx.embedding_registry['random_static']:
-                    self.embedding(rand_emb, log_only_success=True)
+                    self.embeddings(rand_emb, log_only_success=True)
             return
 
         # Download all static random embeddings
         elif x == 'all_random':
             if ctx.debug:
                 for rand_emb in ctx.embedding_registry['random_static']:
-                    self.embedding(rand_emb, log_only_success=True)
+                    self.embeddings(rand_emb, log_only_success=True)
                 folder = ctx.embedding_registry['random_static'][name]['path']
             else:
                 cprint('Error: Random embeddings must be generated using "install random-embeddings"', 'red')
@@ -1184,14 +1217,18 @@ class Install:
             name = input_dialog(title='Embedding registration',
                                 text='You have provided a custom embedding URL/file path ({}). Please make sure that\n'
                                      'all of the following criteria are met:\n\n'
-                                     '- The URL is either a direct HTTP(S) link to the file or a Google Drive link. \n'
+                                     '- The passed value is either a local path or an URL representing a direct HTTP(S) link to the file or a Google Drive link. \n'
                                      '- The file is either a ZIP archive, gzipped file or usable as-is (uncompressed).\n\n'
                                      'Other modes of hosting and archival are currently NOT supported and will cause the installation to fail.\n'
                                      'In those instances, please manually download and extract the files in the "embeddings"'
                                      'directory and \nregister them in "resources/embedding_registry.json"\n\n'
                                      'Please enter a short name for the embeddings:'.format(url),
                                 ).run()
-            if not name:
+            if name is None:
+                cprint("Aborting ...", "red")
+                return
+            
+            elif not name:
                 name = 'my_custom_embeddings'
                 cprint('No name specified, using "my_custom_embeddings" ...', 'yellow')
 
@@ -1200,6 +1237,10 @@ class Install:
                              'If not available, you can leave this information empty and manually edit resources/embeddings2url.json\n'
                              'after the installation.').run()
 
+            if main_emb_file is None:
+                cprint("Aborting ...", "red")
+                return
+            
             if not main_emb_file:
                 main_emb_file = url.rsplit('/', maxsplit=1)[-1].rsplit('.', maxsplit=1)[0]
                 cprint('No main embedding file specified, inferring "{}" (only works for .gz compressed single files!)'.format(main_emb_file), 'yellow')
@@ -1303,7 +1344,10 @@ class Install:
             except FileNotFoundError:
                 pass
 
-            cprint('Downloading and installing:', 'yellow', end =' ') 
+            if local:
+                cprint('Copying and installing:', 'yellow', end =' ') 
+            else:
+                cprint('Downloading and installing:', 'yellow', end =' ') 
             cprint('{}'.format(name), 'yellow', attrs=['bold'])
             # Google Drive downloads
             if 'drive.google.com' in url:
@@ -1323,21 +1367,21 @@ class Install:
                 os.makedirs(fpath_extracted)
                 # TODO: Test this
                 if local:
-                    shutil.copy(url, fpath_extracted / fname)
+                    shutil.copy(url, fpath)
                 else:
                     download_file(url, fpath)
-                    if fname.endswith('zip'):
-                        with zipfile.ZipFile(fpath, 'r') as zip_ref:
-                            zip_ref.extractall(fpath_extracted)
-                        os.remove(fpath)
-                    elif fname.endswith('gz'):
-                        # Assume gzipped bin (requires manually setting filename)
-                        with gzip.open(fpath, 'rb') as f_in:
-                            with open(fpath_extracted / '{}.bin'.format(path), 'wb') as f_out:
-                                shutil.copyfileobj(f_in, f_out)
-                        os.remove(fpath)
-                    else:
-                        shutil.move(fpath, fpath_extracted / fname)
+                if fname.endswith('zip'):
+                    with zipfile.ZipFile(fpath, 'r') as zip_ref:
+                        zip_ref.extractall(fpath_extracted)
+                    os.remove(fpath)
+                elif fname.endswith('gz'):
+                    # Assume gzipped bin (requires manually setting filename)
+                    with gzip.open(fpath, 'rb') as f_in:
+                        with open(fpath_extracted / '{}.bin'.format(path), 'wb') as f_out:
+                            shutil.copyfileobj(f_in, f_out)
+                    os.remove(fpath)
+                else:
+                    shutil.move(fpath, fpath_extracted / fname)
         else:
             cprint('No URL specified, delegating embedding provision to external package ...', 'yellow')
 
@@ -1546,3 +1590,64 @@ def clear():
 ―
     '''
     print("\033c")
+
+
+@command
+@argument('command',
+        type=str,
+        description='Command for which examples are to be shown. Examples for all commands shown if None.')
+def example_calls(command=None):
+    '''
+    Lists example calls for a single or all commands.
+―
+    '''
+    table_rows = []
+    
+    def get_table_rows(cmd, parametrization):
+        print(cmd, parametrization)
+        if isinstance(parametrization, list):
+            for example in parametrization:
+                if example['example']:
+                    example['command'] = cmd
+                    example['example'] = colored(example['example'], 'yellow')
+                    example['subcommand'] = ''
+                    example['description'] = fill(example['description'], 20)
+                    table_rows.append(example)
+        elif isinstance(parametrization, dict):
+            for subcommand, subparametrization in parametrization.items():
+                for example in subparametrization:
+                    if example['example']:
+                        example['command'] = cmd
+                        example['example'] = colored(example['example'], 'yellow')
+                        example['subcommand'] = subcommand
+                        example['description'] = fill(example['description'], 20)
+                        table_rows.append(example)
+        
+    if not command:
+        for command, parametrization in EXAMPLE_COMMANDS.items():
+            get_table_rows(command, parametrization)
+    else:
+        get_table_rows(command, EXAMPLE_COMMANDS[parametrization])
+        
+    df_cli = pd.DataFrame(table_rows)
+    df_cli = df_cli[['command', 'subcommand', 'example', 'description']]
+    df_cli.columns = [colored(col.title(), attrs=['bold']) for col in df_cli.columns]
+    table_str = tabulate.tabulate(df_cli, headers="keys", tablefmt="fancy_grid", showindex=False)
+    page_list([table_str.encode('utf-8')])
+
+@command
+@argument('write_enabled',
+          type=str,
+          description='Enable manual editing of user files (Caution!)')
+def browse(write_enabled=False):
+    '''
+    Browses the user directory and view files using vim, per default in read-only mode. (requires that vim is installed).
+―
+    '''
+    ctx = context.get_context()
+    cognival_path = ctx.cognival_path
+    if write_enabled:
+        command = ['vim', cognival_path]
+    else:
+        command = ['vim', '-RM', cognival_path]
+    subprocess.run(command)

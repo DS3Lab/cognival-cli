@@ -63,6 +63,21 @@ class NubiaCognivalPlugin(PluginInterface):
             action="store_true",
             help="Don't display logo/welcome message in interactive shell."
         )
+
+        opts_parser.add_argument(
+            "--visible-gpus",
+            "-vg",
+            type=str,
+            help="GPUs visible to Cognival, separated by comma. By default, all are visible."
+        )
+
+        opts_parser.add_argument(
+            "--max-gpus",
+            "-mg",
+            type=int,
+            default=1,
+            help="Maximum number of GPUs to use. Defaults to 1. If set to 0, all visible GPUs are used."
+        )
         
         opts_parser.add_argument(
             "--debug",

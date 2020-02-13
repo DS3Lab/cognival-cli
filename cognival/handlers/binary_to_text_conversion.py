@@ -52,8 +52,6 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.shortcuts import input_dialog, yes_no_dialog, button_dialog, radiolist_dialog, ProgressBar
 from termcolor import cprint
 
-from cog_evaluate import run as run_serial
-from cog_evaluate_parallel import run_parallel as run_parallel
 from handlers.file_handler import write_results, update_version
 from handlers.data_handler import chunk
 

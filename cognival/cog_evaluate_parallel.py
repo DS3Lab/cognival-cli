@@ -1,28 +1,44 @@
 import json
+import io
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='3'  #disable tensorflow debugging
 import sys
+from itertools import cycle
 from multiprocessing import Pool
 from datetime import  datetime
 import cog_evaluate
+
+from contextlib import redirect_stdout
+
 from handlers.file_handler import get_config
 from handlers.file_handler import *
 from utils import animated_loading
 
+import GPUtil
+from termcolor import cprint, colored
+
 #TODO: clear all WARNINGS!
 
 def run_parallel(config_dict,
-         emb_to_random_dict,
-         embeddings_list,
-         cog_sources_list,
-         cog_source_to_feature,
-         cpu_count=None):
+                 emb_to_random_dict,
+                 embeddings_list,
+                 cog_sources_list,
+                 cog_source_to_feature,
+                 n_jobs=None,
+                 gpu_ids=None):
+
+    if gpu_ids:
+        gpu_ids_list = gpu_ids
+        gpu_ids = cycle(gpu_ids)
+    else:
+        gpu_ids = cycle([None])
+
     startTime = datetime.now()
 
     ##############################################################################
     #   OPTION GENERATION
     ##############################################################################
-    print("\nGenerating options ...")
+    cprint("\nParametrizing runs ... ", end = '')
 
     options = []
     #GENERATE all possible case scenarios:
@@ -41,9 +57,7 @@ def run_parallel(config_dict,
                 option["truncate_first_line"] = truncate_first_line
                 options.append(option)
 
-
-    print("\nSuccessful options generation")
-
+    cprint("Done.")
     ##############################################################################
     #   JOINED DATAFRAMES GENERATION
     ##############################################################################
@@ -52,13 +66,24 @@ def run_parallel(config_dict,
     #   Parallelized version
     ##############################################################################
 
-    print("\nModels creation, fitting, prediction ...\n")
+    print()
+    cprint("Prediction", attrs=['bold', 'reverse'], color='green')
+    print()
 
-    if cpu_count:
-        proc = cpu_count
+    if n_jobs:
+        proc = n_jobs
     else:
         proc = min(os.cpu_count()-1, config_dict["cpu_count"])
-    print("Running on " + str(proc) + " processors\n")
+    
+    cprint('Number of processes: ', color='cyan', end='')
+    print(proc)
+    if gpu_ids_list:
+        cprint("Number of GPUs allocated: ", color="cyan", end='')
+        print(len(gpu_ids_list))
+        cprint("Allocated GPU IDs: ", color="cyan", end='')
+        print(', '.join(map(str, gpu_ids_list)))
+    print()
+
     pool = Pool(processes=proc)
     async_results_proper = []
     async_results_random = []
@@ -73,7 +98,8 @@ def run_parallel(config_dict,
                                                                         option["cognitiveData"],
                                                                         option["modality"],
                                                                         option["feature"],
-                                                                        option["truncate_first_line"]),)
+                                                                        option["truncate_first_line"],
+                                                                        next(gpu_ids)))
         
         result_random = []
         if random_embeddings:
@@ -84,7 +110,8 @@ def run_parallel(config_dict,
                                                                                     option["cognitiveData"],
                                                                                     option["modality"],
                                                                                     option["feature"],
-                                                                                    option["truncate_first_line"],)))
+                                                                                    option["truncate_first_line"],
+                                                                                    next(gpu_ids))))
             
         async_results_proper.append(result_proper)
         async_results_random.append(result_random)
@@ -93,9 +120,19 @@ def run_parallel(config_dict,
 
     ar_monitoring = async_results_proper + [p for rand_list in async_results_random for p in rand_list]
 
+    # Main loop
     while (False in [ar.ready() == True for ar in ar_monitoring]):
         completed = [ar.ready() == True for ar in ar_monitoring].count(True)
+        f = io.StringIO()
+        with redirect_stdout(f):
+            GPUtil.showUtilization()
+        s = f.getvalue()
+        line_count = len(s.split('\n'))
+        sys.stdout.write(colored(s, 'yellow'))
+        sys.stdout.write("\n")
         animated_loading(completed, len(ar_monitoring))
+        sys.stdout.write("\033[F"*(line_count))
+        sys.stdout.flush()
 
     pool.join()
 

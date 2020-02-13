@@ -24,3 +24,6 @@ bert_serving==0.0.1
 GPUtil==1.4.0
 scikit-learn==0.20.3
 tensorflow==1.15.2
+bokeh==1.0.4
+nltk==3.4.5
+umap-learn==0.3.10

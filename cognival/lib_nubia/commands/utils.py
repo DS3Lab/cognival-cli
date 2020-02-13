@@ -6,6 +6,8 @@ import requests
 from pathlib import Path
 from termcolor import cprint
 
+import GPUtil
+
 #http://stackoverflow.com/questions/1014352/how-do-i-convert-a-nested-tuple-of-tuples-and-lists-to-lists-of-lists-in-python
 def tupleit(t):
     return tuple(map(tupleit, t)) if isinstance(t, (list, tuple)) else t
@@ -145,12 +147,6 @@ class DisplayablePath(object):
     def _default_criteria(cls, path):
         return True
 
-    @property
-    def displayname(self):
-        if self.path.is_dir():
-            return self.path.name + '/'
-        return self.path.name
-
     def displayable(self):
         if self.parent is None:
             return self.displayname
@@ -231,3 +227,29 @@ def page_list(pager_list):
     except (KeyboardInterrupt, BrokenPipeError):
         pass
         # let less handle this, -K will exit cleanly
+
+
+def configure_tf_devices(gpu_ids=None):
+    try:
+        deviceIDs = GPUtil.getAvailable(order='load',
+                                        limit=100,
+                                        maxLoad=0.5,
+                                        maxMemory=0.5,
+                                        includeNan=False,
+                                        excludeID=[],
+                                        excludeUUID=[])
+    except ValueError:
+        cprint(NO_NVIDIA_GPUS, 'yellow')
+        return
+
+    if not deviceIDs:
+        cprint(NO_NVIDIA_GPUS, 'yellow')
+        return
+
+    if not deviceIDs:
+        cprint("Error: Currently, no GPU is eligible (available memory and load at <=50%)", "red")
+        GPUtil.showUtilization()
+    else:
+        cprint("GPUs with utilization and memory load <50%: {}".format(', '.join([str(x) for x in deviceIDs])), "green")
+
+    return deviceIDs

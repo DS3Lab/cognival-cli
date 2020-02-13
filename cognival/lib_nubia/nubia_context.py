@@ -9,6 +9,7 @@
 
 import collections
 import json
+import os
 import sys
 from termcolor import cprint
 
@@ -19,6 +20,8 @@ from nubia import eventbus
 
 class NubiaCognivalContext(context.Context):
     def __init__(self, *args, **kwargs):
+        self.gpu_ids = None
+        self._gpu_ids_all = None
         self.state = {}
         self.messages = kwargs.get('messages', None)
         self.cognival_path = kwargs.get('cognival_path', None)
@@ -49,7 +52,14 @@ class NubiaCognivalContext(context.Context):
         else:
             cprint('Error: Could not load resources path, aborting ...', 'red')
             sys.exit(1)
-        
+
+    def _set_gpu_ids(self, args):
+        self.visible_gpus = args.visible_gpus
+        self.max_gpus = args.max_gpus
+        if self.visible_gpus:
+            gpu_ids = self.visible_gpus.replace(' ', '')
+            os.environ['CUDA_VISIBLE_DEVICES'] = gpu_ids  # for several GPUs
+
     def on_connected(self, *args, **kwargs):
         pass
 
@@ -57,12 +67,16 @@ class NubiaCognivalContext(context.Context):
         # dispatch the on connected message
         self.debug = args.debug
         self.verbose = args.verbose
+        self._set_gpu_ids(args)
+
         self.registry.dispatch_message(eventbus.Message.CONNECTED)
 
     def on_interactive(self, args):
         self.debug = args.debug
         self.verbose = args.verbose
         self.no_welcome = args.no_welcome
+        self._set_gpu_ids(args)
+
         if not self.no_welcome:
             cprint(self.messages.LOGO_STR, "magenta")
             cprint(self.messages.WELCOME_MESSAGE_STR, "green")
