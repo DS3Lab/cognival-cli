@@ -4,7 +4,6 @@ from datetime import datetime
 from prompt_toolkit.shortcuts import ProgressBar
 from termcolor import cprint
 
-
 #own modules
 from handlers.data_handler import data_handler
 from handlers.model_handler import model_handler
@@ -32,40 +31,7 @@ def handler(mode, config, word_embedding, cognitive_data, feature, truncate_firs
     return word_error, grids_result, mserrors
 
 
-def run(config,
-        word_embedding,
-        random_embeddings,
-        cognitive_data,
-        feature,
-        truncate_first_line,
-        parallelized=False):
-    '''
-    Takes a configuration dictionary and keys for a word embedding and cognitive
-    data source, runs model, logs results and prepares output for plotting.
-
-    :param config: Configuration dictionary
-    :param word_embedding: String specifying word embedding (configuration key)
-    :param random_embeddings: String specifying corresponding random embedding or None
-    :param cognitive_data: String specifying cognitiv data source (configuration key)
-    :param feature: Cognitive data feature to be predicted
-    :param truncate_first_line: If the first line of the embedding file should be truncated (when containing meta data)
-    '''
-    cprint('Evaluating proper embedding {} ...'.format(word_embedding), 'cyan')
-    results = []
-    results.append(run_single('proper', config, word_embedding, cognitive_data, feature, truncate_first_line))
-    if random_embeddings:
-        cprint('Evaluating associated random embedding {} ...'.format(random_embeddings), 'cyan')
-        if parallelized:
-            for random_embedding in config["randEmbSetToParts"][random_embeddings]:
-                results.append(run_single('random', config, random_embedding, cognitive_data, feature, truncate_first_line))
-        else:
-            with ProgressBar() as pb:
-                for random_embedding in pb(config["randEmbSetToParts"][random_embeddings]):
-                    results.append(run_single('random', config, random_embedding, cognitive_data, feature, truncate_first_line))
-    return results
-
-
-def run_single(mode, config, word_embedding, cognitive_data, modality, feature, truncate_first_line):
+def run_single(mode, config, word_embedding, cognitive_data, modality, feature, truncate_first_line, gpu_id):
     '''
     Takes a configuration dictionary and keys for a word embedding and cognitive
     data source, runs model, logs results and prepares output for plotting.
@@ -76,8 +42,32 @@ def run_single(mode, config, word_embedding, cognitive_data, modality, feature, 
     :param cognitive_data: String specifying cognitiv data source (configuration key)
     :param feature: Cognitive data feature to be predicted
     :param truncate_first_line: If the first line of the embedding file should be truncated (when containing meta data)
+    :param gpu_ids: IDs of available GPUs
     '''
 
+    # Tensorflow configuration
+    import tensorflow as tf
+    from tensorflow.compat.v1.keras.backend import set_session, clear_session
+
+    if gpu_id:
+        gpu_count = 1
+        soft_placement = True
+    else:
+        gpu_count = 0
+        soft_placement = False
+
+    tf_config = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1,
+                                         inter_op_parallelism_threads=1,
+                                         allow_soft_placement=False,
+                                         device_count={'GPU': gpu_count, 'CPU': 1})
+    if gpu_id:
+        tf_config.gpu_options.allow_growth = True
+        tf_config.gpu_options.per_process_gpu_memory_fraction = 0.25
+        tf_config.gpu_options.visible_device_list = str(gpu_id)
+    
+    session = tf.compat.v1.Session(config=tf_config)
+    set_session(session)
+    
     ##############################################################################
     #   Create logging information
     ##############################################################################
@@ -143,71 +133,10 @@ def run_single(mode, config, word_embedding, cognitive_data, modality, feature, 
     timeTaken = datetime.now() - startTime
     logging["timeTaken"] = str(timeTaken)
 
+    # Clean-up tf session
+    session.close()
+    clear_session()
+
     return word_embedding, logging, word_error, history
 
-def main():
-    '''
-    CLI argument parsing and input sanity checking, execution and exporting
-    results.
-    '''
-
-    ##############################################################################
-    #   Set up of command line arguments to run the script
-    ##############################################################################
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("config_file", help="path and name of configuration file",
-                        nargs='?', default='config/setupConfig.json')
-    parser.add_argument("-c", "--cognitive_data", type=str, default=None,
-                        help="cognitive data to train the model")
-    parser.add_argument("-f", "--feature", type=str,
-                        default=None, help="feature of the dataset to train the model")
-    parser.add_argument("-w", "--word_embedding", type=str, default=None,
-                        help="word embedding to train the model")
-
-    args = parser.parse_args()
-
-    configFile = args.config_file
-    cognitive_data = args.cognitive_data
-    feature = args.feature
-    word_embedding = args.word_embedding
-
-    config = update_version(configFile)
-
-    ##############################################################################
-    #   Check for correct data inputs
-    ##############################################################################
-
-    while (word_embedding not in config['wordEmbConfig']):
-        word_embedding = input("ERROR Please enter correct wordEmbedding:\n")
-        if word_embedding == "x":
-            exit(0)
-
-    while (cognitive_data not in config['cogDataConfig']):
-        cognitive_data = input("ERROR Please enter correct cognitive dataset:\n")
-        if cognitive_data == "x":
-            exit(0)
-
-    if config['cogDataConfig'][cognitive_data]['type'] == "single_output":
-        while feature not in config['cogDataConfig'][cognitive_data]['features']:
-            feature = input("ERROR Please enter correct feature for specified cognitive dataset:\n")
-            if feature == "x":
-                exit(0)
-    else:
-        feature = "ALL_DIM"
-
-    start_time = datetime.now()
-
-    logging, word_error, history = run(config, word_embedding, cognitive_data, feature)
-
-    ##############################################################################
-    #   Saving results
-    ##############################################################################
-
-    write_results(config, logging, word_error, history)
-
-    time_taken = datetime.now() - start_time
-    print(time_taken)
-
-    return
     

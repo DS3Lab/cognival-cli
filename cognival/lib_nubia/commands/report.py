@@ -1,7 +1,6 @@
 import datetime
 import collections
 import json
-import tempfile
 import webbrowser
 import base64
 import os
@@ -12,33 +11,15 @@ import numpy as np
 import pandas as pd
 from jinja2 import Environment, PackageLoader, select_autoescape
 import pdfkit
-from collections import namedtuple
 from operator import truediv as div
 from subprocess import Popen, DEVNULL
 
-from numpy import exp, cos, linspace
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
 import random
 random.seed(48)
 
 from termcolor import cprint
-
-from .utils import (tupleit,
-                   _open_config,
-                   _open_cog_config,
-                   _check_cog_installed,
-                   _check_emb_installed,
-                   _save_cog_config,
-                   _save_config,
-                   DisplayablePath,
-                   download_file,
-                   AbortException,
-                   chunked_list_concat_str,
-                   field_concat,
-                   chunks,
-                   page_list)
 
 # Set seaborn figure size and font scale
 xkcd_colors = [v for k, v in sns.xkcd_rgb.items() if not any([prop in k for prop in ['faded', 'light', 'pale', 'dark']])]

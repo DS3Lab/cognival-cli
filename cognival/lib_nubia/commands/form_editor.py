@@ -44,62 +44,19 @@ from prompt_toolkit import prompt, PromptSession
 from prompt_toolkit.shortcuts import input_dialog, yes_no_dialog, button_dialog, radiolist_dialog, ProgressBar
 from prompt_toolkit.application.current import get_app
 
-from cog_evaluate import run as run_serial
-from cog_evaluate_parallel import run_parallel as run_parallel
 from handlers.file_handler import write_results, update_version
 from handlers.data_handler import chunk
 
 from utils import generate_df_with_header, word2vec_bin_to_txt
 
-#sys.path.insert(0, 'significance_testing/')
-from significance_testing.statisticalTesting import extract_results as st_extract_results
-from significance_testing.aggregated_eeg_results import extract_results as agg_eeg_extr_results
-from significance_testing.aggregated_fmri_results import extract_results as agg_eeg_extr_results
-from significance_testing.aggregated_gaze_results import extract_results_gaze as agg_gaze_extr_results
-from significance_testing.testing_helpers import bonferroni_correction, test_significance
-
 from lib_nubia.prompt_toolkit_table import *
+from lib_nubia.commands.strings import *
 
 # TODO: Make parametrizable
 BINARY_CONVERSION_LIMIT = 1000
 NUM_BERT_WORKERS = 1
 
 _2D_FIELDS = set(['layers'])
-
-EDITOR_TITLES = {"properties": "CogniVal properties",
-                 "main": "General Configuration",
-                 "cognitive": "Cognitive Source Configuration",
-                 "embedding_exp": "Embedding Experiment Configuration",
-                 "embedding_conf": "Embedding Parameter Configuration"}
-
-EDITOR_DESCRIPTIONS = { "properties": {"cognival_path": "Path for storing user data (configurations, embeddings, cognitive sources and results)."},
-                        "main": {"PATH": "Main working directory. Defaults to $HOME/.cognival",
-                                "cpu_count": "Number of CPU cores used for execution, defaults to (1 - number of available logical CPU cores)",
-                                "folds": "Number of folds evaluated in n-Fold cross-validation (CV)",
-                                "outputDir": "Output directory as subdirectory of 'results' (automatically prefixed if missing)",
-                                "seed": "Random seed for train-test sampling",
-                                "version": "Configuration version. Normally set to 1 when creating a new configuration file"
-                                },
-                       "cognitive": {"dataset": "Name of the cognitive data set. See resources/cognitive_sources.json for a list of all available source",
-                                     "modality": "Cognitive source modality (eeg, eye-tracking or fmri)",
-                                     "features": "Comma-separated list of features to be evaluated. Must be set to ALL_DIM for all sources with only one feature, represented by all dimensions.",
-                                     "type": "'single_output' for most multi-feature resources (typically eye-tracking) and 'multivariate_output' for most single-feature resources (typicall eeg, fmri)"
-                                    },
-                       "embedding_exp": {"activations": "Activation function(s) used in the neural regression model. Comma-separated list for multiple values.",
-                                         "batch_size": "Batch size used during training. Comma-separated list for multiple values.",
-                                         "cv_split": "Number of cross-validation (CV) splits",
-                                         "epochs": "Number of training epochs. Comma-separated list for multiple values.",
-                                         "layers": "List of lists of layer specifications. Each row corresponds to possible layer sizes for a layer (comma-separated). Layers are separated by newlines.",
-                                         "validation_split": "Ratio training data used as validation data during training"
-                                        },
-                        "embedding_conf":{"chunk_number": "Number of embedding chunks. Ignored if chunked == 0.",
-                                         "chunked": "Whether the embedding is chunked (1) or not (0).",
-                                         "chunked_file": "Prefix/root of chunk files. Ignored if chunked == 0.",
-                                         "ending": "File suffix of chunk files. Ignored if chunked == 0.",
-                                         "path": "Path of embedding (chunks)",
-                                         "truncate_first_line": "Whether to remove the first line upon loading"
-                                         }
-                        }
 
 # Adapted from: https://stackoverflow.com/a/42033176
 def is_jsonable(x):

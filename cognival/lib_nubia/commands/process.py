@@ -45,32 +45,13 @@ import pandas as pd
 import tabulate
 import tableformatter as tform
 
-from prompt_toolkit import PromptSession
-from prompt_toolkit.shortcuts import input_dialog, button_dialog, yes_no_dialog, message_dialog, radiolist_dialog, ProgressBar
-from pygments import highlight
-from pygments.lexers import MarkdownLexer
-from pygments.formatters import TerminalFormatter
 from termcolor import cprint, colored
 
-from cog_evaluate import run as run_serial
-from cog_evaluate_parallel import run_parallel as run_parallel
 from handlers.file_handler import write_results, write_options, update_version
 from handlers.data_handler import chunk
 from handlers.binary_to_text_conversion import bert_to_text, elmo_to_text
 
 from utils import generate_df_with_header, word2vec_bin_to_txt
-
-#sys.path.insert(0, 'significance_testing/')
-from significance_testing.statisticalTesting import extract_results as st_extract_results
-from significance_testing.aggregated_eeg_results import extract_results as agg_eeg_extr_results
-from significance_testing.aggregated_fmri_results import extract_results as agg_fmri_extr_results
-from significance_testing.aggregated_gaze_results import extract_results_gaze as agg_et_extr_results
-from significance_testing.aggregate_significance import aggregate_signi_eeg, aggregate_signi_fmri
-from significance_testing.aggregate_significance import aggregate_signi_gaze as aggregate_signi_et
-from significance_testing.testing_helpers import bonferroni_correction, test_significance
-
-from lib_nubia.prompt_toolkit_table import *
-from lib_nubia.commands import messages
 
 # Silence TF 2.0 deprecation warnings
 from tensorflow.python.util import deprecation
@@ -100,34 +81,14 @@ from .templates import (WORD_EMB_CONFIG_FIELDS,
                         EMBEDDING_PARAMET_TEMPLATE,
                         EMBEDDING_CONFIG_TEMPLATE)
 
-
 def _filter_config(configuration,
-                  embedding,
                   embeddings,
-                  cognitive_source,
                   cognitive_sources,
-                  cognitive_feature,
                   cognitive_features,
                   random_baseline):
     ctx = context.get_context()
     embedding_registry = ctx.embedding_registry
     resources_path = ctx.resources_path
-
-    # Sanity checks
-    if embedding and embeddings:
-        cprint('Error: Specify either single embedding (e) or list of embeddings (el), not both.', 'red')
-        return
-
-    if cognitive_source and cognitive_sources:
-        cprint('Error: Specify either single cognitive_source (cs) or list of cognitive_sources (csl), not both.', 'red')
-        return
-
-    if cognitive_source == 'all' and (cognitive_feature or cognitive_features):
-        cprint('Error: When evaluating all cognitive sources, features may not be specified.', 'red')
-        return
-
-    if cognitive_features:
-        cognitive_features = [fl.split(';') for fl in cognitive_features]
 
     config_dict = _open_config(configuration, resources_path)
     
@@ -146,22 +107,23 @@ def _filter_config(configuration,
             if embedding_params['installed']:
                 installed_embeddings.append(emb)
     
-    if embedding == 'all':
+    if embeddings[0] == 'all':
         embeddings_list = list(config_dict['wordEmbConfig'].keys())
-    elif isinstance(embedding, str):
-        embeddings_list = [embedding]
     else:
         embeddings_list = embeddings
 
-    if cognitive_source == 'all':
+    if cognitive_sources[0] == 'all':
+        if cognitive_features:
+            cprint('Error: When evaluating all cognitive sources, features may not be specified.', 'red')
+            return
         cog_sources_list, cog_feat_list = zip(*[(k, v['features']) for k, v in config_dict['cogDataConfig'].items()])
-    elif isinstance(cognitive_source, str):
-        cog_sources_list = [cognitive_source]
-        cog_feat_list = [cognitive_feature] if cognitive_feature else []
     else:
-        cog_sources_list = cognitive_sources 
-        cog_feat_list = cognitive_features if cognitive_features else []
-
+        cog_sources_list = cognitive_sources
+        if cognitive_features:
+            cog_feat_list = [fl.split(';') for fl in cognitive_features]
+        else:
+            cog_feat_list = [config_dict['cogDataConfig'][csource]['features'] for csource in cognitive_sources]
+    
     if not cog_feat_list:
         for cog_source in cog_sources_list:
             modality, csource = cog_source.split('_')
