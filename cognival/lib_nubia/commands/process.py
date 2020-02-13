@@ -133,9 +133,9 @@ def _filter_config(configuration,
         if not _check_emb_installed(emb, embedding_registry):
             not_installed_str += '- {}\n'.format(emb)
         
-        if not rand_emb:
+        if random_baseline and not rand_emb:
             no_rand_emb_str += '- {}\n'.format(emb)
-        elif random_baseline:
+        else:
             emb_to_random_dict[emb] = rand_emb
     
     terminate = False
