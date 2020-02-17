@@ -150,7 +150,6 @@ def elmo_to_text(vocabulary_file, output_path, layer='nocontext'):
         with ProgressBar() as pb:
             for word in pb(words):
                 word = word.strip()
-                # print(word)
                 vectors = elmo.embed_sentence(word)
 
                 # context insensitive - first layer

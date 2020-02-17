@@ -159,12 +159,12 @@
             "random_embedding": null
         },
         "bert-base": {
-            "url": "https://storage.googleapis.com/bert_models/2018_10_18/cased_L-12_H-768_A-12.zip",
+            "url": "https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-12_H-768_A-12.zip",
             "dimensions": 768,
             "binary": true,
             "binary_file": "bert_model.ckpt.data-00000-of-00001",
             "binary_format": "bert",
-            "path": "bert-base_cased-768/cased_L-12_H-768_A-12",
+            "path": "bert-base_uncased-768/uncased_L-12_H-768_A-12",
             "embedding_file": "bert-base_as_wordembeddings_cognival.txt",
             "installed": false,
             "truncate_first_line": false,
@@ -172,12 +172,12 @@
             "random_embedding": null
         },
         "bert-large": {
-            "url": "https://storage.googleapis.com/bert_models/2018_10_18/cased_L-24_H-1024_A-16.zip",
+            "url": "https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-24_H-1024_A-16.zip",
             "dimensions": 1024,
             "binary": false,
             "binary_file": "bert_model.ckpt.data-00000-of-00001",
             "binary_format": "bert",
-            "path": "bert-large_cased-1024/cased_L-24_H-1024_A-16",
+            "path": "bert-large_uncased-1024/uncased_L-24_H-1024_A-16",
             "embedding_file": "bert-large_as_wordembeddings_cognival.txt",
             "installed": false,
             "truncate_first_line": false,
