@@ -216,41 +216,67 @@ def generate_report(configuration,
 
 
     # Detail (proper)
-    for modality, mod_report_versions in sig_test_reports_dict.items():
-        mod_report = mod_report_versions[max(mod_report_versions)]
-        bonferroni_alpha = mod_report['bonferroni_alpha']
-        for experiment, sig_test_result in mod_report['hypotheses'].items():
-            with open(experiment_to_path[experiment]) as f:
-                result_dict = json.load(f)
-            result = {'Experiment': experiment,
-                      'Modality': MODALITIES_SHORT_TO_FULL[modality],
-                      'Ø MSE': '{:.5f}'.format(result_dict['AVERAGE_MSE']),
-                      'SD MSE': '{:.5f}'.format(np.std([x['MSE_PREDICTION'] for x in result_dict['folds']])),
-                      'Word embedding': result_dict['wordEmbedding'],
-                      'Cognitive data': result_dict['cognitiveData'],
-                      'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature'],
-                      'bonferroni_alpha':bonferroni_alpha,
-                      **sig_test_result}
-            result['p_value'] = '{:1.3e}'.format(result['p_value'])
+    # If significance tests have been performed
+    if sig_test_reports_dict:
+        for modality, mod_report_versions in sig_test_reports_dict.items():
+            mod_report = mod_report_versions[max(mod_report_versions)]
+            bonferroni_alpha = mod_report['bonferroni_alpha']
 
-            results.append(result)
+            for experiment, sig_test_result in mod_report['hypotheses'].items():
+                with open(experiment_to_path[experiment]) as f:
+                    result_dict = json.load(f)
+                result = {'Experiment': experiment,
+                        'Modality': MODALITIES_SHORT_TO_FULL[modality],
+                        'Ø MSE': '{:.5f}'.format(result_dict['AVERAGE_MSE']),
+                        'SD MSE': '{:.5f}'.format(np.std([x['MSE_PREDICTION'] for x in result_dict['folds']])),
+                        'Word embedding': result_dict['wordEmbedding'],
+                        'Cognitive data': result_dict['cognitiveData'],
+                        'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature'],
+                        'bonferroni_alpha':bonferroni_alpha,
+                        **sig_test_result}
+                result['p_value'] = '{:1.3e}'.format(result['p_value'])
+
+                results.append(result)
+    # If no significance tests have been performed
+    else:
+        for experiment, result_json_path in experiment_to_path.items():
+            with open(result_json_path) as f:
+                result_dict = json.load(f)
+                result = {'Experiment': experiment,
+                        'Modality': MODALITIES_SHORT_TO_FULL[result_dict['modality']],
+                        'Ø MSE': '{:.5f}'.format(result_dict['AVERAGE_MSE']),
+                        'SD MSE': '{:.5f}'.format(np.std([x['MSE_PREDICTION'] for x in result_dict['folds']])),
+                        'Word embedding': result_dict['wordEmbedding'],
+                        'Cognitive data': result_dict['cognitiveData'],
+                        'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature']}
+                results.append(result)
 
     df_details = pd.DataFrame(results)
-    df_details = df_details[['Modality',
-                             'Experiment',
-                             'Word embedding',
-                             'Cognitive data',
-                             'Feature',
-                             'Ø MSE',
-                             'SD MSE',
-                             'alpha',
-                             'bonferroni_alpha',
-                             'p_value',
-                             'significant']]
 
-    df_details.rename(columns={'alpha': 'α',
-                               'bonferroni_alpha': 'Bonferroni α',
-                               'p_value': 'p'}, inplace=True)
+    try:
+        df_details = df_details[['Modality',
+                                'Experiment',
+                                'Word embedding',
+                                'Cognitive data',
+                                'Feature',
+                                'Ø MSE',
+                                'SD MSE',
+                                'alpha',
+                                'bonferroni_alpha',
+                                'p_value',
+                                'significant']]
+        
+        df_details.rename(columns={'alpha': 'α',
+                                  'bonferroni_alpha': 'Bonferroni α',
+                                  'p_value': 'p'}, inplace=True)
+    except KeyError:
+        df_details = df_details[['Modality',
+                                'Experiment',
+                                'Word embedding',
+                                'Cognitive data',
+                                'Feature',
+                                'Ø MSE',
+                                'SD MSE']]
 
     # Detail (random)
     results = []
@@ -268,60 +294,67 @@ def generate_report(configuration,
                       'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature']}
             results.append(result)
 
-    df_random = pd.DataFrame(results)
-    df_random = df_random[['Modality',
-                           'Experiment',
-                           'Corresponding proper',
-                           'Word embedding',
-                           'Cognitive data',
-                           'Feature',
-                           'Ø MSE',
-                           'SD MSE']]
+    if results:
+        df_random = pd.DataFrame(results)
+        df_random = df_random[['Modality',
+                            'Experiment',
+                            'Corresponding proper',
+                            'Word embedding',
+                            'Cognitive data',
+                            'Feature',
+                            'Ø MSE',
+                            'SD MSE']]
+    else:
+        df_random = None
     # Aggregated
     agg_modality_to_max_version = {}
 
     df_agg_dict = {}
     df_agg_for_plot_rows = []
 
-    for modality, mod_report_versions in agg_reports_dict.items():
-        max_version = max(mod_report_versions)
-        agg_modality_to_max_version[modality] = max_version
-        mod_report = mod_report_versions[max_version]
-        df_agg = pd.DataFrame(mod_report)
+    if agg_reports_dict:
+        for modality, mod_report_versions in agg_reports_dict.items():
+            max_version = max(mod_report_versions)
+            agg_modality_to_max_version[modality] = max_version
+            mod_report = mod_report_versions[max_version]
+            df_agg = pd.DataFrame(mod_report)
 
-        df_agg.reset_index(inplace=True)
-        df_agg.rename(columns={'index': 'Word embedding'}, inplace=True)
-        df_agg = df_agg[['Word embedding', 'Ø MSE Baseline', 'Ø MSE Proper', 'Significance']]
-        df_agg_dict[MODALITIES_SHORT_TO_FULL[modality]] = df_agg
+            df_agg.reset_index(inplace=True)
+            df_agg.rename(columns={'index': 'Word embedding'}, inplace=True)
+            df_agg = df_agg[['Word embedding', 'Ø MSE Baseline', 'Ø MSE Proper', 'Significance']]
+            df_agg_dict[MODALITIES_SHORT_TO_FULL[modality]] = df_agg
 
-        for _, row in df_agg.iterrows():
-            row_proper = {'Modality': MODALITIES_SHORT_TO_FULL[modality],
-                          'Embedding': row['Word embedding'],
-                          'Ø MSE': row['Ø MSE Proper'],
-                          'Type': 'proper',
-                          'Significance': row['Significance']}
+            for _, row in df_agg.iterrows():
+                row_proper = {'Modality': MODALITIES_SHORT_TO_FULL[modality],
+                            'Embedding': row['Word embedding'],
+                            'Ø MSE': row['Ø MSE Proper'],
+                            'Type': 'proper',
+                            'Significance': row['Significance']}
 
-            row_random = {'Modality': MODALITIES_SHORT_TO_FULL[modality],
-                          'Embedding': row['Word embedding'],
-                          'Ø MSE': row['Ø MSE Baseline'],
-                          'Type': 'random',
-                          'Significance': '-'}
+                row_random = {'Modality': MODALITIES_SHORT_TO_FULL[modality],
+                            'Embedding': row['Word embedding'],
+                            'Ø MSE': row['Ø MSE Baseline'],
+                            'Type': 'random',
+                            'Significance': '-'}
 
-            df_agg_for_plot_rows.extend([row_proper, row_random])
+                df_agg_for_plot_rows.extend([row_proper, row_random])
 
-    df_agg_for_plot = pd.DataFrame(df_agg_for_plot_rows)
-    max_y = df_agg_for_plot['Ø MSE'].max()
+        df_agg_for_plot = pd.DataFrame(df_agg_for_plot_rows)
+        max_y = df_agg_for_plot['Ø MSE'].max()
 
-    df_list = [pd.DataFrame(y) for x, y in df_agg_for_plot.groupby('Modality', as_index=False)]
+        df_list = [pd.DataFrame(y) for x, y in df_agg_for_plot.groupby('Modality', as_index=False)]
 
-    sig_stats_plots = []
-    for df_agg_for_plot in df_list:
-        sig_stats_plots.append((df_agg_for_plot['Modality'].values[0], sig_bar_plot(df_agg_for_plot, max_y=max_y)))
+        sig_stats_plots = []
+        for df_agg_for_plot in df_list:
+            sig_stats_plots.append((df_agg_for_plot['Modality'].values[0], sig_bar_plot(df_agg_for_plot, max_y=max_y)))
 
-    # Generate stats over time plots if more that one version
-    if version > 1:
-        stats_over_time_plots = agg_stats_over_time_plots(agg_reports_dict)
+        # Generate stats over time plots if more that one version
+        if version > 1:
+            stats_over_time_plots = agg_stats_over_time_plots(agg_reports_dict)
+        else:
+            stats_over_time_plots = None
     else:
+        sig_stats_plots = None
         stats_over_time_plots = None
 
     html_str = template.render(float64=np.float64,

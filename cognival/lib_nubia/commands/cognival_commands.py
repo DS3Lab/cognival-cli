@@ -787,15 +787,7 @@ def significance(configuration,
 
         datasets = [k for (k, v) in config_dict["cogDataConfig"].items() if 'modality' in v and v['modality'] == modality]
         
-        emb_bl_pairs =[]
-        for k, v in config_dict["wordEmbConfig"].items():
-            if v['random_embedding']:
-                emb_bl_pairs.append((k, v['random_embedding']))
-            else:
-                if not quiet:
-                    cprint('Embedding {} has no associated random embeddings, no significance test possible, skipping ...', 'yellow')
-
-        embeddings, baselines = zip(*emb_bl_pairs)
+        embeddings = list(config_dict["wordEmbConfig"])
 
         for ds in datasets:
             for feat in config_dict["cogDataConfig"][ds]["features"]:
@@ -934,16 +926,7 @@ def aggregate(configuration,
             if properties['modality'] == modality:
                 modality_to_experiments[modality].append(properties['embedding'])
 
-    emb_bl_pairs =[]
-
-    for k, v in config_dict["wordEmbConfig"].items():
-        if v['random_embedding']:
-            emb_bl_pairs.append((k, v['random_embedding']))
-        else:
-            if not quiet:
-                cprint('Embedding {} has no associated random embeddings, no significance test possible, skipping ...', 'yellow')
-
-    embeddings, baselines = zip(*emb_bl_pairs)
+    embeddings = list(config_dict["wordEmbConfig"])
     
     for modality, options_dict in zip(modalities, options_dicts):
         if not quiet:

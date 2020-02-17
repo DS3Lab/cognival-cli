@@ -100,23 +100,29 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
 <div id="toc_container">
   <p class="toc_title">Contents</p>
   <ul class="toc_list">
+    {% if df_agg_dict %}
     <li><a href="#results_agg_mod_emb" style='font-weight: bold;'>Results (Aggregated per Embedding and Modality)</a>
       <ul class="toc_list">
       {% for modality in df_agg_dict %}
       <li><a href="#results_agg_{{ modality }}">{{ modality }}</a></li>    
       {% endfor %}
+    {% endif %}
   </ul></li>
   <li><a href="#results_det" style='font-weight: bold;'>Results (Detail)</a>
   <ul class="toc_list">
     <li><a href="#results_det_proper">Proper embeddings</a></li>
+    {% if df_random %}
     <li><a href="#results_det_random">Random embeddings</a></li>
+    {% endif %}
   </ul></li>
+  {% if stats_plots %}
   <li><a href="#significance_plots" style='font-weight: bold;'>Significance plots</a>
   <ul class="toc_list">
   {% for modality in df_agg_dict %}
     <li><a href="#sig_plots_{{modality}}">{{ modality }}</a></li>    
     {% endfor %}
   </ul></li>
+  {% endif %}
   {% if stats_over_time_plots %}
   <li><a href="#stats_over_time_plots" style='font-weight: bold;'>Stats over time plots</a>
   <ul class="toc_list">
@@ -129,6 +135,7 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
   </ul>
 </div>
 
+{% if df_agg_dict %}
 <h2 id="results_agg_mod_emb"> Results (Aggregated per Embedding and Modality)</h2>
 
 {% for modality, df_agg in df_agg_dict.items() %}
@@ -155,6 +162,7 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
   
 </table>
 {% endfor %}
+{% endif %}
 
 <h2 id="results_det"> Results (Detail)</h2>
 
@@ -185,6 +193,7 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
   
 </table>
 
+{% if df_random %}
 <h3 id="results_det_random">Random embeddings</h3>
 
 {# Source: https://stackoverflow.com/a/34584551 #}
@@ -203,11 +212,11 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
          {% endfor %}
   
 </table>
+{% endif %}
 
-
+{% if stats_plots %}
 <h2 id="significance_plots"> Significance plots </h2>
 {# Source: https://schier.co/blog/html-templating-output-a-grid-in-a-single-loop #}
-{% if stats_plots %}
 {% for modality, fig_data in stats_plots%}
 <h3 id="sig_plots_{{ modality }}">{{ modality }}</h3>
 <div class="pure-g">
