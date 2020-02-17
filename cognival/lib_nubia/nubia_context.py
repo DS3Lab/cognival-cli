@@ -56,6 +56,7 @@ class NubiaCognivalContext(context.Context):
     def _set_gpu_ids(self, args):
         self.visible_gpus = args.visible_gpus
         self.max_gpus = args.max_gpus
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         if self.visible_gpus:
             gpu_ids = self.visible_gpus.replace(' ', '')
             os.environ['CUDA_VISIBLE_DEVICES'] = gpu_ids  # for several GPUs

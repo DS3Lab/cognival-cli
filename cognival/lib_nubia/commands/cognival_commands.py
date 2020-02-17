@@ -67,7 +67,7 @@ deprecation._PRINT_DEPRECATION_WARNINGS = False
 # Local imports
 
 from .form_editor import ConfigEditor, config_editor
-from .process import (_filter_config,
+from .process import (filter_config,
                       process_and_write_results,
                       resolve_cog_emb,
                       _edit_config,
@@ -105,18 +105,20 @@ def custom_formatwarning(msg, *args, **kwargs):
 warnings.formatwarning = custom_formatwarning
 
 NUM_BERT_WORKERS = 1
-COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1pWwIiCdB2snIkgJbD1knPQ6akTPW_kx0'
+COGNIVAL_SOURCES_URL = 'https://drive.google.com/open?id=1ouonaByYn2cnDAWihnQ3cGmMT6bJ4NaP'
 
 @command
 @argument("configuration", type=str, description="Configuration for experimental runs", positional=True)
 @argument("processes", type=int, description="No. of processes")
 @argument("n_gpus", type=int, description="No. of processes")
 @argument("embeddings", type=list, description="List of embeddings")
+@argument('modalities', type=list, description="Modalities of cognitive sources")
 @argument("cognitive_sources", type=list, description="List of cognitive sources")
 @argument("cognitive_features", type=list, description="List of cognitive features")
 @argument("random_baseline", type=bool, description="Compute random baseline(s) corresponding to specified embedding")
 def run(configuration,
         embeddings=['all'],
+        modalities=None,
         cognitive_sources=['all'],
         cognitive_features=None,
         processes=None,
@@ -141,11 +143,12 @@ def run(configuration,
     else:
         gpu_ids = None
 
-    parametrization = _filter_config(configuration,
-                                        embeddings,
-                                        cognitive_sources,
-                                        cognitive_features,
-                                        random_baseline)
+    parametrization = filter_config(configuration,
+                                     embeddings,
+                                     modalities,
+                                     cognitive_sources,
+                                     cognitive_features,
+                                     random_baseline)
     
     if not parametrization:
         return
@@ -442,7 +445,7 @@ class Config:
     
     @command
     @argument('configuration', type=str, description='Name of configuration file', positional=True)
-    @argument('modalities', type=list, description="Groups of cog. sources to install.")
+    @argument('modalities', type=list, description="Modalities of cognitive sources sources to install.")
     @argument('cognitive_sources', type=list, description="Either list of cognitive sources or ['all'] (default).")
     @argument('embeddings', type=list, description="Either list of embeddings or ['all'] (default)")
     @argument('rand_embeddings', type=bool, description='Include random embeddings. Note that if random embeddings were included previously, changes are applied to them in any case.')
@@ -609,7 +612,7 @@ class Config:
 
     @command
     @argument('configuration', type=str, description='Name of configuration file', positional=True)
-    @argument('modalities', type=list, description="Groups of cog. sources to install.")
+    @argument('modalities', type=list, description="Modalities of cognitive sources to delete.")
     @argument('cognitive_sources', type=list, description="Either list of cognitive sources or None (for all)")
     @argument('embeddings', type=list, description="Either list of embeddings or None (for all)")
     def delete(self, configuration, modalities=None, cognitive_sources=None, embeddings=None):        
@@ -1419,8 +1422,9 @@ class Install:
                     else:
                         cprint("Unknown binary format, aborting ...", "red")
                         return
-            except FileNotFoundError:
-                cprint("Warning: No binary file found, assume binarization already performed ...", "yellow")
+            except FileNotFoundError as e:
+                cprint("Error: {}".format(str(e)), "red")
+                return
 
             # Chunk embeddings
             if ctx.embedding_registry['proper'][name]['chunked']:

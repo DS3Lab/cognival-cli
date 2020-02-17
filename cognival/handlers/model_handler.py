@@ -2,8 +2,8 @@ import os
 import sys
 os.environ['TF_CPP_MIN_LOG_LEVEL']='3'  #disable tensorflow debugging
 
-from tensorflow.python.keras.models import Sequential
-from tensorflow.python.keras.layers import Dense, Activation
+from tensorflow.compat.v1.keras.models import Sequential
+from tensorflow.compat.v1.keras.layers import Dense, Activation
 stderr = sys.stderr
 sys.stderr = open(os.devnull, 'w')
 from tensorflow.compat.v1.keras.activations import relu, linear

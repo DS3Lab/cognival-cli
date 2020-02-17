@@ -51,7 +51,7 @@ def run_single(mode, config, word_embedding, cognitive_data, modality, feature, 
     else:
         gpu_count = 0
         soft_placement = False
-
+    
     tf_config = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1,
                                          inter_op_parallelism_threads=1,
                                          allow_soft_placement=soft_placement,

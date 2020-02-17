@@ -58,8 +58,9 @@ from .templates import (WORD_EMB_CONFIG_FIELDS,
                         EMBEDDING_PARAMET_TEMPLATE,
                         EMBEDDING_CONFIG_TEMPLATE)
 
-def _filter_config(configuration,
+def filter_config(configuration,
                   embeddings,
+                  modalities,
                   cognitive_sources,
                   cognitive_features,
                   random_baseline):
@@ -84,12 +85,18 @@ def _filter_config(configuration,
             if embedding_params['installed']:
                 installed_embeddings.append(emb)
     
+    # Collect embeddings
     if embeddings[0] == 'all':
         embeddings_list = list(config_dict['wordEmbConfig'].keys())
     else:
         embeddings_list = embeddings
 
-    if cognitive_sources[0] == 'all':
+    # Collect cognitive sources
+    if modalities:
+        if modalities[0] == 'all':
+            modalities = ['eeg', 'eye-tracking', 'fmri']
+        cog_sources_list, cog_feat_list = zip(*[(k, v['features']) for k, v in config_dict['cogDataConfig'].items() if v['modality'] in modalities])
+    elif cognitive_sources[0] == 'all':
         if cognitive_features:
             cprint('Error: When evaluating all cognitive sources, features may not be specified.', 'red')
             return
@@ -133,10 +140,11 @@ def _filter_config(configuration,
         if not _check_emb_installed(emb, embedding_registry):
             not_installed_str += '- {}\n'.format(emb)
         
-        if random_baseline and not rand_emb:
-            no_rand_emb_str += '- {}\n'.format(emb)
-        else:
-            emb_to_random_dict[emb] = rand_emb
+        if random_baseline:
+            if not rand_emb:
+                no_rand_emb_str += '- {}\n'.format(emb)
+            else:
+                emb_to_random_dict[emb] = rand_emb
     
     terminate = False
 
@@ -151,9 +159,8 @@ def _filter_config(configuration,
         terminate = True
 
     if no_rand_emb_str:
-        cprint('For the following embeddings, no random embeddings have been generated:', 'red', attrs=['bold'])
-        cprint(no_rand_emb_str, 'red')
-        terminate = True
+        cprint('Warning: For the following embeddings, no random embeddings have been generated:', 'yellow')
+        cprint(no_rand_emb_str, 'yellow')
 
     if terminate:
         return

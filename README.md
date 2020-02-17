@@ -120,7 +120,7 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
         - modalities: Allows to populate or edit combinations of cognitive-sources of an entire modality and corresponding embeddings
         - cognitive-sources: Specifies either single, multiple or all installed cognitive sources (`[all]`) for editing or population.
         - embeddings: Specifies either single, multiple or all installed cognitive sources (`[all]`) for editing or population.
-        - single-edit: When editing combinations featuring multiple embeddings, whether to edit the embeddings specifics for all embeddings at once (`False`) or one by one. Note that when specifying multiple cognitive sources, specifics are adjusted across all sources at once. Thus, the command must be called for each source individually if separate
+        - single-edit: When editing combinations featuring multiple embeddings, whether to edit the embeddings specifics for all embeddings at once (`False`) or one by one.
         parametrizations are required
         - edit-cog-source-params: Whether to edit parameters of the cognitive source. In general, this is only required when
                                 in the case of a multi-feature source, not all features are to be evaluated.
@@ -232,4 +232,4 @@ Eye-tracking example:
 ``word WORD_FIXATION_COUNT WORD_GAZE_DURATION WORD_FIRST_FIXATION_DURATION ...``  
 ``the 0.1168531943034873 0.11272377054039184 0.25456297601240524 ...`` 
 
-All cognitive data sources are freely available for you to download and preprocess. However, if you prefer the fully preprocessed vectors as described in the publication, you can download them [here](https://drive.google.com/open?id=1pWwIiCdB2snIkgJbD1knPQ6akTPW_kx0).
+All cognitive data sources are freely available for you to download and preprocess. However, if you prefer the fully preprocessed vectors as described in the publication, you can download them [here](https://drive.google.com/open?id=1ouonaByYn2cnDAWihnQ3cGmMT6bJ4NaP).
