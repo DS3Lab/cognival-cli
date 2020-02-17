@@ -63,7 +63,7 @@
             "installed": false,
             "truncate_first_line": true,
             "chunked": false,
-            "chunk_number": 4,
+            "chunk_number": 8,
             "chunked_file": "word2vec",
             "chunk_ending": ".txt",
             "random_embedding": null
@@ -92,7 +92,7 @@
             "installed": false,
             "truncate_first_line": true,
             "chunked": true,
-            "chunk_number": 4,
+            "chunk_number": 8,
             "chunked_file": "fasttext-wiki",
             "chunk_ending": ".txt",
             "random_embedding": null
@@ -108,7 +108,7 @@
             "installed": false,
             "truncate_first_line": true,
             "chunked": true,
-            "chunk_number": 4,
+            "chunk_number": 8,
             "chunked_file": "fasttext-wiki-subword",
             "chunk_ending": ".txt",
             "random_embedding": null
@@ -124,7 +124,7 @@
             "installed": false,
             "truncate_first_line": true,
             "chunked": true,
-            "chunk_number": 4,
+            "chunk_number": 8,
             "chunked_file": "fasttext-cc",
             "chunk_ending": ".txt",
             "random_embedding": null
@@ -140,7 +140,7 @@
             "installed": false,
             "truncate_first_line": true,
             "chunked": true,
-            "chunk_number": 4,
+            "chunk_number": 8,
             "chunked_file": "fasttext-cc-subword",
             "chunk_ending": ".txt",
             "random_embedding": null

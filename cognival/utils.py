@@ -58,30 +58,3 @@ def word2vec_bin_to_txt(binPath,binName,outputName, limit=None):
         warnings.simplefilter('ignore', UserWarning)
         model = KeyedVectors.load_word2vec_format(binPath / binName, binary=True, limit=limit)
         model.save_word2vec_format(binPath / outputName,binary=False)
-
-#
-# Formatting
-#
-
-def create_table(CONFIG):
-    with open(CONFIG,'r') as fR:
-        config = json.load(fR)
-    header = [key for key in config['wordEmbConfig']]
-    print(header)
-    index1 = []
-    index2 = []
-    for cD in config["cogDataConfig"]:
-        for feature in config["cogDataConfig"][cD]["features"]:
-            index1.append(cD)
-            index2.append(feature)
-    index = [index1,index2]    
-    
-    setup = {header[j]:[np.NaN for i in range(len(index2)) ] for j in range(len(header))} 
-    df = pd.DataFrame(setup,index)
-    print(df)    
-    
-    pass
-
-def fill_table(PATH, table):
-
-    pass

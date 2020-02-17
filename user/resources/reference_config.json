@@ -14749,7 +14749,7 @@
             "modality": "eye-tracking",
             "features": [
                 "WORD_FIXATION_COUNT",
-                "WORD_eye-tracking_DURATION",
+                "WORD_GAZE_DURATION",
                 "WORD_FIRST_FIXATION_DURATION",
                 "WORD_LAST_FIXATION_DURATION",
                 "WORD_GO_PAST_TIME",

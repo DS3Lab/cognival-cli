@@ -1,9 +1,11 @@
 from pathlib import Path
 
+import dask.dataframe as dd
 import pandas as pd
 import numpy as np
 import csv
 from sklearn.model_selection import KFold
+from prompt_toolkit.shortcuts import ProgressBar
 
 def chunk(input_path_name,
           output_path_name,
@@ -21,25 +23,40 @@ def chunk(input_path_name,
     '''
     input_path = Path(input_path_name)
     output_path = Path(output_path_name)
+    
     if truncate_first_line:
         skip_lines = 1
     else:
         skip_lines = None
-    df_wE = pd.read_csv(input_path / input_file_name, sep=" ",
-                        encoding="utf-8", quoting=csv.QUOTE_NONE, header=None, skiprows=skip_lines)
-    df_wE.columns = ['word'] + ['x_{}'.format(idx + 1) for idx in range(df_wE.shape[1] - 1)]
-    #TODO: Test this
-    rows = df_wE.shape[0]
+    
+    rows = 0
+    with open(input_path / input_file_name) as f:
+        for _ in f:
+            rows += 1
+        
     chunk_size = rows // number_of_chunks
     rest = rows % number_of_chunks
-    for i in range(0, number_of_chunks):
-        begin = chunk_size * i
-        end = chunk_size * (i + 1)
-        if i == number_of_chunks - 1:
-            end = end + rest
-        df = df_wE.iloc[begin:end,:]
-        df.to_csv(output_path / "{}_{}.txt".format(output_file_name, str(i)), sep=" ", encoding="utf-8", header=False)
 
+    with open(input_path / input_file_name) as f:
+        # Forward lines
+        for i in range(skip_lines):
+            next(f)
+        
+        # Iterate over chunks
+        for i in range(0, number_of_chunks):
+            if i == number_of_chunks - 1:
+                csize = csize + rest
+            else:
+                csize = chunk_size
+
+            with open(output_path / "{}_{}.txt".format(output_file_name,
+                                            str(i)),
+                                            "w") as f_out:
+                with ProgressBar() as pb:
+                    print('Chunk {}/{}:'.format(i+1, number_of_chunks), end='')
+                    for _ in pb(list(range(0, chunk_size))):
+                        f_out.write(next(f))
+                    print()
 
 def update(left_df, right_df, on_column, columns_to_omit, whole_row):
     '''
@@ -116,14 +133,18 @@ def multi_join(mode, config, df_cognitive_data, word_embedding):
 
     # Join from chunked FILE
     df_join = df_cognitive_data
-    chunk_number = config[emb_key][word_embedding]["chunk_number"]
-    file_name = Path(config['PATH']) / config[emb_key][word_embedding]["chunked_file"]
-    ending = config[emb_key][word_embedding]["ending"]
+    word_emb_prop = config[emb_key][word_embedding]
+    chunk_number = word_emb_prop["chunk_number"]
+    base_path = Path(config['PATH'])
+    embedding_path = word_emb_prop["path"].rsplit('/', maxsplit=1)[0]
+    path = base_path / embedding_path
+    chunked_file = word_emb_prop["chunked_file"]
+    ending = word_emb_prop["chunk_ending"]
 
     for i in range(0, chunk_number):
-        df = pd.read_csv(file_name + str(i) + ending, sep=" ",
+        df = pd.read_csv(path  / '{}_{}{}'.format(chunked_file, str(i), ending), sep=" ",
                          encoding="utf-8", quoting=csv.QUOTE_NONE)
-        df.drop(df.columns[0], axis=1, inplace=True)
+        df.columns = ['word'] + ['x_{}'.format(idx + 1) for idx in range(df.shape[1] - 1)]
         if i == 0:
             df_join = pd.merge(df_join, df, how='left', on=['word'])
         else:
@@ -193,7 +214,11 @@ def data_handler(mode, config, word_embedding, cognitive_data, feature, truncate
     else:
         emb_key = 'randEmbConfig'
     # READ Datasets into dataframes
-    df_cognitive_data = pd.read_csv(Path(config['PATH']) / config['cogDataConfig'][cognitive_data]['dataset'], sep=" ")
+    df_cognitive_data = pd.read_csv(Path(config['PATH']) / config['cogDataConfig'][cognitive_data]['dataset'],
+                                    sep=" ",
+                                    quotechar=None,
+                                    quoting=csv.QUOTE_NONE,
+                                    doublequote=False)
 
     # In case it's a single output cogData we just need the single feature
     if config['cogDataConfig'][cognitive_data]['type'] == "single_output":

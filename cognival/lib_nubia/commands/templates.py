@@ -1,7 +1,7 @@
 WORD_EMB_CONFIG_FIELDS = set(["chunk_number",
                               "chunked",
                               "chunked_file",
-                              "ending",
+                              "chunk_ending",
                               "path",
                               "truncate_first_line",
                               "random_embedding"])
