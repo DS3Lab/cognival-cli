@@ -29,7 +29,7 @@ Note that CogniVal commands with multiple arguments always require that the argu
 
 > config show configuration=demo details=True
 
-CogniVal cognitive sources are installed by executing:
+In order to execute to evaluation, both cognitive sources and embeddings need to be installed. CogniVal cognitive sources are installed by executing:
 
 > install cognitive-sources 
 
@@ -57,8 +57,6 @@ are multiple values for a field, this is indicated in the editor.
 
 When entering a space after a command, a navigable list of subcommands or arguments along with default values (where applicable) is shown. Using Tab,
 previous command parametrizations can be auto-completed. Cursor keys allow to navigate through the history of commands, analogous to e.g. Bash.
-
-In order to execute to evaluation, both cognitive sources and embeddings need to be installed.
 
 The experiments can be run with the following command:
 
