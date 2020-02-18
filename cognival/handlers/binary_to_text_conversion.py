@@ -30,6 +30,7 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 from subprocess import Popen, PIPE
+from termcolor import cprint
 
 import gdown
 from joblib import Parallel, delayed
@@ -57,7 +58,6 @@ from handlers.data_handler import chunk
 
 from utils import generate_df_with_header, word2vec_bin_to_txt
 
-#sys.path.insert(0, 'significance_testing/')
 from significance_testing.statisticalTesting import extract_results as st_extract_results
 from significance_testing.aggregated_eeg_results import extract_results as agg_eeg_extr_results
 from significance_testing.aggregated_fmri_results import extract_results as agg_eeg_extr_results
@@ -66,7 +66,7 @@ from significance_testing.testing_helpers import bonferroni_correction, test_sig
 
 from lib_nubia.prompt_toolkit_table import *
 
-def bert_to_text(vocabulary_file, model_dir, output_path, dimensions, num_worker):
+def bert_to_text(vocabulary_file, model_dir, output_path, num_worker):
     # Source: https://github.com/hanxiao/bert-as-service
     # Start Bert Model: bert-serving-start -model_dir /tmp/uncased_L-12_H-768_A-12/ -num_worker=4
     # model: 'base' (768 dimensions) or 'large' (1024 dimensions)
@@ -86,6 +86,9 @@ def bert_to_text(vocabulary_file, model_dir, output_path, dimensions, num_worker
                   preexec_fn=os.setsid,
                   cwd='tmp')
 
+    print("Waiting for server readiness ...")
+    time.sleep(10)
+
     with open(vocabulary_file, 'r') as f:
         words = f.readlines()
 
@@ -97,13 +100,13 @@ def bert_to_text(vocabulary_file, model_dir, output_path, dimensions, num_worker
         with BertClient(ignore_all_checks=True) as bc:
 
             count_not_found = 0
-            words_stripped = [word.strip() for word in words]
             print('Obtaining per-word embedding ...')
-            output_embedding = bc.encode(words_stripped)
-            for idx, word in enumerate(words_stripped):
-                embedding = ' '.join(map(str, output_embedding[idx]))
-
-                print(word, embedding, file=embedding_file)
+            with ProgressBar() as pb:
+                for word in pb(words):
+                    word = word.strip()
+                    output_embedding = bc.encode([word])
+                    embedding = ' '.join(map(str, output_embedding[0]))
+                    print(word, embedding, file=embedding_file)
 
             print(count_not_found, ' words not found.')
 
@@ -119,7 +122,10 @@ def bert_to_text(vocabulary_file, model_dir, output_path, dimensions, num_worker
     time.sleep(5)
 
     print("Removing temporary directory")
-    shutil.rmtree('tmp')
+    try:
+        shutil.rmtree('tmp')
+    except:
+        cprint('Warning: Could not remove temporary directory "tmp" in the current working directory, manual removal necessary!', 'red')
 
 
 def elmo_to_text(vocabulary_file, output_path, layer='nocontext'):

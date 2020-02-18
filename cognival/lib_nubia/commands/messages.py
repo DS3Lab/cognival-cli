@@ -73,4 +73,6 @@ Basic commands:
  - welcome: display this message using 'less'.
  - readme: display the README.md using 'less'.
  - clear: clear the interactive shell.
+ - example-commands: Show a table of example calls along with descriptions
+ - browse: Browse the user directory and view files in read-only mode (requires vim)
 """

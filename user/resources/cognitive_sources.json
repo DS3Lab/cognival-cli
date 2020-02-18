@@ -1,30 +1,48 @@
 {
     "cognival_installed": false,
+    "cognival_sources": ["n400",
+                         "naturalspeech",
+                         "ucl",
+                         "zuco",
+                         "brennan",
+                         "wehbe",
+                         "mitchell",
+                         "pereira",
+                         "provo",
+                         "geco",
+                         "dundee",
+                         "cfilt-scanpath",
+                         "cfilt-sarcasm",
+                         "all"],
     "sources": {
         "eeg": {
             "n400": {
                 "dimensionality": 130,
                 "features": "single",
                 "file": "n400_scaled.txt",
-                "hypothesis_per_participant": false
+                "hypothesis_per_participant": false,
+                "installed": false
             },
             "naturalspeech": {
                 "dimensionality": 130,
                 "features": "single",
                 "file": "naturalspeech_scaled.txt",
-                "hypothesis_per_participant": false
+                "hypothesis_per_participant": false,
+                "installed": false
             },
             "ucl": {
                 "dimensionality": 34,
                 "features": "single",
                 "file": "ucl_scaled.txt",
-                "hypothesis_per_participant": false
+                "hypothesis_per_participant": false,
+                "installed": false
             },
             "zuco": {
                 "dimensionality": 105,
                 "features": "single",
                 "file": "zuco_scaled.txt",
-                "hypothesis_per_participant": false
+                "hypothesis_per_participant": false,
+                "installed": false
             }
         },
         "fmri": {
@@ -60,7 +78,8 @@
                     "scaled_6_brennan_targets_52.txt",
                     "scaled_6_brennan_targets_53.txt"
                 ],
-                "hypothesis_per_participant": true
+                "hypothesis_per_participant": true,
+                "installed": false
             },
             "wehbe": {
                 "dimensionality": 1000,
@@ -75,7 +94,8 @@
                     "scaled_1000_wehbe_targets_7.txt",
                     "scaled_1000_wehbe_targets_8.txt"
                 ],
-                "hypothesis_per_participant": true
+                "hypothesis_per_participant": true,
+                "installed": false
             },
             "mitchell": {
                 "dimensionality": 1000,
@@ -91,7 +111,8 @@
                     "scaled_1000_mitchell_targets_8.txt",
                     "scaled_1000_mitchell_targets_9.txt"
                 ],
-                "hypothesis_per_participant": true
+                "hypothesis_per_participant": true,
+                "installed": false
             },
             "pereira": {
                 "dimensionality": 1000,
@@ -115,7 +136,8 @@
                     "scaled_1000_pereira_targets_M16.txt",
                     "scaled_1000_pereira_targets_M17.txt"
                 ],
-                "hypothesis_per_participant": true
+                "hypothesis_per_participant": true,
+                "installed": false
             }
         },
         "eye-tracking": {
@@ -129,7 +151,8 @@
                     "TRT"
                 ],
                 "file": "zuco_scaled.txt",
-                "hypothesis_per_participant": false
+                "hypothesis_per_participant": false,
+                "installed": false
             },
             "ucl": {
                 "dimensionality": 1,
@@ -140,7 +163,8 @@
                     "RTgopast"
                 ],
                 "file": "ucl_scaled.txt",
-                "hypothesis_per_participant": false
+                "hypothesis_per_participant": false,
+                "installed": false
             },
             "provo": {
                 "dimensionality": 1,
@@ -157,7 +181,8 @@
                     "IA_REGRESSION_PATH_DURATION"
                 ],
                 "file": "provo_scaled.txt",
-                "hypothesis_per_participant": false
+                "hypothesis_per_participant": false,
+                "installed": false
             },
             "geco": {
                 "dimensionality": 1,
@@ -171,7 +196,8 @@
                     "WORD_SKIP"
                 ],
                 "file": "geco_scaled.txt",
-                "hypothesis_per_participant": false
+                "hypothesis_per_participant": false,
+                "installed": false
             },
             "dundee": {
                 "dimensionality": 1,
@@ -192,7 +218,8 @@
                     "nRegres_to"
                 ],
                 "file": "dundee_scaled.txt",
-                "hypothesis_per_participant": false
+                "hypothesis_per_participant": false,
+                "installed": false
             },
             "cfilt-scanpath": {
                 "dimensionality": 1,
@@ -200,7 +227,8 @@
                     "Fixation_Duration"
                 ],
                 "file": "cfilt-scanpath_scaled.txt",
-                "hypothesis_per_participant": false
+                "hypothesis_per_participant": false,
+                "installed": false
             },
             "cfilt-sarcasm": {
                 "dimensionality": 1,
@@ -208,7 +236,8 @@
                     "Fixation_Duration"
                 ],
                 "file": "cfilt-sarcasm_scaled.txt",
-                "hypothesis_per_participant": false
+                "hypothesis_per_participant": false,
+                "installed": false
             },
             "all": {
                 "dimensionality": 1,
@@ -221,7 +250,8 @@
                     "gpt"
                 ],
                 "file": "all_scaled.txt",
-                "hypothesis_per_participant": false
+                "hypothesis_per_participant": false,
+                "installed": false
             }
         }
     },

@@ -13,6 +13,7 @@ warnings.simplefilter(action="ignore", category=DeprecationWarning)
 
 import collections
 import copy
+import csv
 import itertools
 import json
 import gzip
@@ -105,7 +106,7 @@ def custom_formatwarning(msg, *args, **kwargs):
 warnings.formatwarning = custom_formatwarning
 
 NUM_BERT_WORKERS = 1
-COGNIVAL_SOURCES_URL = 'https://drive.google.com/open?id=1ouonaByYn2cnDAWihnQ3cGmMT6bJ4NaP'
+COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1ouonaByYn2cnDAWihnQ3cGmMT6bJ4NaP'
 
 @command
 @argument("configuration", type=str, description="Configuration for experimental runs", positional=True)
@@ -997,6 +998,66 @@ def report(configuration,
     generate_report(configuration, version, resources_path, html, pdf, open_html, open_pdf)
 
 @command
+def update_vocabulary():
+    """
+    Update the vocabulary based on all installed cognitive sources.
+    """
+    ctx = context.get_context()
+    resources_path = ctx.resources_path
+    cog_sources_path = ctx.cog_sources_path
+    vocab_path = resources_path / 'standard_vocab.txt'
+
+    old_len = 0
+    old_vocab = None
+
+    with open(vocab_path) as f:
+        old_vocab = set(map(lambda x: x.rstrip('\n'), f))
+        old_len = len(old_vocab)
+
+    new_vocab = set()
+    source_paths = [(Path(path) / source) for path, _, sources in os.walk(cog_sources_path) for source in sources if not source.startswith('.')]
+    cprint("Updating CogniVal vocabulary from cognitive sources ...", "yellow")
+    with ProgressBar() as pb:
+        for source_path in pb(source_paths):
+            df = pd.read_csv(source_path,
+                             sep=" ",
+                             quotechar=None,
+                             quoting=csv.QUOTE_NONE,
+                             doublequote=False,
+                             keep_default_na=False)
+            is_nan_series = df['word'].isnull()
+            if is_nan_series.values.any():
+                # Row number: Correct for header
+                nan_indices = is_nan_series.index[is_nan_series == True] + 1
+                nan_indices = nan_indices.tolist()
+                cprint('Warning - NaNs in (rows: {}): {}'.format(', '.join(map(str, list(nan_indices))), source_path), 'yellow')
+                # for nan_idx in nan_indices:
+                #     print(list(df.iloc[nan_idx - 1, :]))
+                #     breakpoint()
+                
+            df.fillna('', inplace=True)
+            new_vocab |= set(df['word'])
+
+    new_vocab_list = sorted(list(new_vocab))
+    new_len = len(new_vocab_list)
+
+    if new_len == old_len:
+        cprint('Vocabulary size unchanged ({})'.format(old_len), 'magenta')
+    else:
+        if new_len > old_len:
+            cprint('Vocabulary size (previous/new): {}/{}'.format(old_len, new_len), 'green')
+        elif new_len < old_len:
+            cprint('Vocabulary size (previous/new): {}/{} (Caution: Vocabulary size has decreased!)'.format(old_len, new_len), 'yellow')
+    diff_list = ', '.join(sorted(list((old_vocab | new_vocab) - (old_vocab & new_vocab))))
+    if diff_list:
+        cprint('Diff: {}'.format(diff_list))
+    cprint('Writing vocabulary to {} ...'.format(str(vocab_path)), 'green')
+    with open(vocab_path, 'w') as f:
+        for word in new_vocab_list:
+            f.write('{}\n'.format(word))
+
+
+@command
 class Install:
     """Install CogniVal cognitive vectors, default embeddings (proper and random), custom embeddings and
     generate random embeddings
@@ -1046,6 +1107,11 @@ class Install:
                     except NotADirectoryError:
                         os.remove(basepath / path)
                 cog_config['cognival_installed'] = True
+                cognival_sources = set(cog_config['cognival_sources'])
+                for modality in cog_config['sources'].values():
+                    for source, source_props in modality.items():
+                        if source in cognival_sources:
+                            source_props['installed'] = True
             else:
                 cprint("CogniVal sources already present!", "green")
                 return 
@@ -1105,14 +1171,16 @@ class Install:
             cog_config['sources'][modality][source] = {'file': '{}.txt'.format(source),
                                                        'features': features,
                                                        'dimensionality': dimensionality,
-                                                       'hypothesis_per_participant': False}
+                                                       'hypothesis_per_participant': False,
+                                                       'installed': True}
             index = cog_config['index']
             index.append('{}_{}'.format(modality, source))
             cog_config['index'] = natsorted(list(set(index)))
         
             message_dialog(title='Cognitive source registration',
                             text='Please ensure that the file has the following path and name after installation:\n'
-                                    '{}/cognitive_sources/{}/{}.txt'.format(str(cognival_path), modality, source)).run()
+                                 '{}/cognitive_sources/{}/{}.txt\n'
+                                 'Afterwards, run the command "update-vocabulary" to update the evaluation vocabulary.'.format(str(cognival_path), modality, source)).run()
         
         cprint("Completed installing cognitive sources ({})".format(source), "green")
 
@@ -1400,7 +1468,6 @@ class Install:
                         bert_to_text(resources_path / 'standard_vocab.txt',
                                     base_path,
                                     emb_path,
-                                    emb_dim,
                                     NUM_BERT_WORKERS)
                     else:
                         cprint("Unknown binary format, aborting ...", "red")
