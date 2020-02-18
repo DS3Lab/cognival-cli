@@ -29,20 +29,6 @@ Note that CogniVal commands with multiple arguments always require that the argu
 
 > config show configuration=demo details=True
 
-The experiment details (Word embedding specifics) of the eeg_zuco-glove combination can be edited using: 
-
-> config experiment configuration=demo cognitive-sources=[eeg_zuco] embeddings=[glove.6B.50]
-
-The changes are automatically propagated to the associated random embeddings. Note that if a cognitive source or embedding is not yet
-part of the configuration, it is automatically populated from the reference configuration, which contains default parameters
-for all cognitive sources and embeddings evaluated in the original CogniVal paper. Multiple experiments can be edited at once and if there
-are multiple values for a field, this is indicated in the editor.
-
-When entering a space after a command, a navigable list of subcommands or arguments along with default values (where applicable) is shown. Using Tab,
-previous command parametrizations can be auto-completed. Cursor keys allow to navigate through the history of commands, analogous to e.g. Bash.
-
-In order to execute to evaluation, both cognitive sources and embeddings need to be installed.
-
 CogniVal cognitive sources are installed by executing:
 
 > install cognitive-sources 
@@ -59,6 +45,20 @@ to improve robustness.
 Random embeddings can be generated at any later point using the following command. Regeneration requires that force=True is added:
 
 > install random-embeddings glove.6B.50
+
+The experiment details (Word embedding specifics) of the eeg_zuco-glove combination can be edited using: 
+
+> config experiment configuration=demo cognitive-sources=[eeg_zuco] embeddings=[glove.6B.50]
+
+The changes are automatically propagated to the associated random embeddings. Note that if a cognitive source or embedding is not yet
+part of the configuration, it is automatically populated from the reference configuration, which contains default parameters
+for all cognitive sources and embeddings evaluated in the original CogniVal paper. Multiple experiments can be edited at once and if there
+are multiple values for a field, this is indicated in the editor.
+
+When entering a space after a command, a navigable list of subcommands or arguments along with default values (where applicable) is shown. Using Tab,
+previous command parametrizations can be auto-completed. Cursor keys allow to navigate through the history of commands, analogous to e.g. Bash.
+
+In order to execute to evaluation, both cognitive sources and embeddings need to be installed.
 
 The experiments can be run with the following command:
 
