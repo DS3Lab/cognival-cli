@@ -1054,7 +1054,8 @@ def update_vocabulary():
     cprint('Writing vocabulary to {} ...'.format(str(vocab_path)), 'green')
     with open(vocab_path, 'w') as f:
         for word in new_vocab_list:
-            f.write('{}\n'.format(word))
+            if word:
+                f.write('{}\n'.format(word))
 
 
 @command
@@ -1109,8 +1110,8 @@ class Install:
                 cog_config['cognival_installed'] = True
                 cognival_sources = set(cog_config['cognival_sources'])
                 for modality in cog_config['sources'].values():
-                    for source, source_props in modality.items():
-                        if source in cognival_sources:
+                    for csource, source_props in modality.items():
+                        if csource in cognival_sources:
                             source_props['installed'] = True
             else:
                 cprint("CogniVal sources already present!", "green")

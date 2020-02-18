@@ -80,7 +80,7 @@ class NubiaCognivalContext(context.Context):
 
         if not self.no_welcome:
             cprint(self.messages.LOGO_STR, "magenta")
-            cprint(self.messages.WELCOME_MESSAGE_STR, "green")
+            cprint(self.messages.WELCOME_MESSAGE_STR)
         
         ret = self._registry.find_command("connect").run_cli(args)
         if ret:
