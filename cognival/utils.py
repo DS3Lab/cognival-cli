@@ -1,11 +1,9 @@
 import csv
-import json
 import sys
 import time
 import warnings
 
 import pandas as pd
-import numpy as np
 
 from numpy import fromfile
 from gensim.models.keyedvectors import KeyedVectors

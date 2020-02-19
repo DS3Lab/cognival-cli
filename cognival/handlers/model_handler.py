@@ -3,10 +3,9 @@ import sys
 os.environ['TF_CPP_MIN_LOG_LEVEL']='3'  #disable tensorflow debugging
 
 from tensorflow.compat.v1.keras.models import Sequential
-from tensorflow.compat.v1.keras.layers import Dense, Activation
+from tensorflow.compat.v1.keras.layers import Dense
 stderr = sys.stderr
 sys.stderr = open(os.devnull, 'w')
-from tensorflow.compat.v1.keras.activations import relu, linear
 from tensorflow.compat.v1.keras.wrappers.scikit_learn import KerasRegressor
 sys.stderr = stderr
 from sklearn.model_selection import GridSearchCV

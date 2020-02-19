@@ -1238,7 +1238,7 @@ class Install:
             if ctx.debug:
                 for rand_emb in ctx.embedding_registry['random_static']:
                     self.embeddings(rand_emb, log_only_success=True)
-                folder = ctx.embedding_registry['random_static'][name]['path']
+                folder = ctx.embedding_registry['random_static'][rand_emb]['path']
             else:
                 cprint('Error: Random embeddings must be generated using "install random-embeddings"', 'red')
                 return

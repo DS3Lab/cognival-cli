@@ -15,17 +15,8 @@ import signal
 import shutil
 import time
 
-from datetime import datetime
-from pathlib import Path
 from subprocess import Popen, PIPE
 from termcolor import cprint
-
-import gdown
-from joblib import Parallel, delayed
-from natsort import natsorted
-from nubia import command, argument, context
-import numpy as np
-import pandas as pd
 
 try:
     from allennlp.commands.elmo import ElmoEmbedder
@@ -37,20 +28,8 @@ try:
 except ImportError:
     cprint('Warning: Package bert_serving.client not found. BERT conversion unavailable.', 'yellow')
 
-from prompt_toolkit import PromptSession
-from prompt_toolkit.shortcuts import input_dialog, yes_no_dialog, button_dialog, radiolist_dialog, ProgressBar
+from prompt_toolkit.shortcuts import ProgressBar
 from termcolor import cprint
-
-from handlers.file_handler import write_results, update_version
-from handlers.data_handler import chunk
-
-from utils import generate_df_with_header, word2vec_bin_to_txt
-
-from significance_testing.statisticalTesting import extract_results as st_extract_results
-from significance_testing.aggregated_eeg_results import extract_results as agg_eeg_extr_results
-from significance_testing.aggregated_fmri_results import extract_results as agg_eeg_extr_results
-from significance_testing.aggregated_gaze_results import extract_results_gaze as agg_gaze_extr_results
-from significance_testing.testing_helpers import bonferroni_correction, test_significance
 
 from lib_nubia.prompt_toolkit_table import *
 

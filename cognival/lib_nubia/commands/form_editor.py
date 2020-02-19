@@ -10,44 +10,12 @@
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-import asyncio
-import collections
-import csv
-import copy
-import itertools
 import json
-import gzip
-import os
-import sys
-import requests
-import signal
-import socket
-import shutil
-import time
-import typing
-import zipfile
-
-from datetime import datetime
-from pathlib import Path
-from subprocess import Popen, PIPE
-
-import gdown
-from joblib import Parallel, delayed
-from natsort import natsorted
-from nubia import command, argument, context
-import numpy as np
-import pandas as pd
 
 from termcolor import cprint
 
-from prompt_toolkit import prompt, PromptSession
-from prompt_toolkit.shortcuts import input_dialog, yes_no_dialog, button_dialog, radiolist_dialog, ProgressBar
+from prompt_toolkit import prompt
 from prompt_toolkit.application.current import get_app
-
-from handlers.file_handler import write_results, update_version
-from handlers.data_handler import chunk
-
-from utils import generate_df_with_header, word2vec_bin_to_txt
 
 from lib_nubia.prompt_toolkit_table import *
 from lib_nubia.commands.strings import *
