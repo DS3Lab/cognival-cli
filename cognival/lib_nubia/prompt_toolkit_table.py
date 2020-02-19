@@ -3,14 +3,11 @@
 #!/usr/bin/env python3
 import textwrap
 
-import numpy as np
-
 from prompt_toolkit import Application
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.layout.dimension import Dimension as D, sum_layout_dimensions, max_layout_dimensions, to_dimension
-from prompt_toolkit.widgets import Box, TextArea, Label, Button, HorizontalLine
-# from prompt_toolkit.widgets.base import Border
+from prompt_toolkit.widgets import TextArea, Label, Button, HorizontalLine
 from prompt_toolkit.layout.containers import Window, VSplit, HSplit, HorizontalAlign, VerticalAlign
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.utils import take_using_weights

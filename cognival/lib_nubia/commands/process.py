@@ -24,11 +24,7 @@ import pandas as pd
 
 from termcolor import cprint
 
-from handlers.file_handler import write_results, write_options, update_version
-from handlers.data_handler import chunk
-from handlers.binary_to_text_conversion import bert_to_text, elmo_to_text
-
-from utils import generate_df_with_header, word2vec_bin_to_txt
+from handlers.file_handler import write_results
 
 # Silence TF 2.0 deprecation warnings
 from tensorflow.python.util import deprecation
@@ -36,27 +32,17 @@ deprecation._PRINT_DEPRECATION_WARNINGS = False
 
 # Local imports
 
-from .form_editor import ConfigEditor, config_editor
-from .utils import (tupleit,
-                   _open_config,
+from .form_editor import ConfigEditor
+from .utils import (_open_config,
                    _open_cog_config,
                    _check_cog_installed,
                    _check_emb_installed,
-                   _save_cog_config,
                    _save_config,
-                   DisplayablePath,
-                   download_file,
-                   AbortException,
-                   chunked_list_concat_str,
-                   field_concat,
-                   chunks,
-                   page_list)
+                   AbortException)
 
 from .templates import (WORD_EMB_CONFIG_FIELDS,
-                        MAIN_CONFIG_TEMPLATE,
                         COGNITIVE_CONFIG_TEMPLATE,
-                        EMBEDDING_PARAMET_TEMPLATE,
-                        EMBEDDING_CONFIG_TEMPLATE)
+                        EMBEDDING_PARAMET_TEMPLATE)
 
 def filter_config(configuration,
                   embeddings,
@@ -254,7 +240,7 @@ def write_random_emb_results(rand_emb,
     cum_rand_logging['AVERAGE_MSE'] = cum_average_mse
     cum_rand_logging['wordEmbedding'] = rand_emb
     cum_rand_logging['averagedRuns'] = cum_rand_counter
-    write_results(config_dict, cum_rand_logging, cum_rand_word_error , [])
+    write_results(config_dict, cum_rand_logging, cum_rand_word_error, [])
 
 
 def process_and_write_results(proper_result,
