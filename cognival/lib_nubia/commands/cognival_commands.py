@@ -927,7 +927,19 @@ def aggregate(configuration,
             if properties['modality'] == modality:
                 modality_to_experiments[modality].append(properties['embedding'])
 
-    embeddings = list(config_dict["wordEmbConfig"])
+    emb_bl_pairs = []
+
+    for k, v in config_dict["wordEmbConfig"].items():
+        if v['random_embedding']:
+            emb_bl_pairs.append((k, v['random_embedding']))
+        else:
+            cprint('Embedding {} has no associated random embeddings, no significance test possible, skipping ...'.format(k), 'yellow')
+
+    try:
+        embeddings, baselines = zip(*emb_bl_pairs)
+    except ValueError:
+        cprint('No embedding-baseline pairs, aborting ...', 'red')
+        return
     
     for modality, options_dict in zip(modalities, options_dicts):
         if not quiet:
@@ -1179,8 +1191,8 @@ class Install:
             cog_config['index'] = natsorted(list(set(index)))
         
             message_dialog(title='Cognitive source registration',
-                            text='Please ensure that the file has the following path and name after installation:\n'
-                                 '{}/cognitive_sources/{}/{}.txt\n'
+                            text='Please ensure that the file has the following path and name after installation:\n\n'
+                                 '{}/cognitive_sources/{}/{}.txt\n\n'
                                  'Afterwards, run the command "update-vocabulary" to update the evaluation vocabulary.'.format(str(cognival_path), modality, source)).run()
         
         cprint("Completed installing cognitive sources ({})".format(source), "green")

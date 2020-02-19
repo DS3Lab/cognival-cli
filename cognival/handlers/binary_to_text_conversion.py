@@ -10,22 +10,10 @@
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-import asyncio
-import collections
-import csv
-import copy
-import itertools
-import json
-import gzip
 import os
-import sys
-import requests
 import signal
-import socket
 import shutil
 import time
-import typing
-import zipfile
 
 from datetime import datetime
 from pathlib import Path

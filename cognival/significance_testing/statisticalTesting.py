@@ -1,10 +1,8 @@
-import json
-import os
 import numpy as np
 from termcolor import cprint
 
 from pathlib import Path
-from .testing_helpers import bonferroni_correction, test_significance, save_scores
+from .testing_helpers import save_scores
 
 def extract_results(version, modality, experiment, mapping_dict, input_dir, results_dir):
     embedding_path = Path(input_dir) / mapping_dict[experiment]['proper']

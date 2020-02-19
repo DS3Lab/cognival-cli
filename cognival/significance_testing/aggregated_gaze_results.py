@@ -1,8 +1,3 @@
-import json
-import numpy as np
-import matplotlib.pyplot as plt
-from significance_testing import aggregate_significance
-
 def extract_results_gaze(combinations):
     combination_results = {}
     embeddings = set()
