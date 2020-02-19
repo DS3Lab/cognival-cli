@@ -1,7 +1,3 @@
-import json
-from significance_testing import aggregate_significance
-
-
 def extract_results(combinations):
     combination_results = {}
     for x, y in combinations.items():

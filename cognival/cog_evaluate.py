@@ -1,4 +1,5 @@
 from datetime import datetime
+import numpy as np
 
 #own modules
 from handlers.data_handler import data_handler
