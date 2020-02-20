@@ -62,7 +62,7 @@
             "embedding_file": "word2vec-300d.txt",
             "installed": false,
             "truncate_first_line": true,
-            "chunked": false,
+            "chunked": true,
             "chunk_number": 8,
             "chunked_file": "word2vec",
             "chunk_ending": ".txt",
