@@ -53,7 +53,7 @@
             "random_embedding": null
         },
         "word2vec": {
-            "url": "https://drive.google.com/uc?id=0B7XkCwpI5KDYNlNUTTlSS21pQmM",
+            "url": "https://drive.google.com/uc?id=1CRCVNKW5SJ2fwNwLziIibuJoTZN9NHHw",
             "dimensions": 300,
             "binary": true,
             "binary_file": "word2vec-300d.bin",
@@ -174,7 +174,7 @@
         "bert-large": {
             "url": "https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-24_H-1024_A-16.zip",
             "dimensions": 1024,
-            "binary": false,
+            "binary": true,
             "binary_file": "bert_model.ckpt.data-00000-of-00001",
             "binary_format": "bert",
             "path": "bert-large_uncased-1024/uncased_L-24_H-1024_A-16",
