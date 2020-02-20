@@ -52,7 +52,7 @@ def chunk(input_path_name,
                                             str(i)),
                                             "w") as f_out:
                 with ProgressBar() as pb:
-                    print('Chunk {}/{}:'.format(i+1, number_of_chunks), end='')
+                    print('Chunk {}/{}:'.format(i+1, number_of_chunks))
                     for _ in pb(list(range(0, chunk_size))):
                         f_out.write(next(f))
                     print()
