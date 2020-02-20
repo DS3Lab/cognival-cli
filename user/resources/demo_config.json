@@ -313,7 +313,7 @@
     "folds": 5,
     "outputDir": "results/demo",
     "seed": 42,
-    "version": 1,
+    "run_id": 1,
     "wordEmbConfig": {
         "glove.6B.50": {
             "path": "embeddings/glove.6B/glove.6B.50d.txt",
