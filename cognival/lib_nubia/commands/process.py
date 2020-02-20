@@ -145,7 +145,7 @@ def filter_config(configuration,
         terminate = True
 
     if no_rand_emb_str:
-        cprint('Warning: For the following embeddings, no random embeddings have been generated:', 'yellow')
+        cprint('Warning: For the following embeddings, no random embeddings have been associated:', 'yellow')
         cprint(no_rand_emb_str, 'yellow')
 
     if terminate:
