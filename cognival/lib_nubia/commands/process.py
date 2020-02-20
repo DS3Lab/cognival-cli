@@ -81,12 +81,22 @@ def filter_config(configuration,
     if modalities:
         if modalities[0] == 'all':
             modalities = ['eeg', 'eye-tracking', 'fmri']
-        cog_sources_list, cog_feat_list = zip(*[(k, v['features']) for k, v in config_dict['cogDataConfig'].items() if v['modality'] in modalities])
+        cog_source_feat_tuples = [(k, v['features']) for k, v in config_dict['cogDataConfig'].items() if v['modality'] in modalities]
+        if cog_source_feat_tuples:
+            cog_sources_list, cog_feat_list = zip(*cog_source_feat_tuples)
+        else:
+            cprint('None of the specified modalities found in configuration, aborting ...: {} '.format(', '.join(modalities)), 'red')
+            return
     elif cognitive_sources[0] == 'all':
         if cognitive_features:
             cprint('Error: When evaluating all cognitive sources, features may not be specified.', 'red')
             return
-        cog_sources_list, cog_feat_list = zip(*[(k, v['features']) for k, v in config_dict['cogDataConfig'].items()])
+        cog_source_feat_tuples = [(k, v['features']) for k, v in config_dict['cogDataConfig'].items()]
+        if cog_source_feat_tuples:
+            cog_sources_list, cog_feat_list = zip(*cog_source_feat_tuples)
+        else:
+            cprint('Configuration appears to be empty! Aborting ...', 'red')
+            return
     else:
         cog_sources_list = cognitive_sources
         if cognitive_features:
@@ -332,9 +342,9 @@ def resolve_cog_emb(modalities,
     all_cog = True if cognitive_sources and cognitive_sources[0] == 'all' else False
     all_emb = True if embeddings and embeddings[0] == 'all' else False
 
-    if (not modalities and all_cog) or modalities and modalities[0] == 'all':
+    if (not modalities and all_cog) or (modalities and modalities[0] == 'all'):
         modalities = ['eye-tracking', 'fmri', 'eeg']
-    
+
     if modalities:
         if scope == 'all':
             cognitive_sources = []
@@ -347,7 +357,7 @@ def resolve_cog_emb(modalities,
                         else:
                             cognitive_sources.append('{}_{}'.format(type_, source))
         elif scope == 'config':
-            cognitive_sources = list(config_dict["cogDataConfig"].keys())
+            cognitive_sources = [k for k, v in config_dict["cogDataConfig"].items() if v["modality"] in modalities]
     
     if all_emb:
         if scope == 'all':
@@ -384,7 +394,7 @@ def _edit_config(config_dict, configuration):
                     'outputDir': configuration,
                     'version': 1,
                     'seed': 42,
-                    'cpu_count': os.cpu_count()-1,
+                    'n_proc': os.cpu_count()-1,
                     'folds': 5}
 
     conf_editor = ConfigEditor('main',

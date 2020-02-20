@@ -6,7 +6,8 @@ EDITOR_TITLES = {"properties": "CogniVal properties",
 
 EDITOR_DESCRIPTIONS = { "properties": {"cognival_path": "Path for storing user data (configurations, embeddings, cognitive sources and results)."},
                         "main": {"PATH": "Main working directory. Defaults to $HOME/.cognival",
-                                "cpu_count": "Number of CPU cores used for execution, defaults to (1 - number of available logical CPU cores)",
+                                "n_proc": "Number of (parent) processes to spawn for parallel fitting and evaluation. Defaults to (1 - number of available logical CPU cores). "
+                                          "Note: A single process can allocate cycles on more than CPU core! Reduce this value if encountering issues (e.g. due to ulimit settings).",
                                 "folds": "Number of folds evaluated in n-Fold cross-validation (CV)",
                                 "outputDir": "Output directory as subdirectory of 'results' (automatically prefixed if missing)",
                                 "seed": "Random seed for train-test sampling",
