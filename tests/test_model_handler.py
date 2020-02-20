@@ -115,11 +115,11 @@ def config():
             }
         }
     },
-    "cpu_count": 40,
+    "n_proc": 40,
     "folds": 5,
     "outputDir": "zuco-feature-wordEmbedding",
     "seed": 123,
-    "version": 11.0,
+    "run_id": 11.0,
     "wordEmbConfig": {
         "glove-50": {
             "chunk_number": 4,

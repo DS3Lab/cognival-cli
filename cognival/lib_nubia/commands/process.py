@@ -318,8 +318,8 @@ def process_and_write_results(proper_result,
 
         proper_options["AVERAGE_MSE"] = proper_avg_mse
         rand_options["AVERAGE_MSE"] = rand_avg_mse
-        run_stats['{}_{}_proper'.format(config_dict["version"], id_)] = proper_options
-        run_stats['{}_{}_random'.format(config_dict["version"], id_)] = rand_options
+        run_stats['{}_{}_proper'.format(config_dict["run_id"], id_)] = proper_options
+        run_stats['{}_{}_random'.format(config_dict["run_id"], id_)] = rand_options
 
 
 def insert_config_dict(config_dict, reference_dict, mode, csource, target_emb, source_emb):
@@ -392,7 +392,7 @@ def _edit_config(config_dict, configuration):
 
     prefill_fields={'PATH': ctx.cognival_path,
                     'outputDir': configuration,
-                    'version': 1,
+                    'run_id': 1,
                     'seed': 42,
                     'n_proc': os.cpu_count()-1,
                     'folds': 5}

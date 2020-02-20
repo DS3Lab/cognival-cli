@@ -13,7 +13,7 @@ MAIN_CONFIG_TEMPLATE = {
                         "folds": None,
                         "outputDir": None,
                         "seed": None,
-                        "version": None,
+                        "run_id": None,
                         "wordEmbConfig": {},
                         "randEmbConfig": {},
                         "randEmbSetToParts": {}

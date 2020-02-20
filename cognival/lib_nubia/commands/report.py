@@ -86,18 +86,18 @@ def sig_bar_plot(df, max_y=1.0):
 
 def agg_stats_over_time_plots(agg_reports_dict):
     '''
-    Generates line plots with aggregate stats over time (versions)
+    Generates line plots with aggregate stats over time (run_ids)
     Ø MSE Baseline, Ø MSE Proper, Significance
     '''
     df_list = []
     modality_to_plots = {}
-    for modality, versions in agg_reports_dict.items():
-        for version, agg_params in versions.items():
+    for modality, run_ids in agg_reports_dict.items():
+        for run_id, agg_params in run_ids.items():
             for idx in range(3):
                 df = pd.DataFrame.from_dict(agg_params)
                 df.reset_index(inplace=True)
                 df.rename(columns={'index':'Embeddings'}, inplace=True)
-                df['version'] = [version]*len(df)
+                df['run_id'] = [run_id]*len(df)
                 df['Significance'] = df['Significance'].apply(lambda x: div(*map(int, x.split('/'))))
                 df['Embeddings'] = df['Embeddings'].apply(lambda x: '{}_{}'.format(x, idx))
                 df['Ø MSE Proper'] = df['Ø MSE Proper'].apply(lambda x: x * idx)
@@ -109,16 +109,16 @@ def agg_stats_over_time_plots(agg_reports_dict):
             plt.clf()
             plt.cla()
             plt.figure()
-            df_sub = df[['Embeddings', measure, 'version']]
+            df_sub = df[['Embeddings', measure, 'run_id']]
             df_sub_list = []
             for emb in df_sub['Embeddings'].unique():
                 df_subsub = df_sub[df_sub['Embeddings'] == emb].copy()
                 df_subsub.rename(columns={measure:emb}, inplace=True)
-                df_ver = df_subsub['version']
+                df_ver = df_subsub['run_id']
                 df_subsub = df_subsub[[emb]]
                 df_sub_list.append(df_subsub)
             df_sub = pd.concat(df_sub_list + [df_ver], axis = 1)
-            plot = sns.lineplot(x='version', y='value', hue='variable', data=pd.melt(df_sub, ['version']))
+            plot = sns.lineplot(x='run_id', y='value', hue='variable', data=pd.melt(df_sub, ['run_id']))
             plot.set_title(measure)
 
             plot.locator_params(integer=True)
@@ -141,7 +141,7 @@ def agg_stats_over_time_plots(agg_reports_dict):
 
 
 def generate_report(configuration,
-                    version,
+                    run_id,
                     resources_path,
                     html=True,
                     pdf=False,
@@ -149,20 +149,20 @@ def generate_report(configuration,
                     open_pdf=False):
     '''
     Generates report from significance test results and aggregated statistics for given configuration
-    and configuration version.
+    and configuration run_id.
     '''
     cprint('Generating CogniVal report ...', 'green')
     template = load_jinja_template()
 
     config_dict = _open_config(configuration, resources_path, quiet=True)
 
-    # Get mapping of previous version (current not yet executed)
-    if not version:
-        version = config_dict['version'] - 1
-    elif version >= config_dict['version']:
-        cprint('Version {} exceeds last version for which results were generated ({}), aborting ...'.format(version, config_dict['version'] - 1), 'red')
+    # Get mapping of previous run_id (current not yet executed)
+    if not run_id:
+        run_id = config_dict['run_id'] - 1
+    elif run_id >= config_dict['run_id']:
+        cprint('Run ID {} exceeds last run_id for which results were generated ({}), aborting ...'.format(run_id, config_dict['run_id'] - 1), 'red')
         return
-    if not version:
+    if not run_id:
         cprint('No experimental runs performed yet for configuration {}, aborting ...'.format(configuration), 'red')
         return
 
@@ -172,7 +172,7 @@ def generate_report(configuration,
 
     out_dir = Path(config_dict['PATH']) / config_dict['outputDir']
 
-    with open(out_dir / 'mapping_{}.json'.format(version)) as f:
+    with open(out_dir / 'mapping_{}.json'.format(run_id)) as f:
         mapping_dict = json.load(f)
 
     report_dir = out_dir / 'reports'
@@ -182,8 +182,8 @@ def generate_report(configuration,
     random_to_proper = {}
 
     experiments_dir = out_dir / 'experiments'
-    sig_test_res_dir = out_dir / 'sig_test_results' # / modality / str(version)
-    report_dir = out_dir / 'reports' # / modality / str(version)
+    sig_test_res_dir = out_dir / 'sig_test_results'
+    report_dir = out_dir / 'reports'
     sig_test_reports_dict = collections.defaultdict(dict)
     agg_reports_dict = collections.defaultdict(dict)
     results = []
@@ -218,8 +218,8 @@ def generate_report(configuration,
     # Detail (proper)
     # If significance tests have been performed
     if sig_test_reports_dict:
-        for modality, mod_report_versions in sig_test_reports_dict.items():
-            mod_report = mod_report_versions[max(mod_report_versions)]
+        for modality, mod_report_run_ids in sig_test_reports_dict.items():
+            mod_report = mod_report_run_ids[max(mod_report_run_ids)]
             bonferroni_alpha = mod_report['bonferroni_alpha']
 
             for experiment, sig_test_result in mod_report['hypotheses'].items():
@@ -307,16 +307,16 @@ def generate_report(configuration,
     else:
         df_random = None
     # Aggregated
-    agg_modality_to_max_version = {}
+    agg_modality_to_max_run_id = {}
 
     df_agg_dict = {}
     df_agg_for_plot_rows = []
 
     if agg_reports_dict:
-        for modality, mod_report_versions in agg_reports_dict.items():
-            max_version = max(mod_report_versions)
-            agg_modality_to_max_version[modality] = max_version
-            mod_report = mod_report_versions[max_version]
+        for modality, mod_report_run_ids in agg_reports_dict.items():
+            max_run_id = max(mod_report_run_ids)
+            agg_modality_to_max_run_id[modality] = max_run_id
+            mod_report = mod_report_run_ids[max_run_id]
             df_agg = pd.DataFrame(mod_report)
 
             df_agg.reset_index(inplace=True)
@@ -348,8 +348,8 @@ def generate_report(configuration,
         for df_agg_for_plot in df_list:
             sig_stats_plots.append((df_agg_for_plot['Modality'].values[0], sig_bar_plot(df_agg_for_plot, max_y=max_y)))
 
-        # Generate stats over time plots if more that one version
-        if version > 1:
+        # Generate stats over time plots if more that one run_id
+        if run_id > 1:
             stats_over_time_plots = agg_stats_over_time_plots(agg_reports_dict)
         else:
             stats_over_time_plots = None
@@ -367,7 +367,7 @@ def generate_report(configuration,
                                df_random=df_random)
     
     timestamp = datetime.datetime.now().isoformat()
-    f_path_html = report_dir / 'cognival_report_{}_{}.html'.format(version, timestamp)
+    f_path_html = report_dir / 'cognival_report_{}_{}.html'.format(run_id, timestamp)
     with open(f_path_html, 'w') as f:
         f.write(html_str)
 
@@ -379,7 +379,7 @@ def generate_report(configuration,
             webbrowser.open(url)
 
     if pdf:
-        f_path_pdf = report_dir / 'cognival_report_{}_{}.pdf'.format(version, timestamp)
+        f_path_pdf = report_dir / 'cognival_report_{}_{}.pdf'.format(run_id, timestamp)
         pdfkit.from_file(str(f_path_html),
                          str(f_path_pdf),
                          options={'quiet': '',

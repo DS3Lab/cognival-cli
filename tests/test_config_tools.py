@@ -202,11 +202,11 @@ def conf_json_editor_reference():
                     }
                 }
             },
-            "cpu_count": 2,
+            "n_proc": 2,
             "folds": 5,
             "outputDir": "zuco-feature-wordEmbedding",
             "seed": 123,
-            "version": 23.0,
+            "run_id": 23.0,
             "wordEmbConfig": {
                 "glove-100": {
                     "chunked": 0,

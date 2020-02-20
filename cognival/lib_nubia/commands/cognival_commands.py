@@ -178,8 +178,8 @@ def run(configuration,
             process_and_write_results(result_proper, result_random, rand_emb, config_dict, options, id_, run_stats)
         write_options(config_dict, modality, run_stats)
 
-    # Increment version
-    config_dict['version'] += 1
+    # Increment run_id
+    config_dict['run_id'] += 1
 
     _save_config(config_dict, configuration, resources_path)
 
@@ -726,12 +726,12 @@ class Config:
 
 @command
 @argument('configuration', type=str, description='Name of configuration file', positional=True)
-@argument('version', type=int, description='Version to be aggregated. Defaults to 0, treated as last run (version - 1).')
+@argument('run_id', type=int, description='Run ID to be aggregated. Defaults to 0, treated as last run (run_id - 1).')
 @argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
 @argument('alpha', type=str, description='Alpha value')
 @argument('test', type=str, description='Significance test')
 def significance(configuration,
-                 version=0,
+                 run_id=0,
                  modalities=['eye-tracking', 'eeg', 'fmri'],
                  alpha=0.01,
                  test='Wilcoxon',
@@ -749,14 +749,14 @@ def significance(configuration,
     
     out_dir = Path(config_dict["PATH"]) / config_dict["outputDir"]
 
-    # Get mapping of previous version (current not yet executed)
-    if not version:
-        version = config_dict['version'] - 1
-    elif version >= config_dict['version']:
+    # Get mapping of previous run_id (current not yet executed)
+    if not run_id:
+        run_id = config_dict['run_id'] - 1
+    elif run_id >= config_dict['run_id']:
         if not quiet:
-            cprint('Version {} exceeds last version for which results were generated ({}), aborting ...'.format(version, config_dict['version'] - 1), 'red')
+            cprint('Run ID {} exceeds last run ID for which results were generated ({}), aborting ...'.format(run_id, config_dict['run_id'] - 1), 'red')
         return
-    if not version:
+    if not run_id:
         if not quiet:
             cprint('No experimental runs performed yet for configuration {}, aborting ...'.format(configuration), 'red')
         return
@@ -767,19 +767,19 @@ def significance(configuration,
         return
 
     try:
-        with open(out_dir / 'mapping_{}.json'.format(version)) as f:
+        with open(out_dir / 'mapping_{}.json'.format(run_id)) as f:
             mapping_dict = json.load(f)
     except FileNotFoundError:
         if not quiet:
-            cprint('No results for version {}, aborting ...'.format(version), 'red')
+            cprint('No results for run_id {}, aborting ...'.format(run_id), 'red')
         return
     
     for modality in modalities:
         if not quiet:
             cprint('\n[{}]\n'.format(modality.upper()), attrs=['bold'], color='green')
         experiments_dir = out_dir / 'experiments'
-        sig_test_res_dir = out_dir / 'sig_test_results' / modality / str(version)
-        report_dir = out_dir / 'reports' / modality / str(version)
+        sig_test_res_dir = out_dir / 'sig_test_results' / modality / str(run_id)
+        report_dir = out_dir / 'reports' / modality / str(run_id)
         
         # Erase previously generated report files and significance test files
         if os.path.exists(report_dir / '{}.json'.format(test)):
@@ -799,7 +799,7 @@ def significance(configuration,
                 for embed in embeddings:
                     experiment = '{}_{}_{}'.format(ds, feat, embed)
                     try:
-                        st_extract_results(version, modality, experiment, mapping_dict, experiments_dir, sig_test_res_dir)
+                        st_extract_results(run_id, modality, experiment, mapping_dict, experiments_dir, sig_test_res_dir)
                     except KeyError:
                         pass
 
@@ -858,11 +858,11 @@ def significance(configuration,
 
 @command
 @argument('configuration', type=str, description='Name of configuration file', positional=True)
-@argument('version', type=int, description='Version to be aggregated. Defaults to 0, treated as last run (version - 1).')
+@argument('run_id', type=int, description='Run ID to be aggregated. Defaults to 0, treated as last run (run_id - 1).')
 @argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
 @argument('test', type=str, description='Significance test')
 def aggregate(configuration,
-              version=0,
+              run_id=0,
               modalities=['eye-tracking', 'eeg', 'fmri'],
               test="Wilcoxon",
               quiet=False):    
@@ -877,14 +877,14 @@ def aggregate(configuration,
     if not config_dict:
         return
 
-    # Get mapping of previous version (current not yet executed)
-    if not version:
-        version = config_dict['version'] - 1
-    elif version >= config_dict['version']:
+    # Get mapping of previous run_id (current not yet executed)
+    if not run_id:
+        run_id = config_dict['run_id'] - 1
+    elif run_id >= config_dict['run_id']:
         if not quiet:
-            cprint('Version {} exceeds last version for which results were generated ({}), aborting ...'.format(version, config_dict['version'] - 1), 'red')
+            cprint('Run ID {} exceeds last run ID for which results were generated ({}), aborting ...'.format(run_id, config_dict['run_id'] - 1), 'red')
         return
-    if not version:
+    if not run_id:
         if not quiet:
             cprint('No experimental runs performed yet for configuration {}, aborting ...'.format(configuration), 'red')
         return
@@ -896,7 +896,7 @@ def aggregate(configuration,
             cprint('Output path {} associated with configuration "{}" does not exist. Have you already performed experimental runs?'.format(out_dir, configuration), "red")
         return
 
-    with open(out_dir / 'mapping_{}.json'.format(version)) as f:
+    with open(out_dir / 'mapping_{}.json'.format(run_id)) as f:
         mapping_dict = json.load(f)
 
     report_dir = out_dir / 'reports'
@@ -919,7 +919,7 @@ def aggregate(configuration,
     options_dicts = []
     for modality in modalities:
         try:
-            with open(Path(out_dir) / 'experiments' / modality / 'options_{}.json'.format(version)) as f:
+            with open(Path(out_dir) / 'experiments' / modality / 'options_{}.json'.format(run_id)) as f:
                 options_dict = json.load(f)
                 options_dicts.append(options_dict)
         except FileNotFoundError:
@@ -955,7 +955,7 @@ def aggregate(configuration,
         results = extract_results[modality](options_dict)
 
         significance = aggregate_significance[modality](report_dir,
-                                                        version,
+                                                        run_id,
                                                         test,
                                                         modality_to_experiments[modality])
         
@@ -979,13 +979,13 @@ def aggregate(configuration,
         df_cli.columns = [colored(col, attrs=['bold']) for col in df_cli.columns]
         df = pd.DataFrame(df_rows)
         df.set_index('Word embedding', drop=True, inplace=True)
-        df.to_json(report_dir / modality / str(version) / 'aggregated_scores.json')
+        df.to_json(report_dir / modality / str(run_id) / 'aggregated_scores.json')
         if not quiet:
             print(tabulate.tabulate(df_cli, headers="keys", tablefmt="fancy_grid", showindex=False))
 
 @command
 @argument('configuration', type=str, description='Name of configuration file', positional=True)
-@argument('version', type=int, description='Version to be aggregated. Defaults to 0, treated as last run (version - 1).')
+@argument('run_id', type=int, description='Run ID for which to generate a report. Defaults to 0, treated as last run (run_id - 1).')
 @argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
 @argument('alpha', type=str, description='Alpha value')
 @argument('test', type=str, description='Significance test')
@@ -994,7 +994,7 @@ def aggregate(configuration,
 @argument('pdf', type=bool, description='Generate pdf report.')
 @argument('open_pdf', type=bool, description='Open generated pdf report.')
 def report(configuration,
-           version=0,
+           run_id=0,
            modalities=['eye-tracking', 'eeg', 'fmri'],
            alpha=0.01,
            test="Wilcoxon",
@@ -1009,9 +1009,9 @@ def report(configuration,
     ctx = context.get_context()
     resources_path = ctx.resources_path
 
-    significance(configuration, version, modalities, alpha, test, quiet=True)
-    aggregate(configuration, version, modalities, test, quiet=True)
-    generate_report(configuration, version, resources_path, html, pdf, open_html, open_pdf)
+    significance(configuration, run_id, modalities, alpha, test, quiet=True)
+    aggregate(configuration, run_id, modalities, test, quiet=True)
+    generate_report(configuration, run_id, resources_path, html, pdf, open_html, open_pdf)
 
 @command
 def update_vocabulary():
