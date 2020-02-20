@@ -5,14 +5,14 @@ import numpy as np
 from pathlib import Path
 from handlers.plot_handler import plot_handler
 
-def update_version(configFile):
+def update_run_id(configFile):
     '''
-    Increments configuration version by 1
+    Increments configuration run_id by 1
     '''
     with open(configFile, 'r') as fileReader:
         config = json.load(fileReader)
 
-    config['version'] = config['version'] + 1
+    config['run_id'] = config['run_id'] + 1
 
     with open(configFile,'w') as fileWriter:
         json.dump(config,fileWriter, indent=4, sort_keys=True)
@@ -44,15 +44,15 @@ def write_results(config, log, word_error, history):
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
 
-    mapping_path = output_dir / 'mapping_{}.json'.format(config["version"])
-    title = log["cognitiveData"] + '_' + log["feature"] + '_' + log["wordEmbedding"] + '_' + str(config["version"])
-    path = Path(log["modality"]) / log["cognitiveData"] / log["feature"] / log["wordEmbedding"] / str(config["version"])
+    mapping_path = output_dir / 'mapping_{}.json'.format(config["run_id"])
+    title = log["cognitiveData"] + '_' + log["feature"] + '_' + log["wordEmbedding"] + '_' + str(config["run_id"])
+    path = Path(log["modality"]) / log["cognitiveData"] / log["feature"] / log["wordEmbedding"] / str(config["run_id"])
     rand_emb = None
     if not log["wordEmbedding"].startswith('random'):
         rand_emb = config['wordEmbConfig'][log['wordEmbedding']]['random_embedding']
     
         if rand_emb:
-            rand_path = Path(log["modality"]) / log["cognitiveData"] / log["feature"] / rand_emb / str(config["version"])
+            rand_path = Path(log["modality"]) / log["cognitiveData"] / log["feature"] / rand_emb / str(config["run_id"])
 
     # Mapping dict patch
     mapping_key = "{}_{}_{}".format(log["cognitiveData"], log["feature"], log["wordEmbedding"])
@@ -106,7 +106,7 @@ def write_options(config, modality, run_stats):
     if not os.path.exists(outputDir):
         os.mkdir(outputDir)
 
-    with open(outputDir / "experiments" / modality / "options_{}.json".format(str(config["version"])),'w') as fileWriter:
+    with open(outputDir / "experiments" / modality / "options_{}.json".format(str(config["run_id"])), 'w') as fileWriter:
         json.dump(run_stats, fileWriter, indent=4, sort_keys=True)
 
     return

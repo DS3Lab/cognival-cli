@@ -53,11 +53,11 @@ def config(tmpdir):
                 }
             }
         },
-        "cpu_count": 40,
+        "n_proc": 40,
         "folds": 5,
         "outputDir": str(tmpdir / 'output' / 'test_writeResults_results'),
         "seed": 123,
-        "version": 1.0,
+        "run_id": 1.0,
         "wordEmbConfig": {
             "glove-50": {
                 "chunk_number": 4,
@@ -187,12 +187,12 @@ def results():
 def all_runs():
     return {17.0: {'cognitiveData': 'zuco-eeg', 'feature': 'ALL_DIM', 'wordEmbedding': 'glove-50', 'AVERAGE_MSE': 0.008630327568270158}}
 
-def test_updateVersion(tmpdir, config):
+def test_update_run_id(tmpdir, config):
     path = tmpdir / 'output' / 'config.json'
-    update_version(path)
+    update_run_id(path)
     with open(path, 'r') as f:
         config = json.load(f)
-    assert config['version'] == 2.0
+    assert config['run_id'] == 2.0
 
 def test_write_results(tmpdir, config, results):
     logging, word_error, history = results

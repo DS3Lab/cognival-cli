@@ -18,7 +18,7 @@ of the configuration by executing:
 
 If the error message "Window too small ..." appears, resize the terminal window. Remove the placeholder for the PATH property and it
 will be automatically set to the CogniVal user directory (by default: $HOME/.cognival). Navigate the form with (Shift-)Tab and the
-content of fields with the cursor keys and adjust e.g. the number of CPU cores to be used. 
+content of fields with the cursor keys and adjust e.g. the number of parent process instantiated (reduce this number when experiencing problems).
 
 Using the following command, you can show general properties of the configuration, cognitive sources and embeddings associated
 with the configuration and per-source details (Note: not every embedding is necessarily associated with every cognitive source!). The demo configuration contains
