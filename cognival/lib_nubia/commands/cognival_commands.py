@@ -164,6 +164,10 @@ def run(configuration,
                                 cog_source_to_feature,
                                 n_jobs=processes,
                                 gpu_ids=gpu_ids)
+
+    if not results_dict:
+        cprint('\nAborted run ...', 'red')
+        return
     
     for modality, results in results_dict.items():
         run_stats = {}
@@ -1043,9 +1047,6 @@ def update_vocabulary():
                 nan_indices = is_nan_series.index[is_nan_series == True] + 1
                 nan_indices = nan_indices.tolist()
                 cprint('Warning - NaNs in (rows: {}): {}'.format(', '.join(map(str, list(nan_indices))), source_path), 'yellow')
-                # for nan_idx in nan_indices:
-                #     print(list(df.iloc[nan_idx - 1, :]))
-                #     breakpoint()
                 
             df.fillna('', inplace=True)
             new_vocab |= set(df['word'])

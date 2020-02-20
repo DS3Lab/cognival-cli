@@ -2,6 +2,7 @@ import collections
 import io
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='3'  #disable tensorflow debugging
+import signal
 import sys
 from multiprocessing import Pool
 from datetime import  datetime
@@ -82,79 +83,86 @@ def run_parallel(config_dict,
         cprint("Allocated GPU IDs: ", color="cyan", end='')
         print(', '.join(map(str, gpu_ids_list)))
     print()
-
+    original_sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
     pool = Pool(processes=proc)
+    signal.signal(signal.SIGINT, original_sigint_handler)
+
     async_results_proper = []
     async_results_random = []
     rand_embeddings = []
 
-    for option in options:
-        random_embeddings = option["random_embedding"]
-        rand_embeddings.append(random_embeddings)
-        result_proper = pool.apply_async(cog_evaluate.run_single, args=('proper',
-                                                                        config_dict,
-                                                                        option["wordEmbedding"],
-                                                                        option["cognitiveData"],
-                                                                        option["modality"],
-                                                                        option["feature"],
-                                                                        option["truncate_first_line"],
-                                                                        ','.join(map(str, gpu_ids_list))))
-        
-        result_random = []
-        if random_embeddings:
-            for random_embedding in config_dict["randEmbSetToParts"][random_embeddings]:
-                result_random.append(pool.apply_async(cog_evaluate.run_single, args=('random',
-                                                                                    config_dict,
-                                                                                    random_embedding,
-                                                                                    option["cognitiveData"],
-                                                                                    option["modality"],
-                                                                                    option["feature"],
-                                                                                    option["truncate_first_line"],
-                                                                                    ','.join(map(str, gpu_ids_list)))))
+    try:
+        for option in options:
+            random_embeddings = option["random_embedding"]
+            rand_embeddings.append(random_embeddings)
+            result_proper = pool.apply_async(cog_evaluate.run_single, args=('proper',
+                                                                            config_dict,
+                                                                            option["wordEmbedding"],
+                                                                            option["cognitiveData"],
+                                                                            option["modality"],
+                                                                            option["feature"],
+                                                                            option["truncate_first_line"],
+                                                                            ','.join(map(str, gpu_ids_list))))
             
-        async_results_proper.append(result_proper)
-        async_results_random.append(result_random)
+            result_random = []
+            if random_embeddings:
+                for random_embedding in config_dict["randEmbSetToParts"][random_embeddings]:
+                    result_random.append(pool.apply_async(cog_evaluate.run_single, args=('random',
+                                                                                        config_dict,
+                                                                                        random_embedding,
+                                                                                        option["cognitiveData"],
+                                                                                        option["modality"],
+                                                                                        option["feature"],
+                                                                                        option["truncate_first_line"],
+                                                                                        ','.join(map(str, gpu_ids_list)))))
+                
+            async_results_proper.append(result_proper)
+            async_results_random.append(result_random)
 
-    pool.close()
+        ar_monitoring = async_results_proper + [p for rand_list in async_results_random for p in rand_list]
 
-    ar_monitoring = async_results_proper + [p for rand_list in async_results_random for p in rand_list]
-
-    # Main loop
-    while True:
-        try:
-            all_ready = True
-            completed = 0
-            for ar in ar_monitoring:
-                if not ar.ready():
-                    all_ready = False
-                else:
-                    # Terminate pool if a process fails
-                    if not ar.successful():
-                        print(ar.get())
-                        pool.terminate()
-                        raise StopException
-                    else:
-                        completed += 1
-
-            if all_ready:
-                break
-
-            f = io.StringIO()
-            line_count = 0
+        # Main loop
+        while True:
             try:
-                with redirect_stdout(f):
-                    GPUtil.showUtilization()
-                s = f.getvalue()
-                line_count = len(s.split('\n'))
-                sys.stdout.write(colored(s, 'yellow'))
-                sys.stdout.write("\n")
-            except ValueError:
-                pass
-            animated_loading(completed, len(ar_monitoring))
-            sys.stdout.write("\033[F"*(line_count))
-            sys.stdout.flush()
-        except StopException:
-            break   
+                all_ready = True
+                completed = 0
+                for ar in ar_monitoring:
+                    if not ar.ready():
+                        all_ready = False
+                    else:
+                        # Terminate pool if a process fails
+                        if not ar.successful():
+                            print(ar.get())
+                            pool.terminate()
+                            raise StopException
+                        else:
+                            completed += 1
+
+                if all_ready:
+                    break
+
+                f = io.StringIO()
+                line_count = 0
+                try:
+                    with redirect_stdout(f):
+                        GPUtil.showUtilization()
+                    s = f.getvalue()
+                    line_count = len(s.split('\n'))
+                    sys.stdout.write(colored(s, 'yellow'))
+                    sys.stdout.write("\n")
+                except ValueError:
+                    pass
+                animated_loading(completed, len(ar_monitoring))
+                sys.stdout.write("\033[F"*(line_count))
+                sys.stdout.flush()
+            except StopException:
+                break   
+
+    except KeyboardInterrupt:
+        pool.terminate()
+        return
+    else:
+        pool.close()
 
     pool.join()
 

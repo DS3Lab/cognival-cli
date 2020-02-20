@@ -332,7 +332,7 @@ def resolve_cog_emb(modalities,
     all_cog = True if cognitive_sources and cognitive_sources[0] == 'all' else False
     all_emb = True if embeddings and embeddings[0] == 'all' else False
 
-    if not modalities and all_cog:
+    if (not modalities and all_cog) or modalities and modalities[0] == 'all':
         modalities = ['eye-tracking', 'fmri', 'eeg']
     
     if modalities:
@@ -498,7 +498,7 @@ def populate(configuration,
                 
     # Add embedding experiments dicts
     # Dynamic; check if installed
-    for csource in config_dict['cogDataConfig']:
+    for csource in cognitive_sources:
         for emb in embeddings:
             if not emb in config_dict['cogDataConfig'][csource]['wordEmbSpecifics']:
                 if not embedding_registry['proper'][emb]['installed']:

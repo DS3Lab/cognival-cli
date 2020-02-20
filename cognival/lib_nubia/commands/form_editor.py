@@ -62,6 +62,8 @@ class ConfigEditor():
             else:
                 cog_source_label = 'Cognitive source: {}'
             cognitive_sources = ", ".join(cognitive_sources)
+            if len(cognitive_sources) > 100:
+                cognitive_sources = cognitive_sources[:97] + '...'
             self.table_fields.append([Merge(Label(cog_source_label.format(cognitive_sources), style="fg:ansiyellow bold"), 2)])
         if embeddings:
             if len(embeddings) > 1:
@@ -69,6 +71,8 @@ class ConfigEditor():
             else:
                 embedding_label = 'Embedding: {}'
             embeddings = ", ".join(embeddings)
+            if len(cognitive_sources) > 107:
+                cognitive_sources = cognitive_sources[:104] + '...'
             self.table_fields.append([Merge(Label(embedding_label.format(embeddings), style="fg:ansiyellow bold"), 2)])
 
         self.table_buttons = [[Button('Save', handler=self.save), Button('Abort', handler=self.abort)]]
