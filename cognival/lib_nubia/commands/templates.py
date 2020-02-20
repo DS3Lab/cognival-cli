@@ -9,7 +9,7 @@ WORD_EMB_CONFIG_FIELDS = set(["chunk_number",
 MAIN_CONFIG_TEMPLATE = {
                         "PATH": None,
                         "cogDataConfig": {},
-                        "cpu_count": None,
+                        "n_proc": None,
                         "folds": None,
                         "outputDir": None,
                         "seed": None,

@@ -309,7 +309,7 @@
             }
         }
     },
-    "cpu_count": 2,
+    "n_proc": 2,
     "folds": 5,
     "outputDir": "results/demo",
     "seed": 42,

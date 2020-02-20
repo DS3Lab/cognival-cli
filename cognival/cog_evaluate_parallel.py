@@ -73,7 +73,7 @@ def run_parallel(config_dict,
     if n_jobs:
         proc = n_jobs
     else:
-        proc = min(os.cpu_count()-1, config_dict["cpu_count"])
+        proc = min(os.cpu_count()-1, config_dict["n_proc"])
     
     cprint('Number of processes: ', color='cyan', end='')
     print(proc)
