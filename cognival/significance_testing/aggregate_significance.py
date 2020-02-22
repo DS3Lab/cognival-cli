@@ -17,13 +17,9 @@ def aggregate_signi_fmri(result_dir,
             hypotheses = 0
             for experiment in data['hypotheses']:
                 if emb in experiment:
-                    print(experiment)
                     hypotheses += 1
                     if data['hypotheses'][experiment]['p_value'] < corrected_alpha:
                         significant += 1
-
-            print(hypotheses)
-            print(emb, significant, '/', hypotheses)
             significance[emb] = (str(significant) + '/' + str(hypotheses))
 
     return significance

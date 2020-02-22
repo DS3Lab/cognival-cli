@@ -14,6 +14,7 @@ EDITOR_DESCRIPTIONS = { "properties": {"cognival_path": "Path for storing user d
                                 "run_id": "Configuration run ID. Normally set to 1 when creating a new configuration file"
                                 },
                        "cognitive": {"dataset": "Name of the cognitive data set. See resources/cognitive_sources.json for a list of all available source",
+                                     "parent": "Name of parent data set in multi-hypothesis datasets (usually fMRI). Identical to the cognitive source name otherwise.",
                                      "modality": "Cognitive source modality (eeg, eye-tracking or fmri)",
                                      "features": "Comma-separated list of features to be evaluated. Must be set to ALL_DIM for all sources with only one feature, represented by all dimensions.",
                                      "type": "'single_output' for most multi-feature resources (typically eye-tracking) and 'multivariate_output' for most single-feature resources (typicall eeg, fmri)"

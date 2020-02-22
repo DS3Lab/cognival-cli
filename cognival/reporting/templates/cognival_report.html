@@ -111,7 +111,7 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
   <li><a href="#results_det" style='font-weight: bold;'>Results (Detail)</a>
   <ul class="toc_list">
     <li><a href="#results_det_proper">Proper embeddings</a></li>
-    {% if df_random %}
+    {% if df_random is not none %}
     <li><a href="#results_det_random">Random embeddings</a></li>
     {% endif %}
   </ul></li>
@@ -131,7 +131,9 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
     {% endfor %}
   </ul></li>
   {% endif %}
+  {% if training_history_plots is not none %}
   <li><a href="#training_history_plots" style='font-weight: bold;'>Training history plots</a></li>
+  {% endif %}
   </ul>
 </div>
 
@@ -179,10 +181,12 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
              <tr>
                   {% for key, value in row.to_dict().items() %}
                     {% if key == 'significant' %}
-                        {% if value %}
+                        {% if value is sameas true %}
                           <td class="signficant">{{ value }}</td>
-                        {% else %}
+                        {% elif value is sameas false  %}
                           <td class="not-significant">{{ value }}</td>
+                        {% else %}
+                          <td>{{ value }}</td>
                         {% endif %}
                     {% else %}
                         <td>{{ value }}</td>
@@ -193,7 +197,7 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
   
 </table>
 
-{% if df_random %}
+{% if df_random is not none %}
 <h3 id="results_det_random">Random embeddings</h3>
 
 {# Source: https://stackoverflow.com/a/34584551 #}
@@ -246,6 +250,7 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
 
 <p class="new-page">&nbsp;</p>
 
+{% if training_history_plots is not none %}
 <h2 id="training_history_plots"> Training history plots </h2>
 {# Source: https://schier.co/blog/html-templating-output-a-grid-in-a-single-loop #}
 {% if training_history_plots %}
@@ -256,6 +261,7 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
   </div>
   {% endfor %}
 </div>
+{% endif %}
 {% endif %}
 
 <!-- Source: https://www.w3schools.com/howto/howto_js_sort_table.asp -->

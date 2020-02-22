@@ -50,6 +50,7 @@ def run_parallel(config_dict,
                 truncate_first_line = config_dict["wordEmbConfig"][word_embedding]["truncate_first_line"]
                 option = {"cognitiveData": "empty", "feature": "empty", "wordEmbedding": "empty"}
                 option["cognitiveData"] = cognitive_data
+                option["cognitiveParent"] = config_dict["cogDataConfig"][cognitive_data]["parent"]
                 option["modality"] = config_dict["cogDataConfig"][cognitive_data]["modality"]
                 option["feature"] = feature
                 option["wordEmbedding"] = word_embedding
@@ -99,6 +100,7 @@ def run_parallel(config_dict,
                                                                             config_dict,
                                                                             option["wordEmbedding"],
                                                                             option["cognitiveData"],
+                                                                            option["cognitiveParent"],
                                                                             option["modality"],
                                                                             option["feature"],
                                                                             option["truncate_first_line"],
@@ -111,6 +113,7 @@ def run_parallel(config_dict,
                                                                                         config_dict,
                                                                                         random_embedding,
                                                                                         option["cognitiveData"],
+                                                                                        option["cognitiveParent"],
                                                                                         option["modality"],
                                                                                         option["feature"],
                                                                                         option["truncate_first_line"],

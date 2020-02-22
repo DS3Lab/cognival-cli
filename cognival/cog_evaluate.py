@@ -28,7 +28,7 @@ def handler(mode, config, word_embedding, cognitive_data, feature, truncate_firs
     return word_error, grids_result, mserrors
 
 
-def run_single(mode, config, word_embedding, cognitive_data, modality, feature, truncate_first_line, gpu_id):
+def run_single(mode, config, word_embedding, cognitive_data, cognitive_parent, modality, feature, truncate_first_line, gpu_id):
     '''
     Takes a configuration dictionary and keys for a word embedding and cognitive
     data source, runs model, logs results and prepares output for plotting.
@@ -73,6 +73,7 @@ def run_single(mode, config, word_embedding, cognitive_data, modality, feature, 
 
     logging["wordEmbedding"] = word_embedding
     logging["cognitiveData"] = cognitive_data
+    logging["cognitiveParent"] = cognitive_parent
     logging["modality"] = modality
     logging["feature"] = feature
 
