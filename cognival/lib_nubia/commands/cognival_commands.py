@@ -79,6 +79,7 @@ from .process import (filter_config,
 from .utils import (tupleit,
                    _open_config,
                    _open_cog_config,
+                   _backup_config,
                    _save_cog_config,
                    _save_config,
                    DisplayablePath,
@@ -211,7 +212,7 @@ class List:
         for entry in os.scandir(resources_path):
             if entry.name.endswith('config.json'):
                 with open(entry) as f:
-                    config = entry.name.split('_')[0]
+                    config = entry.name.rsplit('_', maxsplit=1)[0]
                     if not config == 'reference': 
                         config_dict = json.load(f)
                         general_params = {k:v for k, v in config_dict.items() if k not in ['cogDataConfig', 'wordEmbConfig', 'randEmbConfig', 'randEmbSetToParts']}
@@ -468,6 +469,7 @@ class Config:
         Edit configuration of single, multiple or all combinations of embeddings and cognitive sources.
         '''
         populate_conf = True
+        backed_up = False
         ctx = context.get_context()
         embedding_registry = ctx.embedding_registry
         resources_path = ctx.resources_path
@@ -531,11 +533,14 @@ class Config:
                                              cog_data_config_dict[csource],
                                              [],
                                              [csource],
-                                             singleton_params=['dataset', 'type', 'modality'],
+                                             singleton_params=['dataset', 'parent', 'type', 'modality'],
                                              skip_params=['wordEmbSpecifics'])
 
                 if config_patch:
                     cog_data_config_dict[csource].update(config_patch)
+                    if not backed_up:
+                        _backup_config(configuration, resources_path)
+                        backed_up = True
                     _save_config(main_conf_dict, configuration, resources_path)
                 else:
                     return
@@ -585,6 +590,9 @@ class Config:
                         return
                     else:
                         update_emb_config(emb, csource, cdict, config_patch, rand_embeddings, main_conf_dict, embedding_registry)
+                        if not backed_up:
+                            _backup_config(configuration, resources_path)
+                            backed_up = True
                         _save_config(main_conf_dict, configuration, resources_path)
             else:
                 config_template = copy.deepcopy(config_dicts[0])
@@ -613,6 +621,9 @@ class Config:
                     for (csource, emb), cdict in zip(cog_emb_pairs, config_dicts):
                         update_emb_config(emb, csource, cdict, config_patch, rand_embeddings, main_conf_dict, embedding_registry)
 
+                if not backed_up:
+                    _backup_config(configuration, resources_path)
+                    backed_up = True
                 _save_config(main_conf_dict, configuration, resources_path)
 
     @command
@@ -628,6 +639,7 @@ class Config:
         ctx = context.get_context()
         embedding_registry = ctx.embedding_registry
         resources_path = ctx.resources_path
+        backed_up = False
 
         main_conf_dict = _open_config(configuration, resources_path)
         cog_data_config_dict = _open_cog_config(resources_path)
@@ -720,7 +732,9 @@ class Config:
                     del cog_data_config_dict[csource]
                 else:
                     cprint ("Cognitive source {} not found in configuration {}, skipping ...".format(csource, configuration), 'yellow')
-    
+        if not backed_up:
+            _backup_config(configuration, resources_path)
+            backed_up = True
         _save_config(main_conf_dict, configuration, resources_path)
 
 
@@ -989,6 +1003,9 @@ def aggregate(configuration,
 @argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
 @argument('alpha', type=str, description='Alpha value')
 @argument('test', type=str, description='Significance test')
+@argument('average_multi_hypothesis', type=bool, description='Average multi-hypothesis (multi-feature or multi-subject) results.')
+@argument('include_history_plots', type=bool, description='Whether to include training history plots (note: significantly increases report size when number of experiments is large.')
+@argument('include_features', type=bool, description='Whether to include the feature column in detail tables.')
 @argument('html', type=bool, description='Generate html report.')
 @argument('open_html', type=bool, description='Open generated html report.')
 @argument('pdf', type=bool, description='Generate pdf report.')
@@ -998,6 +1015,9 @@ def report(configuration,
            modalities=['eye-tracking', 'eeg', 'fmri'],
            alpha=0.01,
            test="Wilcoxon",
+           average_multi_hypothesis=True,
+           include_history_plots=False,
+           include_features=True,
            html=True,
            open_html=False,
            pdf=False,
@@ -1011,7 +1031,16 @@ def report(configuration,
 
     significance(configuration, run_id, modalities, alpha, test, quiet=True)
     aggregate(configuration, run_id, modalities, test, quiet=True)
-    generate_report(configuration, run_id, resources_path, html, pdf, open_html, open_pdf)
+    generate_report(configuration,
+                    run_id,
+                    resources_path,
+                    average_multi_hypothesis,
+                    include_history_plots,
+                    include_features,
+                    html,
+                    pdf,
+                    open_html,
+                    open_pdf)
 
 @command
 def update_vocabulary():
@@ -1597,9 +1626,13 @@ class Install:
             
             cprint('✓ Generated random embeddings (Naming scheme: random-<dimensionality>-<no. seeds>-<#seed>-<seed_value>)', 'green')
         else:
-            if not embeddings in ctx.embedding_registry['random_multiseed'][rand_emb_name]['associated_with']:
-                cprint('Random embeddings of dimensionality {} already present, associating ...'.format(emb_dim), 'green')
-                ctx.embedding_registry['random_multiseed'][rand_emb_name]['associated_with'].append(embeddings)
+            try:
+                if not embeddings in ctx.embedding_registry['random_multiseed'][rand_emb_name]['associated_with']:
+                    cprint('Random embeddings of dimensionality {} already present, associating ...'.format(emb_dim), 'green')
+                    ctx.embedding_registry['random_multiseed'][rand_emb_name]['associated_with'].append(embeddings)
+            except KeyError:
+                cprint('Random embeddings of dimensionality {} present, but different fold count (no_emb). Use force to regenerate.'.format(emb_dim), 'yellow')
+                return
             else:
                 cprint('Random embeddings of dimensionality {} already present and associated.'.format(emb_dim), 'green')
                 return

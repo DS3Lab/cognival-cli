@@ -1,3 +1,4 @@
+import glob
 import json
 import subprocess
 import sys
@@ -14,7 +15,7 @@ NO_NVIDIA_GPUS = 'Note: No NVIDIA graphics cards found, leaving tensorflow at de
 def tupleit(t):
     return tuple(map(tupleit, t)) if isinstance(t, (list, tuple)) else t
 
-def _open_config(configuration, resources_path, quiet=False, protect_reference=True):
+def _open_config(configuration, resources_path, quiet=False, protect_reference=True, quiet_errors=False):
     if protect_reference and configuration == 'reference':
         cprint('The reference configuration cannot be edited! Use show-config to display its properties.', 'red')
         return
@@ -24,7 +25,8 @@ def _open_config(configuration, resources_path, quiet=False, protect_reference=T
         with open(config_path) as f:
             config_dict = json.load(f)
     except FileNotFoundError:
-        cprint('Error: Configuration file {}_config.json does not yet exist! Execute `edit-config create <filename> to create a new configuration.'.format(configuration), 'red')
+        if not quiet_errors:
+            cprint('Error: Configuration file {}_config.json does not yet exist! Execute `edit-config create <filename> to create a new configuration.'.format(configuration), 'red')
         return
     if not quiet:
         cprint('Opened configuration file {} ...'.format(str(config_path)), 'green')
@@ -68,6 +70,18 @@ def _save_config(config_dict, configuration, resources_path, quiet=False):
         json.dump(config_dict, f, indent=4)
     if not quiet:
         cprint('Saved configuration file {} ...'.format(str(config_path)), 'green')
+
+def _backup_config(configuration, resources_path):
+    config_dict = _open_config(configuration, resources_path, quiet=True, protect_reference=True, quiet_errors=True)
+    if not config_dict:
+        return
+    prev = [int(x.split('.')[-1]) for x in glob.glob(str(resources_path / '{}_config.bak.*'.format(configuration)))]
+    version = max(prev) + 1 if prev else 0
+    
+    config_path = resources_path / '{}_config.bak.{}'.format(configuration, version)
+
+    with open(config_path, 'w') as f:
+        json.dump(config_dict, f, indent=4)
 
 
 #Source: https://stackoverflow.com/a/49912639

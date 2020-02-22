@@ -58,6 +58,7 @@ def write_results(config, log, word_error, history):
     mapping_key = "{}_{}_{}".format(log["cognitiveData"], log["feature"], log["wordEmbedding"])
     map_dict_patch = {mapping_key: {'embedding': log["wordEmbedding"],
                                      'cognitive-source': log["cognitiveData"],
+                                     'cognitive-parent': log["cognitiveParent"],
                                      'modality': log["modality"],
                                      'feature': log["feature"],
                                      'proper': str(path),

@@ -37,6 +37,7 @@ from .utils import (_open_config,
                    _open_cog_config,
                    _check_cog_installed,
                    _check_emb_installed,
+                   _backup_config,
                    _save_config,
                    AbortException)
 
@@ -411,6 +412,7 @@ def _edit_config(config_dict, configuration):
             cprint('Prefixing outputDir with results ...', 'yellow')
             config_dict['outputDir'] = str(Path('results') / config_dict['outputDir'])
 
+        _backup_config(configuration, resources_path)
         _save_config(config_dict, configuration, resources_path)
     else:
         cprint("Aborting ...", "red")
