@@ -68,7 +68,8 @@ class NubiaCognivalPlugin(PluginInterface):
             "--visible-gpus",
             "-vg",
             type=str,
-            help="GPUs visible to Cognival, separated by comma. By default, all are visible."
+            default='-1',
+            help="GPUs visible to Cognival, separated by comma. By default, none are visible."
         )
 
         opts_parser.add_argument(
