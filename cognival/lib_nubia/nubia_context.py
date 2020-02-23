@@ -36,6 +36,7 @@ class NubiaCognivalContext(context.Context):
                 self.resources_path, self.resources_path = [None] * 4
 
         self.embedding_registry = None
+        self.open_config = None
         self.path2embeddings = collections.defaultdict(list)
         self._load_configuration()
         super().__init__()

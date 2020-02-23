@@ -60,17 +60,17 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
 
 ### Main commands and subcommands
 - config
+    - open: Opens configuration if it already exists or creates an empty configuration file and, when setting edit=True, the general parameters  of the specified configuration.
+            In the editor, default values are provided for most fields (cpu_count corresponds to number of CPU cores - 1) and reset
+            automatically for all empty fields upon saving. Configurations can be overwritten with the `overwrite` flag.
+
+      Call: `config open configuration=demo [overwrite=False] [edit=False]`
+
     - properties: Edit general CogniVal properties (user directory, etc.). This is mainly used to set the directory for user
                   data (embeddings, cognitive sources, configurations and results), in case this data should not reside
                   in $HOME (e.g. due to quota restrictions).
 
       Call: `config properties`
-
-    - open: Opens the general parameters of the specified configuration if it already exists or creates an empty configuration file.
-            In the editor, default values are provided for most fields (cpu_count corresponds to number of CPU cores - 1) and reset
-            automatically for all empty fields upon saving. Configurations can be overwritten with the `overwrite` flag.
-
-      Call: `config open configuration=demo [overwrite=False]`
 
     - show: Shows details of a configuration, associated cognitive sources and embeddings as well as experiments. The basic view shows
             general configuration properties (editable by `config open`) and lists cognitive sources and embeddings/random embeddings (without informations about how they are paired):
@@ -78,14 +78,14 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
             
         Experiment details can either be viewed for a single cognitive source or for the entire configuration (this can be quite verbose!):
 
-        `config show configuration=demo details=True`
-        `config show configuration=demo details=True cognitive-source=eeg_zuco`
+        `config show details=True`
+        `config show details=True cognitive-source=eeg_zuco`
             
-      Call: `config show configuration=demo [details=False] [cognitive-source=None] [hide-random=True]`
+      Call: `config show [details=False] [cognitive-source=None] [hide-random=True]`
 
     - experiment: Edits one or multiple experiments (arbitrary combinations of cognitive sources and embeddings). Allows to set grid search parameters for activations, batch size, epochs and layers (both number of layers and sizes per layer) as well as the cross-validation folds and validation split during training.
                   
-        Call: `config experiment configuration=demo [rand-embeddings=False] [modalities=None] [cognitive-sources=[all]] [embeddings= [all] [single-edit=False] [edit-cog-source-params=False]`
+        Call: `config experiment [rand-embeddings=False] [modalities=None] [cognitive-sources=[all]] [embeddings= [all] [single-edit=False] [edit-cog-source-params=False]`
         
         Parameter details:
         
@@ -104,16 +104,16 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
     - delete: Deletes experiments, cognitive sources (along with experiments) or the entire configuration.
     
       Deleting experiments(s):
-      `config delete configuration=demo cognitive-sources=[eeg_zuco] embeddings=[glove.6B.50]`
+      `config delete cognitive-sources=[eeg_zuco] embeddings=[glove.6B.50]`
 
       Deleting cognitive sources:
-      `config delete configuration=demo cognitive-sources=[eeg_zuco]`
-      `config delete configuration=demo modalities=[eeg_zuco]`
+      `config delete cognitive-sources=[eeg_zuco]`
+      `config delete modalities=[eeg_zuco]`
 
       Deleting configurations:
       `config delete demo`
 
-      Call: `config delete configuration=demo [modalities=None] [cognitive-sources=None] [embeddings=None]`
+      Call: `config delete [modalities=None] [cognitive-sources=None] [embeddings=None]`
 
 - install
     - cognitive-sources: Install the entire batch of preprocessed CogniVal cognitive sources or a custom cognitive source.
@@ -141,13 +141,13 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
     
 - run: Run all or a subset of experiments specified in a configuration. The parameters `embeddings`, `modalities` and `cognitive-sources` correspond to `config experiment`. Note that `cognitive-features` is a nested list that must specify features
 for all cognitive-sources. Each inner list must be specified as semicolon-separated string within quotes.
-    Call: `run configuration=demo [embeddings=[all]] [modalities=None] [cognitive-sources=[all]] [cognitive-features=None]`
+    Call: `run [embeddings=[all]] [modalities=None] [cognitive-sources=[all]] [cognitive-features=None]`
 
 - significance:  Compute the significance of results of an experimental run. Note that this requires that random embeddings have been
                  associated and evaluated during the run. Evaluates the results of the last run by default. Results are printed to the
                  shell and stored in the reports directory of the results path.
 
-    Call: `significance configuration=demo [version=0] [modalities=[eye-tracking, eeg, fmri]] [alpha=0.01 test=Wilcoxon]`
+    Call: `significance [version=0] [modalities=[eye-tracking, eeg, fmri]] [alpha=0.01 test=Wilcoxon]`
 
     Parameters:
     - version: Either 0 for the last experimental run or any version before the current version of the configuration.
@@ -157,7 +157,7 @@ for all cognitive-sources. Each inner list must be specified as semicolon-separa
 
 - aggregate: Aggregate the significance test results of an ecxperimental run. This will output how many of your hypotheses are accepted under the Bonferroni correction (see paper for detailed description).
      
-     Call: `aggregate configuration=demo [version=0] [modalities=[eye-tracking, eeg, fmri]] [test=Wilcoxon]`
+     Call: `aggregate [version=0] [modalities=[eye-tracking, eeg, fmri]] [test=Wilcoxon]`
      
      Parameters:
     - version: Either 0 for the last experimental run or any version before the current version of the configuration.
@@ -166,7 +166,7 @@ for all cognitive-sources. Each inner list must be specified as semicolon-separa
 
 - report: Perform significance testing and result aggregation, and generate a HTML or PDF report tabulating and plotting statistics.
      
-     Call: `significance configuration=demo [version=0] [modalities=[eye-tracking, eeg, fmri]] [alpha=0.01] [test=Wilcoxon] [html=True] [open-html=False] [pdf=False] [open-pdf=False]`
+     Call: `significance [version=0] [modalities=[eye-tracking, eeg, fmri]] [alpha=0.01] [test=Wilcoxon] [html=True] [open-html=False] [pdf=False] [open-pdf=False]`
 
      Parameters:
     - version: Either 0 for the last experimental run or any version before the current version of the configuration.
