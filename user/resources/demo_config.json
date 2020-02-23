@@ -3,6 +3,7 @@
     "cogDataConfig": {
         "eeg_zuco": {
             "dataset": "cognitive_sources/eeg/zuco_scaled.txt",
+	    "parent": "eeg_zuco",
             "modality": "eeg",
             "features": [
                 "ALL_DIM"

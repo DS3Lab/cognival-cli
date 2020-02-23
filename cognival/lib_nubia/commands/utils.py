@@ -9,7 +9,7 @@ from termcolor import cprint
 
 import GPUtil
 
-NO_NVIDIA_GPUS = 'Note: No NVIDIA graphics cards found, leaving tensorflow at default settings for CPU-only computation.'
+NO_NVIDIA_GPUS = 'Note: No NVIDIA GPUs found (set --visible-gpus CLI parameter if GPUs present), configuring tensorflow for CPU-only computation.'
 
 #http://stackoverflow.com/questions/1014352/how-do-i-convert-a-nested-tuple-of-tuples-and-lists-to-lists-of-lists-in-python
 def tupleit(t):
@@ -36,7 +36,7 @@ def _open_config(configuration, resources_path, quiet=False, protect_reference=T
 def _open_cog_config(resources_path):
     cog_sources_path = resources_path / 'cognitive_sources.json'
     with open(cog_sources_path) as f:
-        cognitive_sources = json.load(f)
+        sources= json.load(f)
     return cognitive_sources
 
 
