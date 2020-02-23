@@ -249,7 +249,7 @@ def generate_report(configuration,
 
                 results.append(result)
     # If no significance tests have been performed
-    else:
+    if not results:
         for experiment, result_json_path in experiment_to_path.items():
             with open(result_json_path) as f:
                 result_dict = json.load(f)
@@ -448,6 +448,7 @@ def generate_report(configuration,
     agg_modality_to_max_run_id = {}
 
     df_agg_dict = {}
+    df_agg_for_plot = None
     df_agg_for_plot_rows = []
 
     if agg_reports_dict:
@@ -485,20 +486,27 @@ def generate_report(configuration,
 
                 df_agg_for_plot_rows.extend([row_proper, row_random])
 
-        df_agg_for_plot = pd.DataFrame(df_agg_for_plot_rows)
-        max_y = df_agg_for_plot['Ø MSE'].max()
+        if df_agg_for_plot_rows:
+            df_agg_for_plot = pd.DataFrame(df_agg_for_plot_rows)
+            max_y = df_agg_for_plot['Ø MSE'].max()
 
-        df_list = [pd.DataFrame(y) for x, y in df_agg_for_plot.groupby('Modality', as_index=False)]
+            df_list = [pd.DataFrame(y) for x, y in df_agg_for_plot.groupby('Modality', as_index=False)]
 
-        sig_stats_plots = []
-        for df_agg_for_plot in df_list:
-            sig_stats_plots.append((df_agg_for_plot['Modality'].values[0], sig_bar_plot(df_agg_for_plot, max_y=max_y)))
-
-        # Generate stats over time plots if more that one run_id
-        if run_id > 1:
-            stats_over_time_plots = agg_stats_over_time_plots(agg_reports_dict)
+            sig_stats_plots = []
+            for df_agg_for_plot in df_list:
+                sig_stats_plots.append((df_agg_for_plot['Modality'].values[0], sig_bar_plot(df_agg_for_plot, max_y=max_y)))
+        
+            # Generate stats over time plots if more that one run_id
+            if run_id > 1:
+                try:
+                    stats_over_time_plots = agg_stats_over_time_plots(agg_reports_dict)
+                except ValueError:
+                    stats_over_time_plots = None
+            else:
+                stats_over_time_plots = None
         else:
-            stats_over_time_plots = None
+            sig_stats_plots = None
+            stats_over_time_plots =None
     else:
         sig_stats_plots = None
         stats_over_time_plots = None

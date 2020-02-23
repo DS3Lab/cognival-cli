@@ -36,7 +36,7 @@ def _open_config(configuration, resources_path, quiet=False, protect_reference=T
 def _open_cog_config(resources_path):
     cog_sources_path = resources_path / 'cognitive_sources.json'
     with open(cog_sources_path) as f:
-        sources= json.load(f)
+        cognitive_sources = json.load(f)
     return cognitive_sources
 
 
