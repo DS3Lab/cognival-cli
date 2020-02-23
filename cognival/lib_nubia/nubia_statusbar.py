@@ -27,15 +27,18 @@ class NubiaCognivalStatusBar(statusbar.StatusBar):
 
     def get_tokens(self):
         spacer = (Token.Spacer, "  ")
-        if context.get_context().verbose:
-            is_verbose = (Token.Warn, "ON")
-        else:
-            is_verbose = (Token.Info, "OFF")
-        return [
+        barlist = [
             (Token.Toolbar, "CogniVal"),
             spacer,
             (Token.Toolbar, "Interactive Mode"),
-            spacer,
-            (Token.Toolbar, "Verbose: "),
-            is_verbose,
         ]
+
+        config = context.get_context().open_config
+        if config:
+            open_config = (Token.Info, config)
+            barlist.extend([spacer,
+                            (Token.Toolbar, "Configuration:"),
+                            spacer,
+                            open_config])
+
+        return barlist

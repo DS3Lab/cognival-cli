@@ -4,6 +4,7 @@ import json
 import webbrowser
 import base64
 import os
+from copy import deepcopy
 from io import BytesIO
 from pathlib import Path
 
@@ -63,8 +64,7 @@ def sig_bar_plot(df, max_y=1.0):
             thisbar.set_color(xkcd_colors[idx])
             x = thisbar.get_x()
             y = thisbar.get_height() + 0.01
-            bar.ax.annotate('{:.2f} ({})'.format(thisbar.get_height(), sig_labels[idx]), (x, y))
-            
+            bar.ax.annotate('({})\n{:.2f}'.format(sig_labels[idx], thisbar.get_height()), (x, y))   
 
         # random embeddings (grey)
         for idx, thisbar in enumerate(patches[half_patch_num:]):
@@ -76,9 +76,10 @@ def sig_bar_plot(df, max_y=1.0):
         
         # Adjust the margins
         plt.subplots_adjust(bottom= 0.2, top = 0.8)
+        plt.xticks(rotation=45)
 
         with BytesIO() as figfile:
-            bar.fig.set_size_inches(8, 4)
+            bar.fig.set_size_inches(18, 8)
             plt.savefig(figfile, format='png', dpi=300, bbox_inches="tight")
             figfile.seek(0)  # rewind to beginning of file
             statsfig_b64 = base64.b64encode(figfile.getvalue()).decode('utf8')
@@ -237,15 +238,14 @@ def generate_report(configuration,
                     result_dict = json.load(f)
                 result = {'Experiment': experiment,
                         'Modality': MODALITIES_SHORT_TO_FULL[modality],
-                        'Ø MSE': '{:.5f}'.format(result_dict['AVERAGE_MSE']),
-                        'SD MSE': '{:.5f}'.format(np.std([x['MSE_PREDICTION'] for x in result_dict['folds']])),
+                        'Ø MSE': result_dict['AVERAGE_MSE'],
+                        'SD MSE': np.std([x['MSE_PREDICTION'] for x in result_dict['folds']]),
                         'Word embedding': result_dict['wordEmbedding'],
                         'Cognitive data': result_dict['cognitiveData'],
                         'Cognitive parent': result_dict['cognitiveParent'],
                         'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature'],
-                        'bonferroni_alpha':bonferroni_alpha,
+                        'bonferroni_alpha': bonferroni_alpha,
                         **sig_test_result}
-                result['p_value'] = '{:1.3e}'.format(result['p_value'])
 
                 results.append(result)
     # If no significance tests have been performed
@@ -255,8 +255,8 @@ def generate_report(configuration,
                 result_dict = json.load(f)
                 result = {'Experiment': experiment,
                         'Modality': MODALITIES_SHORT_TO_FULL[result_dict['modality']],
-                        'Ø MSE': '{:.5f}'.format(result_dict['AVERAGE_MSE']),
-                        'SD MSE': '{:.5f}'.format(np.std([x['MSE_PREDICTION'] for x in result_dict['folds']])),
+                        'Ø MSE': result_dict['AVERAGE_MSE'],
+                        'SD MSE': np.std([x['MSE_PREDICTION'] for x in result_dict['folds']]),
                         'Word embedding': result_dict['wordEmbedding'],
                         'Cognitive data': result_dict['cognitiveData'],
                         'Cognitive parent': result_dict['cognitiveParent'],
@@ -305,6 +305,14 @@ def generate_report(configuration,
                                                              .rename(columns={'Cognitive data': 'Hypotheses'})
         df_details_multi_subj_avg['Features'] = '-'
         df_details = pd.concat([df_details_atomic, df_details_feat_avg, df_details_multi_subj_avg])
+
+        df_details['Hypotheses'] = df_details['Hypotheses'].astype(int)
+        for col in ['Ø MSE', 'SD MSE', 'Bonferroni α', 'p']:
+            try:
+                df_details[col] = df_details[col].map(lambda x: '{:5.3f}'.format(x))
+            except KeyError:
+                pass
+        df_details['significant'] = df_details['significant'].astype(bool)
         df_details.reset_index(inplace=True)
 
     try:
@@ -365,8 +373,8 @@ def generate_report(configuration,
                 result_dict = json.load(f)
             result = {'Experiment': random_to_proper[experiment],
                       'Modality': MODALITIES_SHORT_TO_FULL[result_dict['modality']],
-                      'Ø MSE': '{:.5f}'.format(result_dict['AVERAGE_MSE']),
-                      'SD MSE': '{:.5f}'.format(np.std([x['MSE_PREDICTION'] for x in result_dict['folds']])),
+                      'Ø MSE': result_dict['AVERAGE_MSE'],
+                      'SD MSE': np.std([x['MSE_PREDICTION'] for x in result_dict['folds']]),
                       'Word embedding': result_dict['wordEmbedding'],
                       'Cognitive data': result_dict['cognitiveData'],
                       'Cognitive parent': result_dict['cognitiveParent'],
@@ -402,6 +410,12 @@ def generate_report(configuration,
                                                                 .rename(columns={'Cognitive data': 'Hypotheses'})
             df_random_multi_subj_avg['Features'] = '-'
             df_random = pd.concat([df_random_atomic, df_random_feat_avg, df_random_multi_subj_avg])
+            df_random['Hypotheses'] = df_random['Hypotheses'].astype(int)
+            for col in ['Ø MSE', 'SD MSE']:
+                try:
+                    df_random[col] = df_random[col].map(lambda x: '{:5.3f}'.format(x))
+                except KeyError:
+                    pass
             df_random.reset_index(inplace=True)
         
         if average_multi_hypothesis:
@@ -440,15 +454,22 @@ def generate_report(configuration,
             mod_report = mod_report_run_ids.get(run_id, None)
             if not mod_report:
                 continue
+            mod_report_formatted = deepcopy(mod_report)
+            for col in ['Ø MSE Baseline', 'Ø MSE Proper']:
+                for k, v in mod_report_formatted[col].items():
+                    mod_report_formatted[col][k] = '{:5.3f}'.format(v)
             agg_modality_to_max_run_id[modality] = run_id
-            df_agg = pd.DataFrame(mod_report)
+            df_agg = pd.DataFrame(mod_report_formatted)
+            df_agg_num = pd.DataFrame(mod_report)
 
             df_agg.reset_index(inplace=True)
             df_agg.rename(columns={'index': 'Word embedding'}, inplace=True)
+            df_agg_num.reset_index(inplace=True)
+            df_agg_num.rename(columns={'index': 'Word embedding'}, inplace=True)
             df_agg = df_agg[['Word embedding', 'Ø MSE Baseline', 'Ø MSE Proper', 'Significance']]
             df_agg_dict[MODALITIES_SHORT_TO_FULL[modality]] = df_agg
 
-            for _, row in df_agg.iterrows():
+            for _, row in df_agg_num.iterrows():
                 row_proper = {'Modality': MODALITIES_SHORT_TO_FULL[modality],
                             'Embedding': row['Word embedding'],
                             'Ø MSE': row['Ø MSE Proper'],

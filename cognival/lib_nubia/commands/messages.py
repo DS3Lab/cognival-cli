@@ -14,6 +14,11 @@ cognitive sources described in CogniVal: A Framework for Cognitive Word Embeddin
 The configuration 'demo' serves to demonstrate the functionality of this tool. In order to use it, open the general properties
 of the configuration by executing:
 
+> config open configuration=demo edit=True
+
+This command also sets the configuration to be the current one, applying all configuration-specific commands to it.
+Subsequently, in order to load the demo configuration without editing its properties, you can simply execute:
+
 > config open demo
 
 If the error message "Window too small ..." appears, resize the terminal window. Remove the placeholder for the PATH property and it
@@ -27,7 +32,7 @@ of matching dimensionality.
 
 Note that CogniVal commands with multiple arguments always require that the arguments be given explicitely:
 
-> config show configuration=demo details=True
+> config show details=True
 
 In order to execute to evaluation, both cognitive sources and embeddings need to be installed. CogniVal cognitive sources are installed by executing:
 
@@ -48,7 +53,7 @@ Random embeddings can be generated at any later point using the following comman
 
 The experiment details (Word embedding specifics) of the eeg_zuco-glove combination can be edited using: 
 
-> config experiment configuration=demo cognitive-sources=[eeg_zuco] embeddings=[glove.6B.50]
+> config experiment cognitive-sources=[eeg_zuco] embeddings=[glove.6B.50]
 
 The changes are automatically propagated to the associated random embeddings. Note that if a cognitive source or embedding is not yet
 part of the configuration, it is automatically populated from the reference configuration, which contains default parameters
@@ -60,11 +65,11 @@ previous command parametrizations can be auto-completed. Cursor keys allow to na
 
 The experiments can be run with the following command:
 
-> run demo
+> run
 
 Finally, a HTML report can be generated and viewed in the default browser by executing:
 
-> report configuration=demo open-html=True
+> report open-html=True
 
 Basic commands:
  - help: brief overview over all commands.

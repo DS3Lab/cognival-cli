@@ -110,7 +110,6 @@ NUM_BERT_WORKERS = 1
 COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1ouonaByYn2cnDAWihnQ3cGmMT6bJ4NaP'
 
 @command
-@argument("configuration", type=str, description="Configuration for experimental runs", positional=True)
 @argument("processes", type=int, description="No. of processes")
 @argument("n_gpus", type=int, description="No. of processes")
 @argument("embeddings", type=list, description="List of embeddings")
@@ -118,8 +117,7 @@ COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1ouonaByYn2cnDAWihnQ3cGmM
 @argument("cognitive_sources", type=list, description="List of cognitive sources")
 @argument("cognitive_features", type=list, description="List of cognitive features")
 @argument("random_baseline", type=bool, description="Compute random baseline(s) corresponding to specified embedding")
-def run(configuration,
-        embeddings=['all'],
+def run(embeddings=['all'],
         modalities=None,
         cognitive_sources=['all'],
         cognitive_features=None,
@@ -131,6 +129,10 @@ def run(configuration,
     '''
     ctx = context.get_context()
     resources_path = ctx.resources_path
+    configuration = ctx.open_config
+    if not configuration:
+        cprint('No configuration open, aborting ...', 'red')
+        return
     
     # max_gpus overrides n_gpus if smaller
     max_gpus = ctx.max_gpus if (ctx.max_gpus and (not n_gpus or (n_gpus and (ctx.max_gpus < n_gpus)))) else n_gpus if n_gpus else None
@@ -282,8 +284,8 @@ class List:
 class Config:
     """Generate or edit configuration files for experimental combinations (cog. data - embedding type)
     [Sub-commands]
-    - properties: Edit general CogniVal properties (user directory, etc.).
     - open: Opens existing or creates new configuration edits its general properties.
+    - properties: Edit general CogniVal properties (user directory, etc.).
     - show: Show details of a configuration and experiments.
     - experiment: Edit configuration of single, multiple or all combinations of embeddings
                   and cognitive sources of specified configuration. Populates default values from reference configuration.
@@ -325,49 +327,61 @@ class Config:
 
     @command
     @argument('configuration', type=str, description='Name of configuration', positional=True)
-    @argument('overwrite', type=str, description='Name of configuration')
-    def open(self, configuration, overwrite=False):
+    @argument('edit', type=bool, description='Open editor for general configuration properties.')
+    @argument('overwrite', type=bool, description='Overwrite configuration (if already existing).')
+    def open(self, configuration, edit=False, overwrite=False):
         '''
-        Creates empty configuration file from template.
+        Opens configuration or creates empty configuration file from template.
 ―
         '''
         ctx = context.get_context()
         resources_path = ctx.resources_path
-        create = False
 
-        if os.path.exists(resources_path / '{}_config.json'.format(configuration)):
-            if overwrite:
-                create = yes_no_dialog(title='Configuration {} already exists.'.format(configuration),
-                            text='You have specified to overwrite the existing configuration. Are you sure?').run()
-                if not create:
-                    cprint('Aborted ...', 'red')
-                    return
+        if edit or overwrite:
+            create = False
+
+            if os.path.exists(resources_path / '{}_config.json'.format(configuration)):
+                if overwrite:
+                    create = yes_no_dialog(title='Configuration {} already exists.'.format(configuration),
+                                text='You have specified to overwrite the existing configuration. Are you sure?').run()
+                    if not create:
+                        cprint('Aborted ...', 'red')
+                        return
+                else:
+                    create = False
             else:
-                create = False
-        else:
-            create = True
+                create = True
 
-        if create:
-            config_dict = copy.deepcopy(MAIN_CONFIG_TEMPLATE)
-            _edit_config(config_dict, configuration)
+            if create:
+                config_dict = copy.deepcopy(MAIN_CONFIG_TEMPLATE)
+                _edit_config(config_dict, configuration)
+            else:
+                config_dict = _open_config(configuration, resources_path)
+                if not config_dict:
+                    return
+                _edit_config(config_dict, configuration)
+            ctx.open_config = configuration
         else:
             config_dict = _open_config(configuration, resources_path)
             if not config_dict:
                 return
-            _edit_config(config_dict, configuration)    
+            ctx.open_config = configuration
     
     @command
-    @argument("configuration", type=str, description="Name of configuration", positional=True)
     @argument("details", type=bool, description="Whether to show details for all cognitive sources. Ignored when cognitive_source is specified.")
     @argument("cognitive_source", type=str, description="Cognitive source for which details should be shown")
     @argument("hide_random", type=str, description="Hide random embeddings from Word embedding specifics")
-    def show(self, configuration, details=False, cognitive_source=None, hide_random=True):
+    def show(self, details=False, cognitive_source=None, hide_random=True):
         '''
         Display an overview for the given configuration.
     ―
         '''
         ctx = context.get_context()
         resources_path = ctx.resources_path
+        configuration = ctx.open_config
+        if not configuration:
+            cprint('No configuration open, aborting ...', 'red')
+            return
 
         config_dict = _open_config(configuration, resources_path, quiet=True, protect_reference=False)
         if not config_dict:
@@ -450,7 +464,6 @@ class Config:
             print(formatted_table)
     
     @command
-    @argument('configuration', type=str, description='Name of configuration file', positional=True)
     @argument('modalities', type=list, description="Modalities of cognitive sources sources to install.")
     @argument('cognitive_sources', type=list, description="Either list of cognitive sources or ['all'] (default).")
     @argument('embeddings', type=list, description="Either list of embeddings or ['all'] (default)")
@@ -458,7 +471,6 @@ class Config:
     @argument('single_edit', type=bool, description='Whether to edit embedding specifics one by one or all at once.')
     @argument('edit_cog_source_params', type=bool, description='Whether to edit parameters of the specified cognitive sources.')
     def experiment(self,
-                   configuration,
                    rand_embeddings=False,
                    modalities=None,
                    cognitive_sources=['all'],
@@ -471,6 +483,11 @@ class Config:
         populate_conf = True
         backed_up = False
         ctx = context.get_context()
+        configuration = ctx.open_config
+        if not configuration:
+            cprint('No configuration open, aborting ...', 'red')
+            return
+
         embedding_registry = ctx.embedding_registry
         resources_path = ctx.resources_path
 
@@ -627,16 +644,19 @@ class Config:
                 _save_config(main_conf_dict, configuration, resources_path)
 
     @command
-    @argument('configuration', type=str, description='Name of configuration file', positional=True)
     @argument('modalities', type=list, description="Modalities of cognitive sources to delete.")
     @argument('cognitive_sources', type=list, description="Either list of cognitive sources or None (for all)")
     @argument('embeddings', type=list, description="Either list of embeddings or None (for all)")
-    def delete(self, configuration, modalities=None, cognitive_sources=None, embeddings=None):        
+    def delete(self, modalities=None, cognitive_sources=None, embeddings=None):        
         '''
         Remove cognitive sources or experiments (cog.source - embedding combinations) from specified configuration or
         delete entire configuration.
         '''
         ctx = context.get_context()
+        configuration = ctx.open_config
+        if not configuration:
+            cprint('No configuration open, aborting ...', 'red')
+            return
         embedding_registry = ctx.embedding_registry
         resources_path = ctx.resources_path
         backed_up = False
@@ -739,13 +759,11 @@ class Config:
 
 
 @command
-@argument('configuration', type=str, description='Name of configuration file', positional=True)
 @argument('run_id', type=int, description='Run ID to be aggregated. Defaults to 0, treated as last run (run_id - 1).')
 @argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
 @argument('alpha', type=str, description='Alpha value')
 @argument('test', type=str, description='Significance test')
-def significance(configuration,
-                 run_id=0,
+def significance(run_id=0,
                  modalities=['eye-tracking', 'eeg', 'fmri'],
                  alpha=0.01,
                  test='Wilcoxon',
@@ -755,6 +773,10 @@ def significance(configuration,
 ―
     '''
     ctx = context.get_context()
+    configuration = ctx.open_config
+    if not configuration:
+        cprint('No configuration open, aborting ...', 'red')
+        return
     resources_path = ctx.resources_path
 
     config_dict = _open_config(configuration, resources_path, quiet=quiet)
@@ -871,12 +893,10 @@ def significance(configuration,
             json.dump(dict(results), fp, indent=4)
 
 @command
-@argument('configuration', type=str, description='Name of configuration file', positional=True)
 @argument('run_id', type=int, description='Run ID to be aggregated. Defaults to 0, treated as last run (run_id - 1).')
 @argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
 @argument('test', type=str, description='Significance test')
-def aggregate(configuration,
-              run_id=0,
+def aggregate(run_id=0,
               modalities=['eye-tracking', 'eeg', 'fmri'],
               test="Wilcoxon",
               quiet=False):    
@@ -885,6 +905,10 @@ def aggregate(configuration,
 ―
     '''
     ctx = context.get_context()
+    configuration = ctx.open_config
+    if not configuration:
+        cprint('No configuration open, aborting ...', 'red')
+        return
     resources_path = ctx.resources_path
     config_dict = _open_config(configuration, resources_path, quiet=quiet)
 
@@ -998,7 +1022,6 @@ def aggregate(configuration,
             print(tabulate.tabulate(df_cli, headers="keys", tablefmt="fancy_grid", showindex=False))
 
 @command
-@argument('configuration', type=str, description='Name of configuration file', positional=True)
 @argument('run_id', type=int, description='Run ID for which to generate a report. Defaults to 0, treated as last run (run_id - 1).')
 @argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
 @argument('alpha', type=str, description='Alpha value')
@@ -1010,8 +1033,7 @@ def aggregate(configuration,
 @argument('open_html', type=bool, description='Open generated html report.')
 @argument('pdf', type=bool, description='Generate pdf report.')
 @argument('open_pdf', type=bool, description='Open generated pdf report.')
-def report(configuration,
-           run_id=0,
+def report(run_id=0,
            modalities=['eye-tracking', 'eeg', 'fmri'],
            alpha=0.01,
            test="Wilcoxon",
@@ -1027,10 +1049,16 @@ def report(configuration,
 ―
     '''
     ctx = context.get_context()
+    configuration = ctx.open_config
+    if not configuration:
+        cprint('No configuration open, aborting ...', 'red')
+        return
     resources_path = ctx.resources_path
 
-    significance(configuration, run_id, modalities, alpha, test, quiet=True)
-    aggregate(configuration, run_id, modalities, test, quiet=True)
+    cprint('Computing significance stats ...', 'yellow')
+    significance(run_id, modalities, alpha, test, quiet=True)
+    cprint('Aggregating ...', 'yellow')
+    aggregate(run_id, modalities, test, quiet=True)
     generate_report(configuration,
                     run_id,
                     resources_path,
