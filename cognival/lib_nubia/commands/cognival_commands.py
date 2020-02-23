@@ -370,7 +370,7 @@ class Config:
     @command
     @argument("details", type=bool, description="Whether to show details for all cognitive sources. Ignored when cognitive_source is specified.")
     @argument("cognitive_source", type=str, description="Cognitive source for which details should be shown")
-    @argument("hide_random", type=str, description="Hide random embeddings from Word embedding specifics")
+    @argument("hide_random", type=bool, description="Hide random embeddings from Word embedding specifics")
     def show(self, details=False, cognitive_source=None, hide_random=True):
         '''
         Display an overview for the given configuration.

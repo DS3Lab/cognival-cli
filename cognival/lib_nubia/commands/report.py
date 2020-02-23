@@ -312,7 +312,8 @@ def generate_report(configuration,
                 df_details[col] = df_details[col].map(lambda x: '{:5.3f}'.format(x))
             except KeyError:
                 pass
-        df_details['significant'] = df_details['significant'].astype(bool)
+        if 'significant' in df_details:
+            df_details['significant'] = df_details['significant'].astype(bool)
         df_details.reset_index(inplace=True)
 
     try:
