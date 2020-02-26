@@ -26,7 +26,7 @@ def _open_config(configuration, resources_path, quiet=False, protect_reference=T
             config_dict = json.load(f)
     except FileNotFoundError:
         if not quiet_errors:
-            cprint('Error: Configuration file {}_config.json does not yet exist! Execute `edit-config create <filename> to create a new configuration.'.format(configuration), 'red')
+            cprint('Error: Configuration file {}_config.json does not yet exist!'.format(configuration), 'red')
         return
     if not quiet:
         cprint('Opened configuration file {} ...'.format(str(config_path)), 'green')

@@ -337,35 +337,31 @@ class Config:
         ctx = context.get_context()
         resources_path = ctx.resources_path
 
-        if edit or overwrite:
-            create = False
+        create = False
 
-            if os.path.exists(resources_path / '{}_config.json'.format(configuration)):
-                if overwrite:
-                    create = yes_no_dialog(title='Configuration {} already exists.'.format(configuration),
-                                text='You have specified to overwrite the existing configuration. Are you sure?').run()
-                    if not create:
-                        cprint('Aborted ...', 'red')
-                        return
-                else:
-                    create = False
-            else:
-                create = True
-
-            if create:
-                config_dict = copy.deepcopy(MAIN_CONFIG_TEMPLATE)
-                _edit_config(config_dict, configuration)
-            else:
-                config_dict = _open_config(configuration, resources_path)
-                if not config_dict:
+        if os.path.exists(resources_path / '{}_config.json'.format(configuration)):
+            if overwrite:
+                create = yes_no_dialog(title='Configuration {} already exists.'.format(configuration),
+                            text='You have specified to overwrite the existing configuration. Are you sure?').run()
+                if not create:
+                    cprint('Aborted ...', 'red')
                     return
-                _edit_config(config_dict, configuration)
-            ctx.open_config = configuration
+            else:
+                create = False
+        else:
+            create = True
+
+        if create:
+            config_dict = copy.deepcopy(MAIN_CONFIG_TEMPLATE)
+            _edit_config(config_dict, configuration)
         else:
             config_dict = _open_config(configuration, resources_path)
             if not config_dict:
                 return
-            ctx.open_config = configuration
+            if edit:
+                _edit_config(config_dict, configuration)
+
+        ctx.open_config = configuration
     
     @command
     @argument("details", type=bool, description="Whether to show details for all cognitive sources. Ignored when cognitive_source is specified.")

@@ -7,6 +7,7 @@ Nora Hollenstein, Antonio de la Torre, Ce Zhang & Nicolas Langer. "CogniVal: A F
 - Python 3.7.4 or newer
 - For PDF generation of reports: wkhtmltopdf version 0.12.5 or newer (available from https://wkhtmltopdf.org/)
 - For manual browsing and viewing of user files: vim (any recent version)
+- For viewing (the textual part of) HTML reports on the CLI: links (CLI browser)
 - 16+ GB of RAM recommended
 - When using an NVIDIA GPU:
     - CUDA >= 10.1
@@ -147,29 +148,29 @@ for all cognitive-sources. Each inner list must be specified as semicolon-separa
                  associated and evaluated during the run. Evaluates the results of the last run by default. Results are printed to the
                  shell and stored in the reports directory of the results path.
 
-    Call: `significance [version=0] [modalities=[eye-tracking, eeg, fmri]] [alpha=0.01 test=Wilcoxon]`
+    Call: `significance [run_id=0] [modalities=[eye-tracking, eeg, fmri]] [alpha=0.01 test=Wilcoxon]`
 
     Parameters:
-    - version: Either 0 for the last experimental run or any version before the current version of the configuration.
+    - run_id: Either 0 for the last experimental run or any run_id before the current run_id of the configuration.
     - modalities: Modalities for which significane is to be termined
     - alpha: Alpha for significance computation
     - test: Significance test. Currently, only the Wilcoxon rank-sum test is implemented (implementation of the Wilcoxon test for NLP provided by [Dror et al. (2018)](https://github.com/rtmdrr/testSignificanceNLP)).
 
 - aggregate: Aggregate the significance test results of an ecxperimental run. This will output how many of your hypotheses are accepted under the Bonferroni correction (see paper for detailed description).
      
-     Call: `aggregate [version=0] [modalities=[eye-tracking, eeg, fmri]] [test=Wilcoxon]`
+     Call: `aggregate [run_id=0] [modalities=[eye-tracking, eeg, fmri]] [test=Wilcoxon]`
      
      Parameters:
-    - version: Either 0 for the last experimental run or any version before the current version of the configuration.
+    - run_id: Either 0 for the last experimental run or any run_id before the current run_id of the configuration.
     - modalities: Modalities for which significane is to be termined
     - test: Significance test. Currently, only the Wilcoxon rank-sum test is implemented
 
 - report: Perform significance testing and result aggregation, and generate a HTML or PDF report tabulating and plotting statistics.
      
-     Call: `significance [version=0] [modalities=[eye-tracking, eeg, fmri]] [alpha=0.01] [test=Wilcoxon] [html=True] [open-html=False] [pdf=False] [open-pdf=False]`
+     Call: `significance [run_id=0] [modalities=[eye-tracking, eeg, fmri]] [alpha=0.01] [test=Wilcoxon] [html=True] [open-html=False] [pdf=False] [open-pdf=False]`
 
      Parameters:
-    - version: Either 0 for the last experimental run or any version before the current version of the configuration.
+    - run_id: Either 0 for the last experimental run or any run_id before the current run_id of the configuration.
     - modalities: Modalities for which significane is to be termined
     - alpha: Alpha for significance computation
     - test: Significance test. Currently, only the Wilcoxon rank-sum test is implemented

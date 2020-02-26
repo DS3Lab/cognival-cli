@@ -43,8 +43,8 @@ def bert_to_text(vocabulary_file, model_dir, output_path, num_worker):
                         'the following command in a separate terminal and wait until the server reports "all set, ready to serve request!".\n'
                         'Note that bert-as-service creates temporary files in the working directory the command is executed in, which\n'
                         'must be removed manually after termination. The number of workers may be increased depending on available resources \n'
-                        'and ulimit restrictions.:\n'
-                        '\n bert-serving-start -model_dir {} -num_worker=1'.format(str(model_dir))).run()
+                        'and ulimit restrictions.\n\n'
+                        'bert-serving-start -model_dir={} -num_worker=1'.format(str(model_dir))).run()
 
 
     with open(vocabulary_file, 'r') as f:
