@@ -72,7 +72,7 @@ Finally, a HTML report can be generated and viewed in the default browser by exe
 > report open-html=True
 
 Basic commands:
- - help: brief overview over all commands.
+ - help: brief overview of all commands.
  - welcome: display this message using 'less'.
  - readme: display the README.md using 'less'.
  - clear: clear the interactive shell.
