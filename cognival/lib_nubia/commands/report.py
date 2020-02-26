@@ -85,7 +85,7 @@ def sig_bar_plot(df, max_y=1.0):
             statsfig_b64 = base64.b64encode(figfile.getvalue()).decode('utf8')
     return statsfig_b64
 
-def agg_stats_over_time_plots(agg_reports_dict):
+def agg_stats_over_time_plots(agg_reports_dict, run_id):
     '''
     Generates line plots with aggregate stats over time (run_ids)
     Ø MSE Baseline, Ø MSE Proper, Significance
@@ -93,33 +93,36 @@ def agg_stats_over_time_plots(agg_reports_dict):
     df_list = []
     modality_to_plots = {}
     for modality, run_ids in agg_reports_dict.items():
-        for run_id, agg_params in run_ids.items():
-            for idx in range(3):
-                df = pd.DataFrame.from_dict(agg_params)
-                df.reset_index(inplace=True)
-                df.rename(columns={'index':'Embeddings'}, inplace=True)
-                df['run_id'] = [run_id]*len(df)
-                df['Significance'] = df['Significance'].apply(lambda x: div(*map(int, x.split('/'))))
-                df['Embeddings'] = df['Embeddings'].apply(lambda x: '{}_{}'.format(x, idx))
-                df['Ø MSE Proper'] = df['Ø MSE Proper'].apply(lambda x: x * idx)
-                df_list.append(df)
+        for agg_run_id, agg_params in run_ids.items():
+            df = pd.DataFrame.from_dict(agg_params)
+            df.reset_index(inplace=True)
+            df.rename(columns={'index':'Embeddings'}, inplace=True)
+            df['run_id'] = [agg_run_id]*len(df)
+            df['Significance'] = df['Significance'].apply(lambda x: div(*map(int, x.split('/'))))
+            df_list.append(df)
         df = pd.concat(df_list)
+        df = df[df['run_id'] <= run_id]
 
         plots_b64 = []
         for measure in ["Ø MSE Baseline", "Ø MSE Proper", "Significance"]:
             plt.clf()
             plt.cla()
             plt.figure()
-            df_sub = df[['Embeddings', measure, 'run_id']]
+            
+            try:
+                df_sub = df[['Embeddings', measure, 'run_id']]
+            except KeyError:
+                continue
             df_sub_list = []
+
             for emb in df_sub['Embeddings'].unique():
                 df_subsub = df_sub[df_sub['Embeddings'] == emb].copy()
                 df_subsub.rename(columns={measure:emb}, inplace=True)
-                df_ver = df_subsub['run_id']
-                df_subsub = df_subsub[[emb]]
-                df_sub_list.append(df_subsub)
-            df_sub = pd.concat(df_sub_list + [df_ver], axis = 1)
-            plot = sns.lineplot(x='run_id', y='value', hue='variable', data=pd.melt(df_sub, ['run_id']))
+                df_subsub = df_subsub[[emb, 'run_id']]
+                df_sub_list.append(pd.melt(df_subsub, ['run_id']))
+            df_sub = pd.concat(df_sub_list, axis=0)
+            df_sub.reset_index(inplace=True, drop=True)
+            plot = sns.lineplot(x='run_id', y='value', hue='variable', data=df_sub)
             plot.set_title(measure)
 
             plot.locator_params(integer=True)
@@ -496,11 +499,11 @@ def generate_report(configuration,
             for df_agg_for_plot in df_list:
                 sig_stats_plots.append((df_agg_for_plot['Modality'].values[0], sig_bar_plot(df_agg_for_plot, max_y=max_y)))
         
-            # Generate stats over time plots if more that one run_id
+            # Generate stats over time plots if run_id > 1
             if run_id > 1:
                 try:
-                    stats_over_time_plots = agg_stats_over_time_plots(agg_reports_dict)
-                except ValueError:
+                    stats_over_time_plots = agg_stats_over_time_plots(agg_reports_dict, run_id)
+                except:
                     stats_over_time_plots = None
             else:
                 stats_over_time_plots = None

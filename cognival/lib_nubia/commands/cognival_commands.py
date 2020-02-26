@@ -224,6 +224,7 @@ class List:
         fgrid = tform.AlternatingRowGrid()
         cols = ['config'] + [k for k in general_param_dicts[0].keys() if not k == 'config']
         rows = [[colored(x['config'], attrs=['bold'], color='yellow')] + [v for k, v in x.items() if not k == 'config'] for x in general_param_dicts]
+        rows.sort(key=lambda x: x[0])
         formatted_table = tform.generate_table(rows=rows,
                                                 columns=cols,
                                                 grid_style=fgrid)
