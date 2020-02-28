@@ -16,7 +16,7 @@ def aggregate_signi_fmri(result_dir,
             significant = 0
             hypotheses = 0
             for experiment in data['hypotheses']:
-                if emb in experiment:
+                if experiment.endswith(emb):
                     hypotheses += 1
                     if data['hypotheses'][experiment]['p_value'] < corrected_alpha:
                         significant += 1
@@ -40,7 +40,7 @@ def aggregate_signi_eeg(result_dir,
             significant = 0
             hypotheses = 0
             for experiment in data['hypotheses']:
-                if emb in experiment:
+                if experiment.endswith(emb):
                     hypotheses += 1
                     if data['hypotheses'][experiment]['p_value'] < corrected_alpha:
                         significant += 1
@@ -67,7 +67,7 @@ def aggregate_signi_gaze(result_dir,
             significant = 0
             hypotheses = 0
             for experiment in data['hypotheses']:
-                if emb in experiment:
+                if experiment.endswith(emb):
                     hypotheses += 1
                     if data['hypotheses'][experiment]['p_value'] < corrected_alpha:
                         significant += 1
