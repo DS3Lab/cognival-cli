@@ -116,14 +116,14 @@ COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1ouonaByYn2cnDAWihnQ3cGmM
 @argument('modalities', type=list, description="Modalities of cognitive sources")
 @argument("cognitive_sources", type=list, description="List of cognitive sources")
 @argument("cognitive_features", type=list, description="List of cognitive features")
-@argument("random_baseline", type=bool, description="Compute random baseline(s) corresponding to specified embedding")
+@argument("baselines", type=bool, description="Compute random baseline(s) corresponding to specified embedding")
 def run(embeddings=['all'],
         modalities=None,
         cognitive_sources=['all'],
         cognitive_features=None,
         processes=None,
         n_gpus=None,
-        random_baseline=True):
+        baselines=True):
     '''
     Run parallelized evaluation of single, selected or all combinations of embeddings and cognitive sources.
     '''
@@ -152,7 +152,7 @@ def run(embeddings=['all'],
                                      modalities,
                                      cognitive_sources,
                                      cognitive_features,
-                                     random_baseline)
+                                     baselines)
     
     if not parametrization:
         return
@@ -192,8 +192,8 @@ class List:
     """List properties of configurations, embeddings and cognitive sources.
     [Sub-commands] 
     - configs: List available configurations (except reference configuration, which is read-only)
-    - embeddings: List available and installed default embeddings, generated random embeddings and installed custom embeddings
-    - cognitive-sources: List installed cognitive sources.
+    - embeddings: List available and imported default embeddings, generated random baselines and imported custom embeddings
+    - cognitive-sources: List imported cognitive sources.
 ―
     """
 
@@ -234,7 +234,7 @@ class List:
     @command
     def embeddings(self):
         """
-        List available and installed default embeddings as well as installed custom and random embeddings.
+        List available and imported default embeddings as well as imported custom and random baselines.
     ―
         """
         ctx = context.get_context()
@@ -248,14 +248,14 @@ class List:
             for key, value in ctx.embedding_registry[emb_type].items():
                 cprint(key, 'cyan', end=' '*(25-len(key)))
                 if value['installed']:
-                    cprint('installed', 'green', attrs=['bold'])
+                    cprint('imported', 'green', attrs=['bold'])
                 else:
-                    cprint('not installed', 'red', attrs=['bold'])
+                    cprint('not imported', 'red', attrs=['bold'])
 
     @command
     def cognitive_sources(self):
         """
-        List CogniVal cognitive sources (must be installed)
+        List CogniVal cognitive sources (must be imported)
     ―
         """
         ctx = context.get_context()
@@ -263,7 +263,7 @@ class List:
         cog_config = _open_cog_config(resources_path)
 
         if not cog_config['cognival_installed']:
-            cprint('CogniVal cognitive sources not installed, aborting ...', 'red')
+            cprint('CogniVal cognitive sources not imported, aborting ...', 'red')
             return
 
         for modality in cog_config['sources']:
@@ -367,8 +367,8 @@ class Config:
     @command
     @argument("details", type=bool, description="Whether to show details for all cognitive sources. Ignored when cognitive_source is specified.")
     @argument("cognitive_source", type=str, description="Cognitive source for which details should be shown")
-    @argument("hide_random", type=bool, description="Hide random embeddings from Word embedding specifics")
-    def show(self, details=False, cognitive_source=None, hide_random=True):
+    @argument("hide_baselines", type=bool, description="Hide random baselines from word embedding specifics")
+    def show(self, details=False, cognitive_source=None, hide_baselines=True):
         '''
         Display an overview for the given configuration.
     ―
@@ -443,7 +443,7 @@ class Config:
             print()
             cprint('Word embedding specifics', attrs=['bold', 'reverse'], color='cyan')
             word_emb_specifics = cog_source_config_dict['wordEmbSpecifics']
-            if hide_random:
+            if hide_baselines:
                 word_emb_specifics = {k:v for k, v in word_emb_specifics.items() if not k.startswith('random')}
 
             df = pd.DataFrame.from_dict(word_emb_specifics).transpose()
@@ -461,14 +461,14 @@ class Config:
             print(formatted_table)
     
     @command
-    @argument('modalities', type=list, description="Modalities of cognitive sources sources to install.")
+    @argument('modalities', type=list, description="Modalities of cognitive sources sources to include.")
     @argument('cognitive_sources', type=list, description="Either list of cognitive sources or ['all'] (default).")
     @argument('embeddings', type=list, description="Either list of embeddings or ['all'] (default)")
-    @argument('rand_embeddings', type=bool, description='Include random embeddings. Note that if random embeddings were included previously, changes are applied to them in any case.')
+    @argument('baselines', type=bool, description='Include random baselines. Note that if random baselines were included previously, changes are applied to them in any case.')
     @argument('single_edit', type=bool, description='Whether to edit embedding specifics one by one or all at once.')
     @argument('edit_cog_source_params', type=bool, description='Whether to edit parameters of the specified cognitive sources.')
     def experiment(self,
-                   rand_embeddings=False,
+                   baselines=False,
                    modalities=None,
                    cognitive_sources=['all'],
                    embeddings=['all'],
@@ -494,14 +494,14 @@ class Config:
         if not main_conf_dict:
             return
 
-        # Never add random embeddings if not yet present
-        if main_conf_dict['wordEmbConfig'] and rand_embeddings and not main_conf_dict['randEmbConfig']:
-            cprint('Cannot add random embeddings to existing configuration without random embeddings! Aborting ...', 'red')
+        # Never add random baselines if not yet present
+        if main_conf_dict['wordEmbConfig'] and baselines and not main_conf_dict['randEmbConfig']:
+            cprint('Cannot add random baselines to existing configuration without random baselines! Aborting ...', 'red')
             return
 
-        # Always add random embeddings if already present
+        # Always add random baselines if already present
         if main_conf_dict['randEmbConfig']:
-            rand_embeddings = True
+            baselines = True
         
         config_dicts = []
         cog_emb_pairs = []
@@ -565,14 +565,14 @@ class Config:
                     if not emb in cog_data_config_dict[csource]["wordEmbSpecifics"]:
                         cprint('Experiment {} / {} not yet registered, populating from reference config if possible ...'.format(csource, emb), 'yellow')
                         do_populate = True
-                    if rand_embeddings and (emb not in main_conf_dict["wordEmbConfig"] or not main_conf_dict["wordEmbConfig"][emb]['random_embedding']):
-                        cprint('Random embeddings not yet associated with {}, adding ...'.format(emb), 'yellow')
+                    if baselines and (emb not in main_conf_dict["wordEmbConfig"] or not main_conf_dict["wordEmbConfig"][emb]['random_embedding']):
+                        cprint('Random baselines not yet associated with {}, adding ...'.format(emb), 'yellow')
 
                     if do_populate:
                         try:
                             populate(configuration,
                                     main_conf_dict,
-                                    rand_embeddings=rand_embeddings,
+                                    rand_embeddings=baselines,
                                     cognitive_sources=[csource],
                                     embeddings=[emb],
                                     quiet=True)
@@ -603,7 +603,7 @@ class Config:
                     if config_patch is None:
                         return
                     else:
-                        update_emb_config(emb, csource, cdict, config_patch, rand_embeddings, main_conf_dict, embedding_registry)
+                        update_emb_config(emb, csource, cdict, config_patch, baselines, main_conf_dict, embedding_registry)
                         if not backed_up:
                             _backup_config(configuration, resources_path)
                             backed_up = True
@@ -633,7 +633,7 @@ class Config:
                     return
                 else:
                     for (csource, emb), cdict in zip(cog_emb_pairs, config_dicts):
-                        update_emb_config(emb, csource, cdict, config_patch, rand_embeddings, main_conf_dict, embedding_registry)
+                        update_emb_config(emb, csource, cdict, config_patch, baselines, main_conf_dict, embedding_registry)
 
                 if not backed_up:
                     _backup_config(configuration, resources_path)
@@ -714,7 +714,7 @@ class Config:
                     if emb in cog_data_config_dict[csource]["wordEmbSpecifics"]:
                         rand_emb = main_conf_dict["wordEmbConfig"][emb]["random_embedding"]
                         if rand_emb:
-                            cprint ("Deleting {}/{} and associated random embedding set {}/{}...".format(csource, emb, csource, rand_emb), 'green')
+                            cprint ("Deleting {}/{} and associated random baselines set {}/{}...".format(csource, emb, csource, rand_emb), 'green')
                         else:
                             cprint ("Deleting {}/{} ...".format(csource, emb), 'green')
                         del cog_data_config_dict[csource]["wordEmbSpecifics"][emb]
@@ -724,7 +724,7 @@ class Config:
 
                         # Delete embedding config and associated random embedding configs if not longer used by any cognitive source
                         if not any(emb in cog_data_dict["wordEmbSpecifics"] for cog_data_dict in cog_data_config_dict.values()):
-                            cprint("Embedding {} no longer used by any cognitive source, removing (and associated random embeddings if applicable and unused)".format(emb), 'yellow')
+                            cprint("Embedding {} no longer used by any cognitive source, removing (and associated random baselines if applicable and unused)".format(emb), 'yellow')
                             assoc_rand_emb = main_conf_dict["wordEmbConfig"][emb]["random_embedding"]
                             if assoc_rand_emb:
                                 for rand_emb_part in main_conf_dict["randEmbSetToParts"][assoc_rand_emb]:
@@ -972,7 +972,7 @@ def aggregate(run_id=0,
         if v['random_embedding']:
             emb_bl_pairs.append((k, v['random_embedding']))
         else:
-            cprint('Embedding {} has no associated random embeddings, no significance test possible, skipping ...'.format(k), 'yellow')
+            cprint('Embedding {} has no associated random baselines, no significance test possible, skipping ...'.format(k), 'yellow')
 
     try:
         embeddings, baselines = zip(*emb_bl_pairs)
@@ -1070,7 +1070,7 @@ def report(run_id=0,
 @command
 def update_vocabulary():
     """
-    Update the vocabulary based on all installed cognitive sources.
+    Update the vocabulary based on all imported cognitive sources.
     """
     ctx = context.get_context()
     resources_path = ctx.resources_path
@@ -1126,13 +1126,13 @@ def update_vocabulary():
 
 
 @command
-class Install:
-    """Install CogniVal cognitive vectors, default embeddings (proper and random), custom embeddings and
-    generate random embeddings
+class Import:
+    """Import CogniVal cognitive vectors, default embeddings, custom embeddings and
+    generate random baselines.
     [Sub-commands]
-    - cognitive-sources: Install the entire batch of preprocessed CogniVal and other cognitive sources.
-    - embeddings: Download and install a default embedding (by name) or custom embedding (from URL)
-    - random-embeddings: Generate and install random embeddings for specified proper embeddings.
+    - cognitive-sources: Import the entire batch of preprocessed CogniVal and other cognitive sources.
+    - embeddings: Download and import a default embedding (by name) or custom embedding (from URL)
+    - random-baselines: Generate and import random baselines for specified embeddings.
 ―
     """
 
@@ -1185,7 +1185,7 @@ class Install:
                 return 
         else:
             if not cog_config['cognival_installed']:
-                cprint('Please install CogniVal source before installing custom cognitive sources (run this command without argument).', 'yellow')
+                cprint('Please import CogniVal source before importing custom cognitive sources (run this command without argument).', 'yellow')
                 return
 
             # Specify path
@@ -1246,11 +1246,11 @@ class Install:
             cog_config['index'] = natsorted(list(set(index)))
         
             message_dialog(title='Cognitive source registration',
-                            text='Please ensure that the file has the following path and name after installation:\n\n'
+                            text='Please ensure that the file has the following path and name after import:\n\n'
                                  '{}/cognitive_sources/{}/{}.txt\n\n'
                                  'Afterwards, run the command "update-vocabulary" to update the evaluation vocabulary.'.format(str(cognival_path), modality, source)).run()
         
-        cprint("Completed installing cognitive sources ({})".format(source), "green")
+        cprint("Completed importing cognitive sources ({})".format(source), "green")
 
         paths = DisplayablePath.make_tree(basepath, max_len=10, max_depth=3)
 
@@ -1264,15 +1264,15 @@ class Install:
     @argument('force', type=bool, description='Force removal and download')
     def embeddings(self, x, force=False, log_only_success=False, are_set=False, associate_rand_emb=None):
         """
-        Download and install a default embedding (by name) or custom embedding (from URL)
+        Download and import a default embedding (by name) or custom embedding (from URL)
         """
         ctx = context.get_context()
         resources_path = ctx.resources_path
         embeddings_path = ctx.embeddings_path
 
         if not are_set:
-            associate_rand_emb = yes_no_dialog(title='Random embedding generation',
-                                               text='Do you wish to compare the embeddings with random embeddings of identical dimensionality? \n').run()
+            associate_rand_emb = yes_no_dialog(title='Random baseline generation',
+                                               text='Do you wish to compare the embeddings with random baselines of identical dimensionality? \n').run()
         local = False                                   
         
         # Download all embeddings
@@ -1282,23 +1282,23 @@ class Install:
                                are_set=True,
                                associate_rand_emb=associate_rand_emb)
 
-            # Download random embeddings
+            # Download random baselines
             if ctx.debug:
                 for rand_emb in ctx.embedding_registry['random_static']:
                     self.embeddings(rand_emb, log_only_success=True)
             return
 
-        # Download all static random embeddings
+        # Download all static random baselines
         elif x == 'all_random':
             if ctx.debug:
                 for rand_emb in ctx.embedding_registry['random_static']:
                     self.embeddings(rand_emb, log_only_success=True)
                 folder = ctx.embedding_registry['random_static'][rand_emb]['path']
             else:
-                cprint('Error: Random embeddings must be generated using "install random-embeddings"', 'red')
+                cprint('Error: random baselines must be generated using "import random-baselines"', 'red')
                 return
 
-        # Download a set of static random embeddings
+        # Download a set of static random baselines
         elif x.startswith('random'):
             if ctx.debug:
                 name = x
@@ -1306,7 +1306,7 @@ class Install:
                 path = 'random_static'
                 folder = ctx.embedding_registry['random_static'][name]['path']
             else:
-                cprint('Error: Random embeddings must be generated using "install random-embeddings"', 'red')
+                cprint('Error: random baselines must be generated using "import random-baselines"', 'red')
                 return
 
         # Download a set of default embeddings
@@ -1338,10 +1338,10 @@ class Install:
                                      'all of the following criteria are met:\n\n'
                                      '- The passed value is either a local path or an URL representing a direct HTTP(S) link to the file or a Google Drive link. \n'
                                      '- The file is either a ZIP archive, gzipped file or usable as-is (uncompressed).\n\n'
-                                     'Other modes of hosting and archival are currently NOT supported and will cause the installation to fail.\n'
-                                     'In those instances, please manually download and extract the files in the "embeddings"'
-                                     'directory and \nregister them in "resources/embedding_registry.json"\n\n'
-                                     'Please enter a short name for the embeddings:'.format(url),
+                                     'Other modes of hosting and archival are currently NOT supported and will cause the import to fail.\n'
+                                     'In those instances, please manually download and extract the files in the {} '
+                                     'directory and \nregister them in {}/embedding_registry.json\n\n'
+                                     'Please enter a short name for the embeddings:'.format(url, str(embeddings_path), str(resources_path)),
                                 ).run()
             if name is None:
                 cprint("Aborting ...", "red")
@@ -1353,8 +1353,8 @@ class Install:
 
             main_emb_file = input_dialog(title='Embedding registration',
                         text='Specify the main embedding file. This information is usually available from the supplier.\n'
-                             'If not available, you can leave this information empty and manually edit resources/embeddings2url.json\n'
-                             'after the installation.').run()
+                             'If not available, you can leave this information empty and manually edit {}/embeddings2url.json\n'
+                             'after the import.'.format(str(resources_path))).run()
 
             if main_emb_file is None:
                 cprint("Aborting ...", "red")
@@ -1450,7 +1450,7 @@ class Install:
         # Check if embeddings already installed
         if x in ctx.embedding_registry['proper'] and ctx.embedding_registry['proper'][x]['installed'] and not force:
             if not log_only_success:
-                cprint('Embedding {} already installed. Use "force" to override'.format(name), 'yellow')
+                cprint('Embedding {} already imported. Use "force" to override'.format(name), 'yellow')
             return
 
         if url:
@@ -1464,9 +1464,9 @@ class Install:
                 pass
 
             if local:
-                cprint('Copying and installing:', 'yellow', end =' ') 
+                cprint('Copying and importing:', 'yellow', end =' ') 
             else:
-                cprint('Downloading and installing:', 'yellow', end =' ') 
+                cprint('Downloading and importing:', 'yellow', end =' ') 
             cprint('{}'.format(name), 'yellow', attrs=['bold'])
             # Google Drive downloads
             if 'drive.google.com' in url:
@@ -1555,10 +1555,10 @@ class Install:
                       truncate_first_line=ctx.embedding_registry['proper'][name]["truncate_first_line"])
                 ctx.embedding_registry['proper'][name]["truncate_first_line"] = False
 
-            cprint('Finished installing embedding "{}"'.format(name), 'green')
+            cprint('Finished importing embedding "{}"'.format(name), 'green')
 
             if associate_rand_emb:                                                
-                self.random_embeddings(name)
+                self.random_baselines(name)
         
         if name.startswith('random'):
             ctx.embedding_registry['random_static'][name]['installed'] = True
@@ -1570,20 +1570,20 @@ class Install:
     @command()
     @argument('embeddings',
             type=str,
-            description='Name of embeddings that have been registered (not necessarily installed).',
+            description='Name of embeddings that have been registered (not necessarily imported).',
             positional=True)
-    @argument('no_embeddings',
+    @argument('num_baselines',
             type=int,
-            description='Number of random embeddings to be generated (and across which performance will later be averaged).')
+            description='Number of random baselines to be generated (and across which performance will later be averaged).')
     @argument('seed_func',
             type=str,
             description='Seed generation function. Currently only "exp_e_floored" (np.floor((k+i)**np.e))) supported.')
     @argument('force',
             type=str,
-            description='Force regeneration and association of random embeddings with specified embeddings.')
-    def random_embeddings(self, embeddings, no_embeddings=10, seed_func='exp_e_floored', force=False):
+            description='Force regeneration and association of random baselines with specified embeddings.')
+    def random_baselines(self, embeddings, num_baselines=10, seed_func='exp_e_floored', force=False):
         """
-        Generate and install random embeddings for specified proper embeddings.
+        Generate and import random baselines for specified embeddings.
     ―
         """
         ctx = context.get_context()
@@ -1597,7 +1597,7 @@ class Install:
         ctx = context.get_context()
         emb_properties = ctx.embedding_registry['proper'].get(embeddings, None)
         if not emb_properties:
-            cprint('✗ No specifications set for embeddings {}! Install custom embeddings or register them manually. Aborting ...'. format(embeddings), 'red')
+            cprint('✗ No specifications set for embeddings {}! Import custom embeddings or register them manually. Aborting ...'. format(embeddings), 'red')
             return
 
         emb_dim = emb_properties['dimensions']
@@ -1609,24 +1609,24 @@ class Install:
 
         # Obtain seed values from non-linear function
         if seed_func == 'exp_e_floored':
-            seeds = [int(np.floor((k+1)**np.e)) for k in range(no_embeddings)]
+            seeds = [int(np.floor((k+1)**np.e)) for k in range(num_baselines)]
         else:
             raise NotImplementedError('Only floor(x**e) (exp_e_floored) currently implemented')
         
         rand_emb_name = 'random-{}-{}'.format(emb_dim, len(seeds))
         
-        # Generate random embeddings if not already present
+        # Generate random baselines if not already present
         if emb_dim not in available_dims or force:
             if emb_dim in available_dims:
-                cprint('Replacing existing random embeddings of dimensionality {}, generating ...'.format(emb_dim), 'yellow')
+                cprint('Replacing existing random baselines of dimensionality {}, generating ...'.format(emb_dim), 'yellow')
             else:
-                cprint('No pre-existing random embeddings of dimensionality {}, generating ...'.format(emb_dim), 'yellow')
+                cprint('No pre-existing random baselines of dimensionality {}, generating ...'.format(emb_dim), 'yellow')
 
             with open(resources_path / 'standard_vocab.txt') as f:
                 vocabulary = f.read().split('\n')
-            cprint('Generating {}-dim. random embeddings using standard CogniVal vocabulary ({} tokens)...'.format(emb_dim, len(vocabulary)), 'yellow')
+            cprint('Generating {}-dim. random baselines using standard CogniVal vocabulary ({} tokens)...'.format(emb_dim, len(vocabulary)), 'yellow')
 
-            # Generate random embeddings
+            # Generate random baselines
             rand_emb_keys = ['{}_{}_{}'.format(rand_emb_name, idx+1, seed) for idx, seed in enumerate(seeds)]
             rand_emb_path = Path('random_multiseed') / '{}_dim'.format(emb_dim) / '{}_seeds'.format(len(seeds))
             fullpath = embeddings_path / rand_emb_path
@@ -1649,20 +1649,20 @@ class Install:
             for rand_emb_key in rand_emb_keys:
                 ctx.embedding_registry['random_multiseed'][rand_emb_name]['embedding_parts'][rand_emb_key] = '{}.txt'.format(rand_emb_key)
             
-            cprint('✓ Generated random embeddings (Naming scheme: random-<dimensionality>-<no. seeds>-<#seed>-<seed_value>)', 'green')
+            cprint('✓ Generated random baselines (Naming scheme: random-<dimensionality>-<no. seeds>-<#seed>-<seed_value>)', 'green')
         else:
             try:
                 if not embeddings in ctx.embedding_registry['random_multiseed'][rand_emb_name]['associated_with']:
-                    cprint('Random embeddings of dimensionality {} already present, associating ...'.format(emb_dim), 'green')
+                    cprint('Random baselines of dimensionality {} already present, associating ...'.format(emb_dim), 'green')
                     ctx.embedding_registry['random_multiseed'][rand_emb_name]['associated_with'].append(embeddings)
             except KeyError:
-                cprint('Random embeddings of dimensionality {} present, but different fold count (no_emb). Use force to regenerate.'.format(emb_dim), 'yellow')
+                cprint('Random baselines of dimensionality {} present, but different fold count (no_emb). Use force to regenerate.'.format(emb_dim), 'yellow')
                 return
             else:
-                cprint('Random embeddings of dimensionality {} already present and associated.'.format(emb_dim), 'green')
+                cprint('Random baselines of dimensionality {} already present and associated.'.format(emb_dim), 'green')
                 return
         
-        # Associate random embeddings with proper embeddings
+        # Associate random baselines with embeddings
         emb_properties['random_embedding'] = rand_emb_name
         ctx.save_configuration()
 

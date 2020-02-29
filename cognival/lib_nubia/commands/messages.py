@@ -34,13 +34,13 @@ Note that CogniVal commands with multiple arguments always require that the argu
 
 > config show details=True
 
-In order to execute to evaluation, both cognitive sources and embeddings need to be installed. CogniVal cognitive sources are installed by executing:
+In order to execute to evaluation, both cognitive sources and embeddings need to be imported. CogniVal cognitive sources are imported by executing:
 
-> install cognitive-sources 
+> import cognitive-sources 
 
-GloVe embeddings are installed by executing (note that this installs GloVe embeddings for all dimensionalities, as they are provided in one archive):
+GloVe embeddings are imported by executing (note that this imports GloVe embeddings for all dimensionalities, as they are provided in one archive):
 
-> install embeddings glove.6B.50
+> import embeddings glove.6B.50
 
 A prompt will be shown, asking wether the user wants to perform a random embeddings comparison. Make sure to respond with "Yes" (default).
 Note that random embedding generation greedily uses at most n-1 of n available CPU cores (up to 10 with default parametrization)
@@ -49,7 +49,7 @@ to improve robustness.
 
 Random embeddings can be generated at any later point using the following command. Regeneration requires that force=True is added:
 
-> install random-embeddings glove.6B.50
+> import random-baselines glove.6B.50
 
 The experiment details (Word embedding specifics) of the eeg_zuco-glove combination can be edited using: 
 

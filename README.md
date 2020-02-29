@@ -5,7 +5,7 @@ Nora Hollenstein, Antonio de la Torre, Ce Zhang & Nicolas Langer. "CogniVal: A F
 
 ## Requirements
 - Python 3.7.4 or newer
-- For PDF generation of reports: wkhtmltopdf version 0.12.5 or newer (available from https://wkhtmltopdf.org/)
+- For PDF generation of reports: wkhtmltopdf version 0.12.5 or newer (available from https://wkhtmltopdf.org/. Note: At the time of writing this README, the version available from Ubuntu repositories is outdated.)
 - For manual browsing and viewing of user files: vim (any recent version)
 - For viewing (the textual part of) HTML reports on the CLI: links (CLI browser)
 - 16+ GB of RAM recommended
@@ -14,15 +14,16 @@ Nora Hollenstein, Antonio de la Torre, Ce Zhang & Nicolas Langer. "CogniVal: A F
     - CuDNN >= 7.6.5
     - NVIDIA drivers >= 418.39 (can be determined with nvidia-smi)
     - NVIDIA SMI (for scheduling and monitoring)
+- Python requirements are specified in requirements.txt (must be manually installed through pip when installing via `python setup.py install`). When installing a tar.gz release via pip, requirements are installed automatically.
 
 ## A framework for cognitive word embedding evaluation
 The tool generates and fits a neural network regression to predict cognitive data such as fMRI, eye-tracking and EEG (corpora mapping words to cognitive signals) from word embedding inputs.
-Thus, it allows determining the predictive power of sets of of word embeddings with respect to cognitive sources. Currently supported modalities are **eye-tracking**, **electroencephalography (EEG)** and **functional magnetic resonance imaging (fMRI)**. Furthermore, the significance of the prediction can be estimated by comparing a set of embeddings with n-fold random embeddings of identical dimensionality and computing statistic significance using the Wilcoxon signed-rank test with conservative Bonferroni correction, counteracting the multiple hypotheses problem.
+Thus, it allows determining the predictive power of sets of of word embeddings with respect to cognitive sources. Currently supported modalities are **eye-tracking**, **electroencephalography (EEG)** and **functional magnetic resonance imaging (fMRI)**. Furthermore, the significance of the prediction can be estimated by comparing a set of embeddings with n-fold random baselines of identical dimensionality and computing statistic significance using the Wilcoxon signed-rank test with conservative Bonferroni correction, counteracting the multiple hypotheses problem.
 
 ## Terminology
 - Embeddings: Word embeddings in textual format, with a single vector per word. Context-sensitive embedding types like BERT and ELMo thus require preprocessing
 - Cognitive source: per-word cognitive signal vectors (e.g. EEG electrodes or eye-tracking statistics)
-- Experiment: Combination of a set of embeddings, associated n-fold set of random embeddings and a cognitive source.
+- Experiment: Combination of a set of embeddings, associated n-fold set of random baselines and a cognitive source.
 
 In the cases of fMRI and EEG, we want to predict a vector representing the data and not a specific feature.
 
@@ -41,12 +42,18 @@ The CogniVal interactive shell allows:
 - Generating an interactive HTML or static PDF report, showing both aggregate and detail statistics in tabular and plot form,
   as well as plots visualizing the training history and history of key statistics over different experimental runs.
 
+## Execution and file paths
+
+After installation, the tool is globally available and can be started as interactive shell, by executing `cognival`. Alternatively, commands not relying on a state (i.e. requiring an active configuration, which is stored in the session) can be run as command-line parameters, e.g. `cognival list configs`.
+
+User files are stored in `$HOME/.cognival` by default. This can be reconfigured (e.g. when there are space limitations for the home directory on a shared server).  The path of the user files is specified in a global configuration file, which is stored in the site-packages directory of the virtual environment. The command history is stored in `$HOME/.cognival_history`.
+
 ## Overview of commands
 `<Tab>` shows all available commands, subcommands and parameters at the given position, as well as argument types and default values where applicable.
 By pressing `<Left>`, previously executed commands can be auto-completed. When a command is executed with only one argument, it can be
 provided in a positional manner: `command argument`. Otherwise, each parameter must be named: `command parameter1=argument2 parameter2=argument2`.
 
-Note that the syntax is a simplified version of Python's, as strings and ints can be provided without quotes (except for URLs in the context of custom embedding installation), however lists must be enclosed in brackets: `list-param=[value1, value2]`. List parameters require lists even for single values (`list-param=[value]`) and the special value `all`, indicating all possbile values (`list-param=[all]`).
+Note that the syntax is a simplified version of Python's, as strings and ints can be provided without quotes (except for URLs in the context of custom embedding import), however lists must be enclosed in brackets: `list-param=[value1, value2]`. List parameters require lists even for single values (`list-param=[value]`) and the special value `all`, indicating all possbile values (`list-param=[all]`).
 
 ### Basic commands
 - clear: Clears the shell
@@ -57,7 +64,7 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
 - quit / exit: Terminates the shell session.
 - example-calls: Lists example calls for a single or all commands.
 - browse: Browses the user directory and view files using vim, per default in read-only mode. (requires that vim is installed).
-- update-vocabulary: Scans all installed cognitive sources and updates the vocabulary file.
+- update-vocabulary: Scans all imported cognitive sources and updates the vocabulary file.
 
 ### Main commands and subcommands
 - config
@@ -74,7 +81,7 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
       Call: `config properties`
 
     - show: Shows details of a configuration, associated cognitive sources and embeddings as well as experiments. The basic view shows
-            general configuration properties (editable by `config open`) and lists cognitive sources and embeddings/random embeddings (without informations about how they are paired):
+            general configuration properties (editable by `config open`) and lists cognitive sources and embeddings/random baselines (without information about how they are paired):
             `config show demo`
             
         Experiment details can either be viewed for a single cognitive source or for the entire configuration (this can be quite verbose!):
@@ -86,15 +93,15 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
 
     - experiment: Edits one or multiple experiments (arbitrary combinations of cognitive sources and embeddings). Allows to set grid search parameters for activations, batch size, epochs and layers (both number of layers and sizes per layer) as well as the cross-validation folds and validation split during training.
                   
-        Call: `config experiment [rand-embeddings=False] [modalities=None] [cognitive-sources=[all]] [embeddings= [all] [single-edit=False] [edit-cog-source-params=False]`
+        Call: `config experiment [baselines=False] [modalities=None] [cognitive-sources=[all]] [embeddings= [all] [single-edit=False] [edit-cog-source-params=False]`
         
         Parameter details:
         
-        - rand-embeddings: Whether to include random embeddings in the configuration. Note that this parameter is ignored if the combination(s) have already been associated with random embeddings. In this case, changes to the proper embeddings
-        are always propagated to the random embeddings.
+        - baselines: Whether to include random baselines in the configuration. Note that this parameter is ignored if the combination(s) have already been associated with random baselines. In this case, changes to the embeddings
+        are always propagated to the random baseline.
         - modalities: Allows to populate or edit combinations of cognitive-sources of an entire modality and corresponding embeddings
-        - cognitive-sources: Specifies either single, multiple or all installed cognitive sources (`[all]`) for editing or population.
-        - embeddings: Specifies either single, multiple or all installed cognitive sources (`[all]`) for editing or population.
+        - cognitive-sources: Specifies either single, multiple or all imported cognitive sources (`[all]`) for editing or population.
+        - embeddings: Specifies either single, multiple or all imported cognitive sources (`[all]`) for editing or population.
         - single-edit: When editing combinations featuring multiple embeddings, whether to edit the embeddings specifics for all embeddings at once (`False`) or one by one.
         parametrizations are required
         - edit-cog-source-params: Whether to edit parameters of the cognitive source. In general, this is only required when
@@ -116,35 +123,35 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
 
       Call: `config delete [modalities=None] [cognitive-sources=None] [embeddings=None]`
 
-- install
-    - cognitive-sources: Install the entire batch of preprocessed CogniVal cognitive sources or a custom cognitive source.
+- import
+    - cognitive-sources: Import the entire batch of preprocessed CogniVal cognitive sources or a custom cognitive source.
                          Custom sources must be manually placed in the path indicated by the assistant.
                          
-        CogniVal sources: `install cognitive-sources`
-        Custom source: `install cognitive-sources source=yoursource`
+        CogniVal sources: `import cognitive-sources`
+        Custom source: `import cognitive-sources source=yoursource`
     
-    - embeddings: Install and preprocess default embeddings (see CogniVal paper) as well as custom embeddings (word2vec compliant text/binary or BERT compliant). Allows to directly associate random embeddings with the embeddings.
+    - embeddings: Import and preprocess default embeddings (see CogniVal paper) as well as custom embeddings (word2vec compliant text/binary or BERT compliant). Allows to directly associate random baselines with the embeddings.
 
-      Default embeddings: `install embeddings glove.6B.50`
-      Custom embeddings: `install embeddings http://example.org/example.zip`
+      Default embeddings: `import embeddings glove.6B.50`
+      Custom embeddings: `import embeddings http://example.org/example.zip`
     
-    - random embeddings: Associate or re-associate (`force` parameter) embeddings with a set of random embeddings. Random embeddings of a set are generated with different seeds and results are averaged during evaluation to increase robustness of significance testing.
+    - random-baselines: Associate or re-associate (`force` parameter) embeddings with a set of random baselines. random baselines of a set are generated with different seeds and results are averaged during evaluation to increase robustness of significance testing.
 
                          The parameter `no-embeddings` specifies the number of "folds" to generate (default: 10). Generation is parallelized greedily across available CPU cores - 1.
       
-      Call: `install random-embeddings embeddings=glove.6B.50 [no-embeddings=10] [seed-func=exp_e_floored] [force=False]`
+      Call: `import random-baselines embeddings=glove.6B.50 [num-baselines=10] [seed-func=exp_e_floored] [force=False]`
     
 -  list
     - configs: List available configurations. Note that the reference configuration cannot be edited as it is used to populate newly
                created configurations with default values.
-    - embeddings: List available and installed default embeddings as well as installed custom embeddings and generated random embeddings.
-    - cognitive-sources: Lists installed cognitive sources along with their features (where applicable).
+    - embeddings: List available and imported default embeddings as well as imported custom embeddings and generated random baselines.
+    - cognitive-sources: Lists imported cognitive sources along with their features (where applicable).
     
 - run: Run all or a subset of experiments specified in a configuration. The parameters `embeddings`, `modalities` and `cognitive-sources` correspond to `config experiment`. Note that `cognitive-features` is a nested list that must specify features
 for all cognitive-sources. Each inner list must be specified as semicolon-separated string within quotes.
-    Call: `run [embeddings=[all]] [modalities=None] [cognitive-sources=[all]] [cognitive-features=None]`
+    Call: `run [embeddings=[all]] [modalities=None] [cognitive-sources=[all]] [cognitive-features=None] [baselines=True]`
 
-- significance:  Compute the significance of results of an experimental run. Note that this requires that random embeddings have been
+- significance:  Compute the significance of results of an experimental run. Note that this requires that random baselines have been
                  associated and evaluated during the run. Evaluates the results of the last run by default. Results are printed to the
                  shell and stored in the reports directory of the results path.
 
@@ -179,25 +186,25 @@ for all cognitive-sources. Each inner list must be specified as semicolon-separa
     - pdf: Whether to generate a PDF version of the HTML report (stored in the reports directory of the results path)
     - open-pdf: Whether to open the PDF report with the default document viewer. Note: In case of remote access, this requires a server-side installation of a document viewer and X11 forwarding.
 
-## Custom embedding installation
+## Custom embedding import
 Custom embeddings can be directly downloaded from a specified URL and extracted from an archive (if applicable).
-The assistant is started by executing `install embeddings "<some URL or local path>"`.
+The assistant is started by executing `import embeddings "<some URL or local path>"`.
 
 The following criteria must be met:
 
 - The passed value is either a local path or an URL representing a direct HTTP(S) link to the file or a Google Drive link.
 - The file is either a ZIP archive, gzipped file or usable as-is.
 
-Other modes of hosting and archival are currently NOT supported and will cause the installation to fail.                        
+Other modes of hosting and archival are currently NOT supported and will cause the import to fail.                        
 In those instances, please manually download, extract and preprocess the files in the "embeddings" directory.
-The last dialog box of the assistant will prompt the user regarding manual installation (defaulting to "No").
+The last dialog box of the assistant will prompt the user regarding manual import (defaulting to "No").
 
 First, a name must be specified for addressing the embeddings in subsequent commands. Next, the name of the main embeddings file must be specified. Optionally, the name of the embeddings path can be customized. Following, the user is prompted with respect to the embeddings dimensionality, whether the embeddings are binary or textual. In the binary case, conversion from word2vec- and BERT-compliant formats can be performed (Note: BERT conversion requires at least 16GB of RAM). Embeddings can also be chunked to avoid memory errors, with the number of chunks being parametrizable.
 
-## Custom cognitive source installation
-Custom cognitive sources can be installed in a semi-automatic manner, in that the associated file must be placed manually in the corresponding path (shown by the assistant). 
+## Custom cognitive source import
+Custom cognitive sources can be imported in a semi-automatic manner, in that the associated file must be placed manually in the corresponding path (shown by the assistant). 
 
-Call: `install cognitive-sources source=<name of the source>`
+Call: `import cognitive-sources source=<name of the source>`
 
 Custom cognitive sources MUST conform to the CogniVal format (space-separated, columns word, feature or dimension columns (named e[i], see below)) and be put manually in the corresponding directory (`.cognival/<cognitive_sources/<modality>/`) after running this assistant. The specified name must match the corresponding text file! Multi-hypothesis (multi-file) sources must currently be added manually.
 
