@@ -6,6 +6,7 @@ import base64
 import os
 from copy import deepcopy
 from io import BytesIO
+from operator import truediv
 from pathlib import Path
 
 import numpy as np
@@ -41,8 +42,35 @@ def load_jinja_template(path=['reporting', 'templates'], template_file='cognival
         autoescape=select_autoescape(['html', 'xml'])
     )
 
+    env.globals.update(sig_status=sig_status,
+                       get_sig=get_sig)
     template = env.get_template(template_file)
     return template
+
+def sig_status(sig_value):
+    try:
+        sig_ratio = truediv(*map(int, sig_value.split("/")))
+        if sig_ratio == 0.0:
+            return 'none'
+        elif sig_ratio == 1.0:
+            return 'all'
+        else:
+            return 'some'
+    except AttributeError:
+        if sig_value:
+            return 'all'
+        else:
+            return 'none'
+
+
+def get_sig(sig_value, average_multi_hypothesis):
+    if isinstance(sig_value, str) or not average_multi_hypothesis:
+        return sig_value
+    elif sig_value:
+        return '1/1'
+    else:
+        return '0/1'
+
 
 def sig_bar_plot(df, max_y=1.0):
     '''
@@ -165,6 +193,12 @@ def generate_report(configuration,
         return
     cprint('Generating CogniVal report ...', 'green')
 
+    config_dict_report = {k:v for k,v in config_dict.items() if k not in ('cogDataConfig',
+                                                                          'wordEmbConfig',
+                                                                          'randEmbConfig',
+                                                                          'randEmbSetToParts',
+                                                                          'run_id')}
+
     # Get mapping of previous run_id (current not yet executed)
     if not run_id:
         run_id = config_dict['run_id'] - 1
@@ -174,6 +208,8 @@ def generate_report(configuration,
     if not run_id:
         cprint('No experimental runs performed yet for configuration {}, aborting ...'.format(configuration), 'red')
         return
+
+    config_dict_report['run_id'] = run_id
 
     if not html and not pdf:
         cprint('No output format enabled, aborting ...', 'red')
@@ -244,12 +280,11 @@ def generate_report(configuration,
                         'Ø MSE': result_dict['AVERAGE_MSE'],
                         'SD MSE': np.std([x['MSE_PREDICTION'] for x in result_dict['folds']]),
                         'Word embedding': result_dict['wordEmbedding'],
-                        'Cognitive data': result_dict['cognitiveData'],
-                        'Cognitive parent': result_dict['cognitiveParent'],
+                        'Subject': result_dict['cognitiveData'] if result_dict['cognitiveData'] != result_dict['cognitiveParent'] else '-',
+                        'Cognitive source': result_dict['cognitiveParent'],
                         'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature'],
                         'bonferroni_alpha': bonferroni_alpha,
                         **sig_test_result}
-
                 results.append(result)
     # If no significance tests have been performed
     if not results:
@@ -261,8 +296,8 @@ def generate_report(configuration,
                         'Ø MSE': result_dict['AVERAGE_MSE'],
                         'SD MSE': np.std([x['MSE_PREDICTION'] for x in result_dict['folds']]),
                         'Word embedding': result_dict['wordEmbedding'],
-                        'Cognitive data': result_dict['cognitiveData'],
-                        'Cognitive parent': result_dict['cognitiveParent'],
+                        'Subject': result_dict['cognitiveData'] if result_dict['cognitiveData'] != result_dict['cognitiveParent'] else '-',
+                        'Cognitive source': result_dict['cognitiveParent'],
                         'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature']}
                 results.append(result)
 
@@ -279,12 +314,12 @@ def generate_report(configuration,
     df_details = df_details.astype({k:float for k in numtypes})
     
     if average_multi_hypothesis:
-        group_by_keys = ['Modality', 'Word embedding', 'Cognitive parent']
-        df_details_atomic = df_details.copy()[(df_details['Cognitive data'] == df_details['Cognitive parent']) & (df_details['Feature'] == '-')]
-        df_details_feat_avg = df_details.copy()[(df_details['Cognitive data'] == df_details['Cognitive parent']) & (df_details['Feature'] != '-')]
-        df_details_multi_subj_avg = df_details.copy()[df_details['Cognitive data'] != df_details['Cognitive parent']]
-        df_details_atomic = df_details_atomic.drop(['Experiment', 'Cognitive data'], axis='columns')
-        df_details_feat_avg = df_details_feat_avg.drop(['Experiment', 'Cognitive data'], axis='columns')
+        group_by_keys = ['Modality', 'Word embedding', 'Cognitive source']
+        df_details_atomic = df_details.copy()[(df_details['Subject'] == '-') & (df_details['Feature'] == '-')]
+        df_details_feat_avg = df_details.copy()[(df_details['Subject'] == '-') & (df_details['Feature'] != '-')]
+        df_details_multi_subj_avg = df_details.copy()[df_details['Subject'] != '-']
+        df_details_atomic = df_details_atomic.drop(['Experiment', 'Subject'], axis='columns')
+        df_details_feat_avg = df_details_feat_avg.drop(['Experiment', 'Subject'], axis='columns')
         df_details_multi_subj_avg = df_details_multi_subj_avg.drop(['Experiment'], axis='columns')
         df_details_atomic = df_details_atomic.groupby(group_by_keys).mean()
         df_details_atomic['Hypotheses'] = 1
@@ -298,32 +333,33 @@ def generate_report(configuration,
                                                  .rename(columns={'Feature': 'Features'})
         df_details_feat_avg['Hypotheses'] = df_details_feat_avg['Features'].apply(lambda x: len(x.split(', ')))
 
-        agg_multi_subj_dict = {'Cognitive data': 'size',
+        agg_multi_subj_dict = {'Subject': 'size',
                                **{k:'mean' for k in numtypes}}
         if 'significant' in df_details:
             agg_multi_subj_dict['significant'] = lambda col: '{}/{}'.format(list(col).count(True), len(col))
 
         df_details_multi_subj_avg = df_details_multi_subj_avg.groupby(group_by_keys) \
                                                              .agg(agg_multi_subj_dict) \
-                                                             .rename(columns={'Cognitive data': 'Hypotheses'})
+                                                             .rename(columns={'Subject': 'Hypotheses'})
         df_details_multi_subj_avg['Features'] = '-'
         df_details = pd.concat([df_details_atomic, df_details_feat_avg, df_details_multi_subj_avg])
 
         df_details['Hypotheses'] = df_details['Hypotheses'].astype(int)
-        for col in ['Ø MSE', 'SD MSE', 'Bonferroni α', 'p']:
-            try:
-                df_details[col] = df_details[col].map(lambda x: '{:5.3f}'.format(x))
-            except KeyError:
-                pass
-        if 'significant' in df_details:
-            df_details['significant'] = df_details['significant'].astype(bool)
         df_details.reset_index(inplace=True)
+    for col in ['Ø MSE', 'SD MSE', 'p']:
+        try:
+            df_details[col] = df_details[col].map(lambda x: '{:5.3f}'.format(x))
+        except KeyError:
+            pass
+
+    if 'significant' in df_details:
+        df_details['Bonferroni α'] = df_details['Bonferroni α'].map(lambda x: '{:5.3e}'.format(x))
 
     try:
         if average_multi_hypothesis:
             df_details = df_details[['Modality',
                                     'Word embedding',
-                                    'Cognitive parent',
+                                    'Cognitive source',
                                     'Features',
                                     'Hypotheses',
                                     'Ø MSE',
@@ -336,8 +372,8 @@ def generate_report(configuration,
             df_details = df_details[['Modality',
                                     'Experiment',
                                     'Word embedding',
-                                    'Cognitive data',
-                                    'Cognitive parent',
+                                    'Cognitive source',
+                                    'Subject',
                                     'Feature',
                                     'Ø MSE',
                                     'SD MSE',
@@ -349,7 +385,7 @@ def generate_report(configuration,
         if average_multi_hypothesis:
             df_details = df_details[['Modality',
                                      'Word embedding',
-                                     'Cognitive parent',
+                                     'Cognitive source',
                                      'Features',
                                      'Hypotheses',
                                      'Ø MSE',
@@ -358,8 +394,8 @@ def generate_report(configuration,
             df_details = df_details[['Modality',
                                     'Experiment',
                                     'Word embedding',
-                                    'Cognitive data',
-                                    'Cognitive parent',
+                                    'Cognitive source',
+                                    'Subject',
                                     'Feature',
                                     'Ø MSE',
                                     'SD MSE']]
@@ -380,24 +416,24 @@ def generate_report(configuration,
                       'Ø MSE': result_dict['AVERAGE_MSE'],
                       'SD MSE': np.std([x['MSE_PREDICTION'] for x in result_dict['folds']]),
                       'Word embedding': result_dict['wordEmbedding'],
-                      'Cognitive data': result_dict['cognitiveData'],
-                      'Cognitive parent': result_dict['cognitiveParent'],
+                      'Subject': result_dict['cognitiveData'] if result_dict['cognitiveData'] != result_dict['cognitiveParent'] else '-',
+                      'Cognitive source': result_dict['cognitiveParent'],
                       'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature']}
             results.append(result)
 
     if results:
         df_random = pd.DataFrame(results)
         numtypes = ['Ø MSE', 'SD MSE']
-        group_by_keys = ['Modality', 'Word embedding', 'Cognitive parent']
+        group_by_keys = ['Modality', 'Word embedding', 'Cognitive source']
         
         df_random = df_random.astype({k:float for k in numtypes})
 
         if average_multi_hypothesis:
-            df_random_atomic = df_random.copy()[(df_random['Cognitive data'] == df_random['Cognitive parent']) & (df_random['Feature'] == '-')]
-            df_random_feat_avg = df_random.copy()[(df_random['Cognitive data'] == df_random['Cognitive parent']) & (df_random['Feature'] != '-')]
-            df_random_multi_subj_avg = df_random.copy()[df_random['Cognitive data'] != df_random['Cognitive parent']]
-            df_random_atomic = df_random_atomic.drop(['Experiment', 'Cognitive data'], axis='columns')
-            df_random_feat_avg = df_random_feat_avg.drop(['Experiment', 'Cognitive data'], axis='columns')
+            df_random_atomic = df_random.copy()[(df_random['Subject'] == '-') & (df_random['Feature'] == '-')]
+            df_random_feat_avg = df_random.copy()[(df_random['Subject'] == '-') & (df_random['Feature'] != '-')]
+            df_random_multi_subj_avg = df_random.copy()[df_random['Subject'] != '-']
+            df_random_atomic = df_random_atomic.drop(['Experiment', 'Subject'], axis='columns')
+            df_random_feat_avg = df_random_feat_avg.drop(['Experiment', 'Subject'], axis='columns')
             df_random_multi_subj_avg = df_random_multi_subj_avg.drop(['Experiment'], axis='columns')
             df_random_atomic = df_random_atomic.groupby(group_by_keys).mean()
             df_random_atomic['Hypotheses'] = 1
@@ -409,23 +445,23 @@ def generate_report(configuration,
             df_random_feat_avg['Hypotheses'] = df_random_feat_avg['Features'].apply(lambda x: len(x.split(', ')))
 
             df_random_multi_subj_avg = df_random_multi_subj_avg.groupby(group_by_keys) \
-                                                                .agg({'Cognitive data': 'size',
+                                                                .agg({'Subject': 'size',
                                                                     **{k:'mean' for k in numtypes}}) \
-                                                                .rename(columns={'Cognitive data': 'Hypotheses'})
+                                                                .rename(columns={'Subject': 'Hypotheses'})
             df_random_multi_subj_avg['Features'] = '-'
             df_random = pd.concat([df_random_atomic, df_random_feat_avg, df_random_multi_subj_avg])
             df_random['Hypotheses'] = df_random['Hypotheses'].astype(int)
-            for col in ['Ø MSE', 'SD MSE']:
-                try:
-                    df_random[col] = df_random[col].map(lambda x: '{:5.3f}'.format(x))
-                except KeyError:
-                    pass
             df_random.reset_index(inplace=True)
+        for col in ['Ø MSE', 'SD MSE']:
+            try:
+                df_random[col] = df_random[col].map(lambda x: '{:5.3f}'.format(x))
+            except KeyError:
+                pass
         
         if average_multi_hypothesis:
             df_random = df_random[['Modality',
                                 'Word embedding',
-                                'Cognitive parent',
+                                'Cognitive source',
                                 'Features',
                                 'Hypotheses',
                                 'Ø MSE',
@@ -434,8 +470,8 @@ def generate_report(configuration,
             df_random = df_random[['Modality',
                                    'Experiment',
                                    'Word embedding',
-                                   'Cognitive data',
-                                   'Cognitive parent',
+                                   'Cognitive source',
+                                   'Subject',
                                    'Feature',
                                    'Ø MSE',
                                    'SD MSE']]
@@ -515,7 +551,9 @@ def generate_report(configuration,
         stats_over_time_plots = None
 
     html_str = template.render(float64=np.float64,
-                               title='CogniVal Report',
+                               title='CogniVal Report (Configuration {})'.format(configuration),
+                               average_multi_hypothesis=average_multi_hypothesis,
+                               config_dict=config_dict_report,
                                training_history_plots=training_history_plots,
                                stats_plots=sig_stats_plots,
                                stats_over_time_plots=stats_over_time_plots,

@@ -48,9 +48,9 @@ td {
   text-align: left;
 }
 
-.not-significant { background-color: rgb(247, 60, 60);}
-
 .signficant { background-color: rgb(121, 184, 121);}
+.partially-significant { background-color: rgb(247, 244, 90);}
+.not-significant { background-color: rgb(247, 60, 60);}
 
 #toc_container {
     background: #f9f9f9 none repeat scroll 0 0;
@@ -96,6 +96,21 @@ Note that <span style="font-style: italic;">EEG</span> and <span style="font-sty
 In contrast, each <span style="font-style: italic;">fMRI</span> study participant is a separate hypothesis, as fMRI voxels cannot be meaningfully averaged.</p>
 </div>
 <p></p>
+
+{# Source: https://stackoverflow.com/a/34584551 #}
+<table id="config_dict_table" style="margin-left: auto; margin-right: auto;width: auto;float: right;">
+  <tr>
+      {% for column in config_dict%}
+          <th>{{ column }}</th>
+      {% endfor %}
+  </tr>  
+  <tr>
+      {% for key, value in config_dict.items() %}
+          <td>{{ value }}</td>
+      {% endfor %}
+  </tr>
+</table>
+
 <!-- Source: https://www.tipsandtricks-hq.com/simple-table-of-contents-toc-using-pure-html-and-css-code-9217 -->
 <div id="toc_container">
   <p class="toc_title">Contents</p>
@@ -110,9 +125,9 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
   </ul></li>
   <li><a href="#results_det" style='font-weight: bold;'>Results (Detail)</a>
   <ul class="toc_list">
-    <li><a href="#results_det_proper">Proper embeddings</a></li>
+    <li><a href="#results_det_proper">Embeddings</a></li>
     {% if df_random is not none %}
-    <li><a href="#results_det_random">Random embeddings</a></li>
+    <li><a href="#results_det_random">Random baseline</a></li>
     {% endif %}
   </ul></li>
   {% if stats_plots %}
@@ -120,7 +135,7 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
   <ul class="toc_list">
   {% for modality in df_agg_dict %}
     <li><a href="#sig_plots_{{modality}}">{{ modality }}</a></li>    
-    {% endfor %}
+  {% endfor %}
   </ul></li>
   {% endif %}
   {% if stats_over_time_plots %}
@@ -135,6 +150,30 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
   <li><a href="#training_history_plots" style='font-weight: bold;'>Training history plots</a></li>
   {% endif %}
   </ul>
+</div>
+
+{% if stats_plots %}
+<h2 id="significance_plots"> Significance plots </h2>
+<div class="greybox">
+  <p>
+    The bars correspond to aggregated MSEs embeddings (colored) and random baselines (grey, striped), averaged across all cognitive sources of the respective modality. The MSE value for each embedding is additionally shown above each bar. In parentheses, the ratio of significant individual hypotheses (either sources, features or subjects) with respect to the random baseline is given.
+  </p>
+</div>
+{# Source: https://schier.co/blog/html-templating-output-a-grid-in-a-single-loop #}
+{% for modality, fig_data in stats_plots%}
+<h3 id="sig_plots_{{ modality }}">{{ modality }}</h3>
+<div class="pure-g">
+  <div class="pure-u-1-1">
+      <img src="data:image/png;base64,{{ fig_data }}" alt="{{ modality }}" style="width: 80%;">
+  </div>
+</div>
+{% endfor %}
+{% endif %}
+
+<div class="greybox", style='width: 50%;'>
+  <p>
+    Note: Tables can be sorted by clicking on column heads. This feature requires Javascript.
+  </p>
 </div>
 
 {% if df_agg_dict %}
@@ -156,7 +195,17 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
                     {% if value is number %}
                       <td>{{ '{:.5f}'.format(value) }}</td>
                     {% else %}
-                      <td>{{ value }}</td>
+                      {% if key == 'Significance' %}
+                        {% if sig_status(value) == 'all' %}
+                          <td class="signficant">{{ value }}</td>
+                        {% elif sig_status(value) == 'some' %}
+                          <td class="partially-significant">{{ value }}</td>
+                        {% else %}
+                          <td class="not-significant">{{ value }}</td>
+                        {% endif %}
+                      {% else %}
+                          <td>{{ value }}</td>
+                      {% endif %}
                     {% endif %}
                   {% endfor %}
              </tr>
@@ -168,7 +217,7 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
 
 <h2 id="results_det"> Results (Detail)</h2>
 
-<h3 id="results_det_proper">Proper embeddings</h3>
+<h3 id="results_det_proper">Embeddings</h3>
 
 {# Source: https://stackoverflow.com/a/34584551 #}
 <table id="results_det_table" style="margin-left: auto;margin-right: auto;">
@@ -181,12 +230,12 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
              <tr>
                   {% for key, value in row.to_dict().items() %}
                     {% if key == 'significant' %}
-                        {% if value is sameas true %}
-                          <td class="signficant">{{ value }}</td>
-                        {% elif value is sameas false  %}
-                          <td class="not-significant">{{ value }}</td>
-                        {% else %}
-                          <td>{{ value }}</td>
+                        {% if sig_status(value) == 'all' %}
+                          <td class="signficant">{{ get_sig(value, average_multi_hypothesis) }}</td>
+                        {% elif sig_status(value) == 'some' %}
+                          <td class="partially-signficant">{{ get_sig(value, average_multi_hypothesis) }}</td>
+                        {% else  %}
+                          <td class="not-significant">{{ get_sig(value, average_multi_hypothesis) }}</td>
                         {% endif %}
                     {% else %}
                         <td>{{ value }}</td>
@@ -198,7 +247,7 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
 </table>
 
 {% if df_random is not none %}
-<h3 id="results_det_random">Random embeddings</h3>
+<h3 id="results_det_random">Random baselines</h3>
 
 {# Source: https://stackoverflow.com/a/34584551 #}
 <table id="results_det_random_table" style="margin-left: auto;margin-right: auto;">
@@ -216,19 +265,6 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
          {% endfor %}
   
 </table>
-{% endif %}
-
-{% if stats_plots %}
-<h2 id="significance_plots"> Significance plots </h2>
-{# Source: https://schier.co/blog/html-templating-output-a-grid-in-a-single-loop #}
-{% for modality, fig_data in stats_plots%}
-<h3 id="sig_plots_{{ modality }}">{{ modality }}</h3>
-<div class="pure-g">
-  <div class="pure-u-1-1">
-      <img src="data:image/png;base64,{{ fig_data }}" alt="{{ modality }}" style="width: 80%;">
-  </div>
-</div>
-{% endfor %}
 {% endif %}
 
 {% if stats_over_time_plots %}
