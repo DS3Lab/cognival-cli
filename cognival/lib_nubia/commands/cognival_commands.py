@@ -508,6 +508,13 @@ class Config:
 
         edit_all_embeddings = embeddings[0] == 'all'
 
+        # When configuration is empty, 'all' pertains to all embeddings and cognitive-source. If sources
+        # and embeddings have already been added, 'all' means all contained in config.
+        if main_conf_dict['wordEmbConfig']:
+            scope = 'config'
+        else:
+            scope = 'all'
+
         try:
             cognitive_sources, embeddings = resolve_cog_emb(modalities,
                                                             cognitive_sources,
@@ -515,7 +522,7 @@ class Config:
                                                             main_conf_dict,
                                                             cog_data_config_dict,
                                                             embedding_registry,
-                                                            scope="all")
+                                                            scope=scope)
         except AbortException:
             return
 

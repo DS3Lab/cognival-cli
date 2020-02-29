@@ -359,28 +359,36 @@ def resolve_cog_emb(modalities,
                             cognitive_sources.append('{}_{}'.format(type_, source))
         elif scope == 'config':
             cognitive_sources = [k for k, v in config_dict["cogDataConfig"].items() if v["modality"] in modalities]
-    
+
     if all_emb:
         if scope == 'all':
             embeddings = [k for k, v in embedding_registry['proper'].items() if v['installed']]
         elif scope == 'config':
             embeddings = list(config_dict["wordEmbConfig"])
 
+    # Checks
     if embeddings:
-        for x in embeddings:
-            if not x in embedding_registry['proper'] or not embedding_registry['proper'][x]['installed']:
-                cprint('Embedding {} unknown or not installed, aborting ...'.format(x), 'red')
+        for emb in embeddings:
+            if not emb in embedding_registry['proper'] or not embedding_registry['proper'][emb]['installed']:
+                cprint('Embedding {} unknown or not installed, aborting ...'.format(emb), 'red')
                 raise AbortException
 
     cog_source_index = set(cog_config_dict['index'])
-    
+    cognitive_sources_resolved = []
+
+    # Checks and resolution of multi-subject sources
     if cognitive_sources:
-        for x in cognitive_sources:
-            if x in cog_source_index:
-                break
+        for source in cognitive_sources:
+            if source in cog_source_index:
+                cognitive_sources_resolved.append(source)
             else:
-                cprint('Cognitive source {} unknown, aborting ...'.format(x), 'red')
-                raise AbortException
+                if source in cog_config_dict['source_to_participant_index']:
+                    for subj_source in cog_config_dict['source_to_participant_index'][source]:
+                        cognitive_sources_resolved.append(subj_source)
+                else:
+                    cprint('Cognitive source {} unknown, aborting ...'.format(source), 'red')
+                    raise AbortException
+    cognitive_sources = cognitive_sources_resolved
 
     return cognitive_sources, embeddings
 
