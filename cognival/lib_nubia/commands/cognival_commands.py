@@ -1030,6 +1030,7 @@ def aggregate(run_id=0,
 @argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
 @argument('alpha', type=str, description='Alpha value')
 @argument('test', type=str, description='Significance test')
+@argument('precision', type=int, description='Number of decimal points in report (except for bonferroni alpha)')
 @argument('average_multi_hypothesis', type=bool, description='Average multi-hypothesis (multi-feature or multi-subject) results.')
 @argument('include_history_plots', type=bool, description='Whether to include training history plots (note: significantly increases report size when number of experiments is large.')
 @argument('include_features', type=bool, description='Whether to include the feature column in detail tables.')
@@ -1041,6 +1042,7 @@ def report(run_id=0,
            modalities=['eye-tracking', 'eeg', 'fmri'],
            alpha=0.01,
            test="Wilcoxon",
+           precision=3,
            average_multi_hypothesis=True,
            include_history_plots=False,
            include_features=True,
@@ -1066,6 +1068,7 @@ def report(run_id=0,
     generate_report(configuration,
                     run_id,
                     resources_path,
+                    precision,
                     average_multi_hypothesis,
                     include_history_plots,
                     include_features,
