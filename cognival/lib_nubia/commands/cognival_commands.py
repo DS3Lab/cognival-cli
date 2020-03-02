@@ -1665,11 +1665,11 @@ class Import:
                 if not embeddings in ctx.embedding_registry['random_multiseed'][rand_emb_name]['associated_with']:
                     cprint('Random baselines of dimensionality {} already present, associating ...'.format(emb_dim), 'green')
                     ctx.embedding_registry['random_multiseed'][rand_emb_name]['associated_with'].append(embeddings)
+                else:
+                    cprint('Random baselines of dimensionality {} already present and associated.'.format(emb_dim), 'green')
+                    return
             except KeyError:
                 cprint('Random baselines of dimensionality {} present, but different fold count (no_emb). Use force to regenerate.'.format(emb_dim), 'yellow')
-                return
-            else:
-                cprint('Random baselines of dimensionality {} already present and associated.'.format(emb_dim), 'green')
                 return
         
         # Associate random baselines with embeddings
