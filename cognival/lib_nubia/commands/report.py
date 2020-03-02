@@ -175,6 +175,7 @@ def agg_stats_over_time_plots(agg_reports_dict, run_id):
 def generate_report(configuration,
                     run_id,
                     resources_path,
+                    precision,
                     average_multi_hypothesis,
                     include_training_history_plots,
                     include_features,
@@ -348,7 +349,7 @@ def generate_report(configuration,
         df_details.reset_index(inplace=True)
     for col in ['Ø MSE', 'SD MSE', 'p']:
         try:
-            df_details[col] = df_details[col].map(lambda x: '{:5.3f}'.format(x))
+            df_details[col] = df_details[col].map(lambda x: ('{:.%df}' % precision).format(x))
         except KeyError:
             pass
 
@@ -454,7 +455,7 @@ def generate_report(configuration,
             df_random.reset_index(inplace=True)
         for col in ['Ø MSE', 'SD MSE']:
             try:
-                df_random[col] = df_random[col].map(lambda x: '{:5.3f}'.format(x))
+                df_random[col] = df_random[col].map(lambda x: ('{:.%df}' % precision).format(x))
             except KeyError:
                 pass
         
@@ -498,7 +499,7 @@ def generate_report(configuration,
             mod_report_formatted = deepcopy(mod_report)
             for col in ['Ø MSE Baseline', 'Ø MSE Proper']:
                 for k, v in mod_report_formatted[col].items():
-                    mod_report_formatted[col][k] = '{:5.3f}'.format(v)
+                    mod_report_formatted[col][k] = ('{:.%df}' % precision).format(v)
             agg_modality_to_max_run_id[modality] = run_id
             df_agg = pd.DataFrame(mod_report_formatted)
             df_agg_num = pd.DataFrame(mod_report)
