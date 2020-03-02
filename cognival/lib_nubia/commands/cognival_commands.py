@@ -1415,7 +1415,7 @@ class Import:
                     return
             else:
                 truncate_first_line = yes_no_dialog(title='Embedding registration',
-                                                    text='Is the embedding prefixed by a header row or row specifying dimensionality?')
+                                                    text='Is the embedding prefixed by a header row or row specifying dimensionality?').run()
 
             chunk_embeddings = button_dialog(title='Embedding registration',
                                             text='Large embeddings can be memory-intensive. Do you wish to segment the embeddings into chunks?\n'
