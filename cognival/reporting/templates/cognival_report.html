@@ -48,7 +48,7 @@ td {
   text-align: left;
 }
 
-.signficant { background-color: rgb(121, 184, 121);}
+.significant { background-color: rgb(121, 184, 121);}
 .partially-significant { background-color: rgb(247, 244, 90);}
 .not-significant { background-color: rgb(247, 60, 60);}
 
@@ -231,9 +231,9 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
                   {% for key, value in row.to_dict().items() %}
                     {% if key == 'significant' %}
                         {% if sig_status(value) == 'all' %}
-                          <td class="signficant">{{ get_sig(value, average_multi_hypothesis) }}</td>
+                          <td class="significant">{{ get_sig(value, average_multi_hypothesis) }}</td>
                         {% elif sig_status(value) == 'some' %}
-                          <td class="partially-signficant">{{ get_sig(value, average_multi_hypothesis) }}</td>
+                          <td class="partially-significant">{{ get_sig(value, average_multi_hypothesis) }}</td>
                         {% else  %}
                           <td class="not-significant">{{ get_sig(value, average_multi_hypothesis) }}</td>
                         {% endif %}
@@ -277,7 +277,7 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
 <div class="pure-g">
   {% for fig_data in fig_list %}
   <div class="pure-u-1-1">
-      <img src="data:image/png;base64,{{ fig_data }}" alt="foo" style="width: 60%;">
+      <img src="data:image/png;base64,{{ fig_data }}" alt="stats_over_time_plot_{{ modality }}" style="width: 60%;">
   </div>
   {% endfor %}
 </div>
