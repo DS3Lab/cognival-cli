@@ -53,7 +53,9 @@ def run_parallel(config_dict,
                 option["cognitiveParent"] = config_dict["cogDataConfig"][cognitive_data]["parent"]
                 option["modality"] = config_dict["cogDataConfig"][cognitive_data]["modality"]
                 option["feature"] = feature
-                option["wordEmbedding"] = word_embedding
+                option["wordEmbedding"] = word_embedding if word_embedding in config_dict["cogDataConfig"][cognitive_data]['wordEmbSpecifics'] else None
+                if not option['wordEmbedding']:
+                    continue
                 option["random_embedding"] = emb_to_random_dict.get(word_embedding, None)
                 option["truncate_first_line"] = truncate_first_line
                 options.append(option)

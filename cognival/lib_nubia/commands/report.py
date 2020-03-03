@@ -347,7 +347,7 @@ def generate_report(configuration,
 
         df_details['Hypotheses'] = df_details['Hypotheses'].astype(int)
         df_details.reset_index(inplace=True)
-    for col in ['Ø MSE', 'SD MSE', 'p']:
+    for col in ['Ø MSE', 'SD MSE', 'p', 'α']:
         try:
             df_details[col] = df_details[col].map(lambda x: ('{:.%df}' % precision).format(x))
         except KeyError:
