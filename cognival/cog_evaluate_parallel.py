@@ -149,12 +149,14 @@ def run_parallel(config_dict,
                 f = io.StringIO()
                 line_count = 0
                 try:
-                    with redirect_stdout(f):
-                        GPUtil.showUtilization()
-                    s = f.getvalue()
-                    line_count = len(s.split('\n'))
-                    sys.stdout.write(colored(s, 'yellow'))
-                    sys.stdout.write("\n")
+                    # Show GPU utilization if any GPUs assigned
+                    if gpu_ids_list:
+                        with redirect_stdout(f):
+                            GPUtil.showUtilization()
+                        s = f.getvalue()
+                        line_count = len(s.split('\n'))
+                        sys.stdout.write(colored(s, 'yellow'))
+                        sys.stdout.write("\n")
                 except ValueError:
                     pass
                 animated_loading(completed, len(ar_monitoring))

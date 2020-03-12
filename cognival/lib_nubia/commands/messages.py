@@ -78,4 +78,6 @@ Basic commands:
  - clear: clear the interactive shell.
  - example-commands: Show a table of example calls along with descriptions
  - browse: Browse the user directory and view files in read-only mode (requires vim)
+
+Note that less can be exited by typing 'q' and vim by typing ':q' followed by Return.
 """
