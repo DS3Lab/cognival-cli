@@ -29,4 +29,3 @@ tensorflow-gpu==1.15.2
 bokeh==1.0.4
 nltk==3.4.5
 umap-learn==0.3.10
-dask[dataframe]==2.10.1

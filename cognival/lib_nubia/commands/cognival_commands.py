@@ -228,8 +228,9 @@ class List:
         formatted_table = tform.generate_table(rows=rows,
                                                 columns=cols,
                                                 grid_style=fgrid)
-        cprint('List of available configurations. Note that the reference configuration is read-only and not listed.', 'green')
-        print(formatted_table)
+        header_msg = colored('List of available configurations. Note that the reference configuration is read-only and not listed.', 'green')
+        formatted_list = [header_msg, '\n\n', formatted_table]
+        page_list([x.encode('utf-8') for x in formatted_list])
 
     @command
     def embeddings(self):
@@ -266,20 +267,28 @@ class List:
             cprint('CogniVal cognitive sources not imported, aborting ...', 'red')
             return
 
+        formatted_list = []
+
         for modality in cog_config['sources']:
-            cprint(modality.upper(), attrs=['bold'])
-            cprint('Resource                           Features')
+            formatted_list.append(colored(modality.upper(), attrs=['bold']))
+            formatted_list.append('\n')
+            formatted_list.append(colored('Resource                           Features'))
+            formatted_list.append('\n')
             for key, value in cog_config['sources'][modality].items():
                 label = '{}_{}'.format(modality, key)
-                cprint(label, 'cyan', end=' '*(35-len(label)))
+                formatted_list.append(colored(label, 'cyan')  + ' '*(35-len(label)))
                 if isinstance(value["features"], str):
-                    cprint(value["features"], 'green')
+                    formatted_list.append(colored(value["features"], 'green'))
+                    formatted_list.append('\n')
                 else:
-                    cprint(value["features"][0], 'green')
+                    formatted_list.append(colored(value["features"][0], 'green'))
+                    formatted_list.append('\n')
                     for feature in value["features"][1:]:
-                        cprint(' '*35 + feature, 'green')
-                print()
-            print()
+                        formatted_list.append(colored(' '*35 + feature, 'green'))
+                        formatted_list.append('\n')
+                formatted_list.append('\n')
+            formatted_list.append('\n')
+        page_list([x.encode('utf-8') for x in formatted_list])
 
 @command
 class Config:
@@ -386,24 +395,27 @@ class Config:
 
         fgrid = tform.FancyGrid()
         altgrid = tform.AlternatingRowGrid()
+        table_strs = []
         if not cognitive_source:
-            cprint("Note: Use 'config open {}' to edit the general properties of this configuration.".format(configuration), attrs=["bold"], color="green")
+            table_strs.append(colored("Note: Use 'config open {}' to edit the general properties of this configuration.".format(configuration), attrs=["bold"], color="green"))
+            table_strs.append('\n')
             general = [(k, v) for k, v in config_dict.items() if not k in ['cogDataConfig', 'wordEmbConfig', 'randEmbConfig', 'randEmbSetToParts']]
-            print()
-            cprint('General properties', attrs=['bold', 'reverse'], color='green')
+            table_strs.append(colored('General properties', attrs=['bold', 'reverse'], color='green'))
+            table_strs.append('\n')
             formatted_table = tform.generate_table(rows=[[x[1] for x in general]],
                                                 columns=[x[0] for x in general],
                                                 grid_style=fgrid,
                                                 #row_tagger=row_stylist,
                                                 transpose=False)
-            print(formatted_table)
-            print()
+            table_strs.append(formatted_table)
+            table_strs.append('\n')
             experiment_rows = [chunked_list_concat_str(list(config_dict['cogDataConfig']), 4)]
             experiment_rows += [chunked_list_concat_str(list(['{} ({})'.format(k, v['random_embedding'] if 'random_embedding' in v and v['random_embedding'] else 'None') \
                                                                 for k, v in config_dict['wordEmbConfig'].items()]), 2)]
             experiment_rows = [experiment_rows]
 
-            cprint('Experiment properties', attrs=['bold', 'reverse'], color='cyan')
+            table_strs.append(colored('Experiment properties', attrs=['bold', 'reverse'], color='cyan'))
+            table_strs.append('\n')
             formatted_table = tform.generate_table(rows=experiment_rows,
                                                 columns=[colored('Cognitive sources', attrs=['bold']),
                                                         colored('Embeddings (Rand. emb.)', attrs=['bold'])],
@@ -411,7 +423,8 @@ class Config:
                                                 #row_tagger=row_stylist,
                                                 transpose=True)
 
-            print(formatted_table)
+            table_strs.append(formatted_table)
+            table_strs.append('\n')
         
         if cognitive_source:
             cognitive_sources = [cognitive_source]
@@ -421,11 +434,13 @@ class Config:
             cognitive_sources = []
 
         if cognitive_sources:
-            cprint("Note: Use 'edit-config experiment configuration={} cognitive-sources=[{}] single-edit=True' to edit the properties "
-                "of the specified cognitive source(s) and associated embedding specifics.".format(configuration, ', '.join(cognitive_sources)), attrs=["bold"], color="green")
+            table_strs.append(colored(fill("Note: Use 'edit-config experiment configuration={} cognitive-sources=[{}] single-edit=True' to edit the properties "
+                "of the specified cognitive source(s) and associated embedding specifics.".format(configuration, ', '.join(cognitive_sources)), 160)))
+            table_strs.append('\n')
 
         for cognitive_source in cognitive_sources:
-            cprint('{}\n'.format(cognitive_source), attrs=['bold', 'reverse'], color='yellow')
+            table_strs.append(colored('{}\n'.format(cognitive_source), attrs=['bold', 'reverse'], color='yellow'))
+            table_strs.append('\n')
             try:
                 cog_source_config_dict = config_dict['cogDataConfig'][cognitive_source]
             except KeyError:
@@ -433,15 +448,17 @@ class Config:
                 return
 
             cog_source_properties = [(k, field_concat(v)) for k, v in cog_source_config_dict.items() if k != 'wordEmbSpecifics']
-            cprint('Cognitive source properties ({})'.format(cognitive_source), attrs=['bold', 'reverse'], color='green')
+            table_strs.append(colored('Cognitive source properties ({})'.format(cognitive_source), attrs=['bold', 'reverse'], color='green'))
+            table_strs.append('\n')
             formatted_table = tform.generate_table(rows=[[', '.join(x[1]) if isinstance(x[1], list) else x[1] for x in cog_source_properties]],
                                                 columns=[x[0] for x in cog_source_properties],
                                                 grid_style=fgrid,
                                                 #row_tagger=row_stylist,
                                                 transpose=False)
-            print(formatted_table)
-            print()
-            cprint('Word embedding specifics', attrs=['bold', 'reverse'], color='cyan')
+            table_strs.append(formatted_table)
+            table_strs.append('\n')
+            table_strs.append(colored('Word embedding specifics', attrs=['bold', 'reverse'], color='cyan'))
+            table_strs.append('\n')
             word_emb_specifics = cog_source_config_dict['wordEmbSpecifics']
             if hide_baselines:
                 word_emb_specifics = {k:v for k, v in word_emb_specifics.items() if not k.startswith('random')}
@@ -458,7 +475,9 @@ class Config:
             formatted_table = tform.generate_table(df,
                                                 grid_style=altgrid,
                                                 transpose=False) 
-            print(formatted_table)
+            table_strs.append(formatted_table)
+            table_strs.append('\n')
+        page_list([x.encode('utf-8') for x in table_strs])
     
     @command
     @argument('modalities', type=list, description="Modalities of cognitive sources sources to include.")

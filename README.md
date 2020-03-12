@@ -5,6 +5,8 @@ Nora Hollenstein, Antonio de la Torre, Ce Zhang & Nicolas Langer. "CogniVal: A F
 
 For practical purposes, this tool should be used. For reference, the original code base can be found in the [paper_code] (https://github.com/DS3Lab/cognival/tree/paper_code) branch of this repository (no longer maintained).
 
+**Note**: CogniVal is under active development, thus we highly recommend that you **verify** your configuration prior to runs. You can do so by executing `config show details=True`. Feel free to report issues and bugs you encounter.
+
 ## Requirements
 - Python 3.7.4 or newer
 - For PDF generation of reports: wkhtmltopdf version 0.12.5 or newer (available from https://wkhtmltopdf.org/. Note: At the time of writing this README, the version available from Ubuntu repositories is outdated.)
