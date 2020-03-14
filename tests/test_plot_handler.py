@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from pathlib import Path
 
-sys.path.insert(0, '..')
+sys.path.insert(0, 'cognival')
 
 from handlers.plot_handler import *
 
@@ -53,12 +53,13 @@ def history():
        0.00850148, 0.00850097, 0.00849433, 0.00848764, 0.00849617])}
     return history
 
+
 def test_plot_handler(tmpdir, history):
     title = 'test_plotHandler'
     hasher = hashlib.md5()
     tmpdir.mkdir('output')
-    plot_handler(title, history, str(tmpdir / 'output'))
-    with open(tmpdir / 'output' / 'test_plotHandler.png', 'rb') as f:
+    plot_handler(title, history, {'wordEmbedding': 'test_embedding'}, str(tmpdir / 'output'))
+    with open(tmpdir / 'output' / 'test_embedding.png', 'rb') as f:
         buf = f.read()
         hasher.update(buf)
         assert hasher.hexdigest() == '36c4d7e67abf8f61032b87944222de9b'
