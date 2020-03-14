@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 import pandas as pd
-sys.path.insert(0, '..')
+sys.path.insert(0, 'cognival')
 
 from handlers.data_handler import *
 
@@ -59,9 +59,9 @@ def config():
         "glove-50": {
             "chunk_number": 4,
             "chunked": 1,
-            "chunked_file": "reference/chunked_embeddings/glove-50_",
-            "ending": ".txt",
-            "path": "input/glove.6B.50d.txt"
+            "chunked_file": "glove-50",
+            "chunk_ending": ".txt",
+            "path": "reference/chunked_embeddings/glove.6B.50d.txt",
         }
     }
 }
@@ -69,9 +69,9 @@ def config():
 
 def test_chunker(tmpdir):
     #TODO: Why did I need to add the header information to the embeddings
-    refdir = Path('reference')
+    refdir = Path('tests/reference')
     outdir = tmpdir.mkdir('output')
-    chunk('input',
+    chunk('tests/input',
             outdir,
             'glove.6B.50d.txt',
             'glove-50')
@@ -79,14 +79,14 @@ def test_chunker(tmpdir):
 
 
 def test_update():
-    df_word_embedding = pd.read_csv('reference/chunked_embeddings/glove-50_0.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE, index_col=0)
-    df_cognitive_data = pd.read_csv('cognitive-data/eeg/zuco/zuco_scaled.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE)
+    df_word_embedding = pd.read_csv('tests/reference/chunked_embeddings/glove-50_0.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE, index_col=0, names=['word', *['x{}'.format(idx) for idx in range(50)]])
+    df_cognitive_data = pd.read_csv('tests/cognitive-data/eeg/zuco/zuco_scaled.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE)
     we_chunk_rows = df_word_embedding.shape[0] // 4
     df_word_embeddings_1 = df_word_embedding.iloc[:we_chunk_rows + 1, :]
     df_word_embeddings_2 = df_word_embedding.iloc[we_chunk_rows:(we_chunk_rows + 1)*2, :]
     df_join = pd.merge(df_cognitive_data, df_word_embeddings_1, how='left', on=['word'])
     # length w/o NANs after first merge
-    assert len(df_join[df_join['edim1'].notnull()]) == 3386
+    assert len(df_join[df_join['x1'].notnull()]) == 3386
 
     update(df_join,
            df_word_embeddings_2,
@@ -95,7 +95,7 @@ def test_update():
            whole_row=True)
 
     # length w/O NANs after second merge
-    assert len(df_join[df_join['edim1'].notnull()]) == 3769
+    assert len(df_join[df_join['x1'].notnull()]) == 3769
 
 def test_update_synthetic_whole_row_True():
     #TODO: This appears to operate exactly in reverse (whole_row)
@@ -125,29 +125,32 @@ def test_update_synthetic_whole_row_False():
 
 
 def test_dfMultiJoin():
-    df_word_embedding = pd.read_csv('input/glove.6B.50d.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE, index_col=0)
-    df_cognitive_data = pd.read_csv('cognitive-data/eeg/zuco/zuco_scaled.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE)
+    df_word_embedding = pd.read_csv('tests/input/glove.6B.50d.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE, index_col=0, names=['word', *['x{}'.format(idx) for idx in range(50)]])
+    df_cognitive_data = pd.read_csv('tests/cognitive-data/eeg/zuco/zuco_scaled.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE)
     df_join = df_multi_join(df_cognitive_data,
                             df_word_embedding,
                             4)
-    assert len(df_join[df_join['edim1'].notnull()]) == 4162
+    assert len(df_join[df_join['x1'].notnull()]) == 4162
 
 
 def test_multiJoin(config):
-    df_cognitive_data = pd.read_csv('cognitive-data/eeg/zuco/zuco_scaled.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE)
-    df_join = multi_join(config,
-                        df_cognitive_data,
-                        'glove-50')
-    assert len(df_join[df_join['edim1'].notnull()]) == 4162
+    df_cognitive_data = pd.read_csv('tests/cognitive-data/eeg/zuco/zuco_scaled.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE)
+    df_join = multi_join('proper',
+                         config,
+                         df_cognitive_data,
+                         'glove-50')
+    assert len(df_join[df_join['x_1'].notnull()]) == 4162
 
 
 def test_dataHandler(config):
     #TODO: Handle chunked embeddings correctly
     #TODO: Ascertain: 75:25 Train test split, then 80:20 CV on train set, and 3-fold CV on train-train set?
-    words_test, X_train, y_train, X_test, y_test = data_handler(config,
+    words_test, X_train, y_train, X_test, y_test = data_handler('proper',
+                                                                config,
                                                                'glove-50',
                                                                'zuco-eeg',
-                                                               'ALL_DIM')
+                                                               'ALL_DIM',
+                                                                False)
     assert [len(chunk) for chunk in X_train] == [3327, 3327, 3327, 3327, 3328]
     assert [len(chunk) for chunk in y_train] == [3327, 3327, 3327, 3327, 3328]
     assert [len(chunk) for chunk in words_test] == [832, 832, 832, 832, 831]
@@ -156,8 +159,8 @@ def test_dataHandler(config):
 
 
 def test_split_folds(config):
-    df_cognitive_data = pd.read_csv('cognitive-data/eeg/zuco/zuco_scaled.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE)
-    df_join = multi_join(config, df_cognitive_data, 'glove-50')
+    df_cognitive_data = pd.read_csv('tests/cognitive-data/eeg/zuco/zuco_scaled.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE)
+    df_join = multi_join('proper', config, df_cognitive_data, 'glove-50')
     df_join.dropna(inplace=True)
     words = df_join['word']
     words = np.array(words, dtype='str').reshape(-1,1)
