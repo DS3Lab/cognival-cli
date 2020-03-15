@@ -352,7 +352,8 @@ def config_show(configuration, config_dict, details, cognitive_source, hide_base
     return table_strs
 
 
-def config_experiment(main_conf_dict,
+def config_experiment(configuration,
+                      main_conf_dict,
                       cog_data_config_dict,
                       embedding_registry,
                       resources_path,
@@ -361,7 +362,8 @@ def config_experiment(main_conf_dict,
                       cognitive_sources,
                       embeddings,
                       single_edit,
-                      edit_cog_source_params):
+                      edit_cog_source_params,
+                      scope):
     populate_conf = True
     backed_up = False
 
@@ -384,10 +386,16 @@ def config_experiment(main_conf_dict,
 
     # When configuration is empty, 'all' pertains to all embeddings and cognitive-source. If sources
     # and embeddings have already been added, 'all' means all contained in config.
-    if main_conf_dict['wordEmbConfig']:
-        scope = 'config'
+    
+    if scope is None:
+        if main_conf_dict['wordEmbConfig']:
+            scope = 'config'
+        else:
+            scope = 'all'
     else:
-        scope = 'all'
+        if scope not in ('all', 'config'):
+            cprint("Error: Invalid value for parameter 'scope'.", 'red')
+            raise AbortException
 
     try:
         cognitive_sources, embeddings = resolve_cog_emb(modalities,
@@ -398,6 +406,9 @@ def config_experiment(main_conf_dict,
                                                         embedding_registry,
                                                         scope=scope)
     except AbortException:
+        return
+
+    if not embeddings or (embeddings and not cognitive_sources):
         return
 
     cog_data_config_dict = main_conf_dict['cogDataConfig']
@@ -526,9 +537,16 @@ def config_experiment(main_conf_dict,
                 _backup_config(configuration, resources_path)
                 backed_up = True
             _save_config(main_conf_dict, configuration, resources_path)
+    return True
 
 
-def config_delete(main_conf_dict, cog_config_dict, embedding_registry, modalities, cognitive_sources, embeddings):
+def config_delete(configuration,
+                  main_conf_dict,
+                  cog_config_dict,
+                  embedding_registry,
+                  modalities,
+                  cognitive_sources,
+                  embeddings):
 
     if not cognitive_sources and not modalities and not embeddings:
         delete_config = button_dialog(title='Deletion',
@@ -604,10 +622,10 @@ def config_delete(main_conf_dict, cog_config_dict, embedding_registry, modalitie
                 else:
                     cprint ("Combination {}/{} not found in configuration {}, skipping ...".format(csource, emb, configuration), 'yellow')
         
-        # Remove source if empty
-        if not cog_data_config_dict[csource]["wordEmbSpecifics"]:
-            cprint("Deleting now empty source {} ...".format(csource), 'yellow')
-            del cog_data_config_dict[csource]
+            # Remove source if empty
+            if not cog_data_config_dict[csource]["wordEmbSpecifics"]:
+                cprint("Deleting now empty source {} ...".format(csource), 'yellow')
+                del cog_data_config_dict[csource]
 
     # Remove complete cognitive source
     else:
@@ -854,7 +872,7 @@ def aggregate(config_dict,
 def update_vocabulary(ctx,
                       cog_sources_path,
                       old_vocab):
-    old_vocab = set(map(lambda x: x.rstrip('\n'), f))
+    old_vocab = set(old_vocab)
     old_len = len(old_vocab)
 
     new_vocab = set()
@@ -878,16 +896,17 @@ def update_vocabulary(ctx,
             df.fillna('', inplace=True)
             new_vocab |= set(df['word'])
 
-    new_vocab_list = sorted(list(new_vocab))
+    new_vocab_list = sorted([x for x in new_vocab if x])
     new_len = len(new_vocab_list)
 
     if new_len == old_len:
         cprint('Vocabulary size unchanged ({})'.format(old_len), 'magenta')
     else:
         if new_len > old_len:
-            cprint('Vocabulary size (previous/new): {}/{}'.format(old_len, new_len), 'green')
+            cprint('Vocabulary size increased (previous/new): {}/{}'.format(old_len, new_len), 'green')
         elif new_len < old_len:
-            cprint('Vocabulary size (previous/new): {}/{} (Caution: Vocabulary size has decreased!)'.format(old_len, new_len), 'yellow')
+            cprint('Vocabulary size decreased (previous/new): {}/{} (Caution: Vocabulary size has decreased!)'.format(old_len, new_len), 'yellow')
+
     diff_list = ', '.join(sorted(list((old_vocab | new_vocab) - (old_vocab & new_vocab))))
     if diff_list:
         cprint('Diff: {}'.format(diff_list))
@@ -1005,7 +1024,8 @@ def import_cognitive_sources(ctx,
 
     for path in paths:
         cprint(path.displayable(), 'cyan')
-
+    
+    return cog_config
 
 
 def import_embeddings(ctx,
@@ -1024,21 +1044,21 @@ def import_embeddings(ctx,
     # Download all embeddings
     if x == 'all':
         for emb in ctx.embedding_registry['proper']:
-            self.embeddings(emb,
+            import_embeddings(emb,
                             are_set=True,
                             associate_rand_emb=associate_rand_emb)
 
         # Download random baselines
         if ctx.debug:
             for rand_emb in ctx.embedding_registry['random_static']:
-                self.embeddings(rand_emb, log_only_success=True)
+                import_embeddings(rand_emb, log_only_success=True)
         return
 
     # Download all static random baselines
     elif x == 'all_random':
         if ctx.debug:
             for rand_emb in ctx.embedding_registry['random_static']:
-                self.embeddings(rand_emb, log_only_success=True)
+                import_embeddings(rand_emb, log_only_success=True)
             folder = ctx.embedding_registry['random_static'][rand_emb]['path']
         else:
             cprint('Error: random baselines must be generated using "import random-baselines"', 'red')
@@ -1304,7 +1324,7 @@ def import_embeddings(ctx,
         cprint('Finished importing embedding "{}"'.format(name), 'green')
 
         if associate_rand_emb:                                                
-            self.random_baselines(name)
+            import_random_baselines(name)
     
     if name.startswith('random'):
         ctx.embedding_registry['random_static'][name]['installed'] = True
