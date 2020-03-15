@@ -104,9 +104,6 @@ def write_options(config, modality, run_stats):
 
     outputDir = Path(config['PATH']) / config['outputDir']
 
-    if not os.path.exists(outputDir):
-        os.mkdir(outputDir)
-
     with open(outputDir / "experiments" / modality / "options_{}.json".format(str(config["run_id"])), 'w') as fileWriter:
         json.dump(run_stats, fileWriter, indent=4, sort_keys=True)
 
