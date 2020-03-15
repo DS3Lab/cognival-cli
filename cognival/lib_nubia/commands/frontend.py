@@ -271,13 +271,18 @@ class Config:
     @argument('baselines', type=bool, description='Include random baselines. Note that if random baselines were included previously, changes are applied to them in any case.')
     @argument('single_edit', type=bool, description='Whether to edit embedding specifics one by one or all at once.')
     @argument('edit_cog_source_params', type=bool, description='Whether to edit parameters of the specified cognitive sources.')
+    @argument('scope', type=str, description="Specifies the scope for meta-parameters and -arguments ('all', modalities). "
+                                             "Either 'all' (all installed embeddings/cog. sources) or 'config' (configuration only). "
+                                             "In the latter case, no automatic insertion of missing sources occurs. If set to None (default), "
+                                             "the scope is 'all' if the configuration is empty and 'config' after adding the first source-embedding pair(s).")
     def experiment(self,
                    baselines=False,
                    modalities=None,
                    cognitive_sources=['all'],
                    embeddings=['all'],
                    single_edit=False,
-                   edit_cog_source_params=False):
+                   edit_cog_source_params=False,
+                   scope=None):
         '''
         Edit configuration of single, multiple or all combinations of embeddings and cognitive sources.
         '''
@@ -292,7 +297,8 @@ class Config:
 
         main_conf_dict = _open_config(configuration, resources_path)
         cog_data_config_dict = _open_cog_config(resources_path)
-        commands.config_experiment(main_conf_dict,
+        result = commands.config_experiment(configuration,
+                                   main_conf_dict,
                                    cog_data_config_dict,
                                    embedding_registry,
                                    resources_path,
@@ -301,7 +307,11 @@ class Config:
                                    cognitive_sources,
                                    embeddings,
                                    single_edit,
-                                   edit_cog_source_params)
+                                   edit_cog_source_params,
+                                   scope)
+
+        if not result:
+            cprint("Nothing to do. If the configuration is populated, pass scope=all to add embeddings and cognitive-sources in bulk.", "yellow")
 
         # TODO: Backup auslagern?
 
@@ -325,7 +335,13 @@ class Config:
         main_conf_dict = _open_config(configuration, resources_path)
         cog_config_dict = _open_cog_config(resources_path)
 
-        main_conf_dict = commands.config_delete(main_conf_dict, cog_config_dict, embedding_registry, modalities, cognitive_sources, embeddings)
+        main_conf_dict = commands.config_delete(configuration,
+                                                main_conf_dict,
+                                                cog_config_dict,
+                                                embedding_registry,
+                                                modalities,
+                                                cognitive_sources,
+                                                embeddings)
 
         _backup_config(configuration, resources_path)
         
@@ -407,7 +423,7 @@ def update_vocabulary():
     vocab_path = resources_path / 'standard_vocab.txt'
 
     with open(vocab_path) as f:
-        old_vocab = f.readlines()
+        old_vocab = [x.rstrip('\n') for x in f]
 
     new_vocab_list = commands.update_vocabulary(ctx,
                                                 cog_sources_path,
