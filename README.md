@@ -69,6 +69,9 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
 - example-calls: Lists example calls for a single or all commands.
 - browse: Browses the user directory and view files using vim, per default in read-only mode. (requires that vim is installed).
 - update-vocabulary: Scans all imported cognitive sources and updates the vocabulary file.
+- properties: Edit general CogniVal properties (user directory, etc.). Currently only used to set the directory for user
+                  data (embeddings, cognitive sources, configurations and results), in case this data should not reside
+                  in $HOME (e.g. due to quota restrictions).
 
 ### Main commands and subcommands
 - config
@@ -77,12 +80,6 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
             automatically for all empty fields upon saving. Configurations can be overwritten with the `overwrite` flag.
 
       Call: `config open configuration=demo [overwrite=False] [edit=False]`
-
-    - properties: Edit general CogniVal properties (user directory, etc.). This is mainly used to set the directory for user
-                  data (embeddings, cognitive sources, configurations and results), in case this data should not reside
-                  in $HOME (e.g. due to quota restrictions).
-
-      Call: `config properties`
 
     - show: Shows details of a configuration, associated cognitive sources and embeddings as well as experiments. The basic view shows
             general configuration properties (editable by `config open`) and lists cognitive sources and embeddings/random baselines (without information about how they are paired):
@@ -241,3 +238,6 @@ Eye-tracking example:
 All cognitive data sources are freely available for you to download and preprocess. 
 
 The fully preprocessed vectors as described in the publication can however be downloaded from the tool, as well as [here](https://drive.google.com/uc?id=1ouonaByYn2cnDAWihnQ3cGmMT6bJ4NaP).
+
+## Testing and Development
+In order to run the tests, you need to download the [test_data](https://drive.google.com/open?id=1f0hFulGIwqf6FRbPCv14d6yiEXh6WI49) and extract the archive into the `tests` directory. Note that testing coverage is fairly minimal at present time.

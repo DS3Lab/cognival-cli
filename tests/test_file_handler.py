@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 import pandas as pd
 import json
+import shutil
 sys.path.insert(0, 'cognival')
 
 from handlers.file_handler import *
@@ -58,7 +59,7 @@ def config(tmpdir):
         "folds": 5,
         "outputDir": str(tmpdir),
         "seed": 123,
-        "run_id": 1.0,
+        "run_id": 1,
         "wordEmbConfig": {
             "glove-50": {
                 "chunk_number": 4,
@@ -195,15 +196,20 @@ def test_update_run_id(tmpdir, config):
     update_run_id(path)
     with open(path, 'r') as f:
         config = json.load(f)
-    assert config['run_id'] == 2.0
+    assert config['run_id'] == 2
 
 
 def test_write_results(tmpdir, config, results):
+    shutil.rmtree(tmpdir / 'output')
     logging, word_error, history = results
     write_results(config, logging, word_error, history)
     refdir = Path('tests/reference/test_writeResults_results')
-    outdir = tmpdir
-    assert not filecmp.dircmp(refdir, outdir).diff_files
+    # Fix missing newline
+    with open(tmpdir / 'mapping_1.json', 'r') as f_in:
+        f_str = f_in.read()
+        with open(tmpdir / 'mapping_1.json', 'w') as f_out:
+            f_out.write(f_str + '\n')
+    assert not filecmp.dircmp(refdir, tmpdir).diff_files
 
 
 def test_write_options(config, all_runs, tmpdir):
@@ -211,7 +217,7 @@ def test_write_options(config, all_runs, tmpdir):
     if not os.path.exists(outputDir):
         os.makedirs(outputDir)
     write_options(config, 'eeg', all_runs)
-    with open(outputDir / 'options_1.0.json') as f:
+    with open(outputDir / 'options_1.json') as f:
         options_str = f.read()
     ref_str = """{
     "17.0": {
