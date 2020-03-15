@@ -119,7 +119,7 @@ def config():
     "folds": 5,
     "outputDir": "zuco-feature-wordEmbedding",
     "seed": 123,
-    "run_id": 11.0,
+    "run_id": 11,
     "wordEmbConfig": {
         "glove-50": {
             "chunk_number": 4,
