@@ -430,7 +430,11 @@ def _edit_config(config_dict, configuration):
 def update_emb_config(emb, csource, cdict, config_patch, rand_embeddings, main_conf_dict, embedding_registry):
     cdict.update(config_patch)
     if rand_embeddings or main_conf_dict['randEmbConfig']:
-        rand_emb = embedding_registry['proper'][emb]['random_embedding']
+        registry_rand_emb = embedding_registry['proper'][emb]['random_embedding']
+        config_rand_emb = main_conf_dict['wordEmbConfig'][emb]['random_embedding'].split('_for_')[0]
+        if not registry_rand_emb == config_rand_emb:
+            cprint('Error: The current configuration has random baseline {} associated with embeddings {}. However, baseline {} is currently associated with embeddings {} in the embeddings registry. Please change the association using "import random-embeddings" if you wish to edit this configuration or edit the configuration manually.'. format(config_rand_emb, emb, registry_rand_emb, emb), 'red')
+            raise AbortException
         if rand_emb:
             for rand_emb_part in main_conf_dict['randEmbSetToParts']['{}_for_{}'.format(rand_emb, emb)]:
                 main_conf_dict['cogDataConfig'][csource]["wordEmbSpecifics"][rand_emb_part].update(config_patch)

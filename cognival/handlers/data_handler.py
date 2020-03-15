@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import csv
 from sklearn.model_selection import KFold
-from prompt_toolkit.shortcuts import ProgressBar
+from tqdm import tqdm
 
 def chunk(input_path_name,
           output_path_name,
@@ -26,7 +26,7 @@ def chunk(input_path_name,
     if truncate_first_line:
         skip_lines = 1
     else:
-        skip_lines = None
+        skip_lines = 0
     
     rows = 0
     with open(input_path / input_file_name) as f:
@@ -51,11 +51,10 @@ def chunk(input_path_name,
             with open(output_path / "{}_{}.txt".format(output_file_name,
                                             str(i)),
                                             "w") as f_out:
-                with ProgressBar() as pb:
-                    print('Chunk {}/{}:'.format(i+1, number_of_chunks))
-                    for _ in pb(list(range(0, chunk_size))):
-                        f_out.write(next(f))
-                    print()
+                print('Chunk {}/{}:'.format(i+1, number_of_chunks))
+                for _ in tqdm(list(range(0, chunk_size))):
+                    f_out.write(next(f))
+                print()
 
 def update(left_df, right_df, on_column, columns_to_omit, whole_row):
     '''
@@ -141,9 +140,12 @@ def multi_join(mode, config, df_cognitive_data, word_embedding):
     ending = word_emb_prop["chunk_ending"]
 
     for i in range(0, chunk_number):
+        with open(path  / '{}_{}{}'.format(chunked_file, str(i), ending)) as f:
+            first_line = next(f)
+        dimensionality = len(first_line.split(" ")) - 1
+
         df = pd.read_csv(path  / '{}_{}{}'.format(chunked_file, str(i), ending), sep=" ",
-                         encoding="utf-8", quoting=csv.QUOTE_NONE)
-        df.columns = ['word'] + ['x_{}'.format(idx + 1) for idx in range(df.shape[1] - 1)]
+                         encoding="utf-8", quoting=csv.QUOTE_NONE, names=['word'] + ['x_{}'.format(idx + 1) for idx in range(dimensionality)])
         if i == 0:
             df_join = pd.merge(df_join, df, how='left', on=['word'])
         else:
@@ -232,10 +234,13 @@ def data_handler(mode, config, word_embedding, cognitive_data, feature, truncate
         else:
             skip_rows = None
 
+        
+        with open(Path(config['PATH']) / config[emb_key][word_embedding]["path"]) as f:
+            first_line = next(f)
+        dimensionality = len(first_line.split(" ")) - 1
+        
         df_word_embedding = pd.read_csv(Path(config['PATH']) / config[emb_key][word_embedding]["path"], sep=" ",
-                            encoding="utf-8", quoting=csv.QUOTE_NONE, skiprows=skip_rows, header=None)
-
-        df_word_embedding.columns = ['word'] + ['x_{}'.format(idx + 1) for idx in range(df_word_embedding.shape[1] - 1)]
+                            encoding="utf-8", quoting=csv.QUOTE_NONE, skiprows=skip_rows, names=['word'] + ['x_{}'.format(idx + 1) for idx in range(dimensionality)])
 
         # Left (outer) Join to get wordembedding vectors for all words in cognitive dataset
         df_join = pd.merge(df_cognitive_data, df_word_embedding, how='left', on=['word'])

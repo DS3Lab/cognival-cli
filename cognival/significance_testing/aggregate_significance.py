@@ -9,7 +9,6 @@ def aggregate_signi_fmri(result_dir,
 
     with open(result_dir / 'fmri' / str(run_id) / '{}.json'.format(test)) as json_file:
         data = json.load(json_file)
-
         corrected_alpha = data['bonferroni_alpha']
 
         for emb in embeddings:
