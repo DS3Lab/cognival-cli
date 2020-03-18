@@ -132,19 +132,26 @@ def run(embeddings=['all'],
     ctx = context.get_context()
     resources_path = ctx.resources_path
     configuration = ctx.open_config
+    embedding_registry = ctx.embedding_registry
+    max_gpus = ctx.max_gpus
+
     if not configuration:
         cprint('No configuration open, aborting ...', 'red')
         return
 
-    config_dict = commands.run(ctx,
-                               configuration,
+    config_dict = _open_config(configuration, resources_path)
+
+    config_dict = commands.run(configuration,
+                               config_dict,
                                resources_path,
+                               embedding_registry,
                                embeddings,
                                modalities,
                                cognitive_sources,
                                cognitive_features,
                                processes,
                                n_gpus,
+                               max_gpus,
                                baselines)
     if config_dict:
         _save_config(config_dict, configuration, resources_path)
@@ -174,7 +181,7 @@ class List:
         ctx = context.get_context()
         resources_path = ctx.resources_path
         
-        formatted_list = commands.list_configs(ctx, resources_path)
+        formatted_list = commands.list_configs(resources_path)
 
         page_list([x.encode('utf-8') for x in formatted_list])
 
@@ -185,7 +192,11 @@ class List:
     ―
         """
         ctx = context.get_context()
-        commands.list_embeddings(ctx)
+        debug = ctx.debug
+        embedding_registry = ctx.embedding_registry
+        formatted_list = commands.list_embeddings(debug, embedding_registry)
+
+        page_list([x.encode('utf-8') for x in formatted_list])
 
     @command
     def cognitive_sources(self):
@@ -235,8 +246,9 @@ class Config:
 ―
         '''
         ctx = context.get_context()
+        cognival_path = ctx.cognival_path
         resources_path = ctx.resources_path
-        configuration = commands.config_open(configuration, resources_path, edit, overwrite)
+        configuration, _ = commands.config_open(configuration, cognival_path, resources_path, edit, overwrite)
         if configuration:
             ctx.open_config = configuration
     
@@ -425,8 +437,7 @@ def update_vocabulary():
     with open(vocab_path) as f:
         old_vocab = [x.rstrip('\n') for x in f]
 
-    new_vocab_list = commands.update_vocabulary(ctx,
-                                                cog_sources_path,
+    new_vocab_list = commands.update_vocabulary(cog_sources_path,
                                                 old_vocab)
 
     if new_vocab_list:
@@ -464,8 +475,7 @@ class Import:
         resources_path = ctx.resources_path
         cog_config = _open_cog_config(resources_path)
 
-        cog_config = commands.import_cognitive_sources(ctx,
-                                                       cognival_path,
+        cog_config = commands.import_cognitive_sources(cognival_path,
                                                        resources_path,
                                                        cog_config,
                                                        source)
@@ -483,15 +493,20 @@ class Import:
         ctx = context.get_context()
         resources_path = ctx.resources_path
         embeddings_path = ctx.embeddings_path
+        embedding_registry = ctx.embedding_registry
+        path2embeddings = ctx.path2embeddings
+        debug = ctx.debug
 
-        ctx = commands.import_embeddings(ctx,
+        embedding_registry = commands.import_embeddings(x,
+                                         embedding_registry,
+                                         path2embeddings,
                                          resources_path,
                                          embeddings_path,
-                                         x,
                                          force,
                                          log_only_success,
                                          are_set,
-                                         associate_rand_emb)
+                                         associate_rand_emb,
+                                         debug)
 
         if ctx:
             ctx.save_configuration()
@@ -518,16 +533,17 @@ class Import:
         ctx = context.get_context()
         resources_path = ctx.resources_path
         embeddings_path = ctx.embeddings_path
+        embedding_registry = ctx.embedding_registry
 
-        ctx = commands.import_random_baselines(ctx,
-                                               resources_path,
-                                               embeddings_path,
-                                               embeddings,
-                                               num_baselines,
-                                               seed_func,
-                                               force)
+        embedding_registry = commands.import_random_baselines(embedding_registry,
+                                                              resources_path,
+                                                              embeddings_path,
+                                                              embeddings,
+                                                              num_baselines,
+                                                              seed_func,
+                                                              force)
 
-        if ctx:
+        if embedding_registry:
             ctx.save_configuration()
 
 

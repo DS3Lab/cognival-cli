@@ -5,7 +5,14 @@ Nora Hollenstein, Antonio de la Torre, Ce Zhang & Nicolas Langer. "CogniVal: A F
 
 For practical purposes, this tool should be used. For reference, the original code base can be found in the [paper_code] (https://github.com/DS3Lab/cognival/tree/paper_code) branch of this repository (no longer maintained).
 
-**Note**: CogniVal is under active development, thus we highly recommend that you **verify** your configuration prior to runs. You can do so by executing `config show details=True`. Feel free to report issues and bugs you encounter.
+**Notes**:
+    - CogniVal is in active (and relatively early) development and testing coverage is as of yet low, thus we highly recommend that you take the following precautions:
+        - **Verify** your configuration prior to runs. You can easily do so by executing `config show details=True`.
+        - Include (at least) one **default embedding** (e.g. `glove.6B.50`) and one **cognitive source** (e.g. `eeg_zuco`) bundled with CogniVal, along with any custom embeddings and custom cognitive sources you evaluate. Verify that the results match those reported (in the paper/in the table below) to rule out any regressions in the prediction pipeline, as well as significance testing and aggregation steps.
+    - Processing on GPUs is implemented, however is presently neither stable nor performant and is not tested, thus it is disabled by default. For productive use, evaluations should only be carried out on CPU.
+    - Experimental runs with results intended for publication should always include random baselines and be tested for significance.
+
+ Feel free to report issues and bugs you encounter.
 
 ## Requirements
 - Python 3.7.4 or newer
