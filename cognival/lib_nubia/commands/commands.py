@@ -26,6 +26,7 @@ import zipfile
 
 from pathlib import Path
 from textwrap import fill
+from tqdm import tqdm
 
 import gdown
 from joblib import Parallel, delayed
@@ -79,6 +80,7 @@ from .process import (filter_config,
 from .utils import (tupleit,
                    _open_config,
                    _open_cog_config,
+                   _check_cog_installed,
                    _backup_config,
                    _save_cog_config,
                    _save_config,
@@ -109,18 +111,28 @@ warnings.formatwarning = custom_formatwarning
 NUM_BERT_WORKERS = 1
 COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1ouonaByYn2cnDAWihnQ3cGmMT6bJ4NaP'
 
-def run(ctx,
-        configuration,
+def run(configuration,
+        config_dict,
         resources_path,
+        embedding_registry,
         embeddings,
         modalities,
         cognitive_sources,
         cognitive_features,
         processes,
         n_gpus,
+        max_gpus,
         baselines):
+
+    cog_sources_conf = _open_cog_config(resources_path)
+    if not _check_cog_installed(resources_path):
+        cprint('CogniVal sources not installed! Aborted ...', 'red')
+        return
+
+    # Set GPU IDs
+
     # max_gpus overrides n_gpus if smaller
-    max_gpus = ctx.max_gpus if (ctx.max_gpus and (not n_gpus or (n_gpus and (ctx.max_gpus < n_gpus)))) else n_gpus if n_gpus else None
+    max_gpus = max_gpus if (max_gpus and (not n_gpus or (n_gpus and (max_gpus < n_gpus)))) else n_gpus if n_gpus else None
 
     _gpu_ids_all = configure_tf_devices()
     
@@ -132,18 +144,23 @@ def run(ctx,
     else:
         gpu_ids = None
 
-    parametrization = filter_config(configuration,
-                                     embeddings,
-                                     modalities,
-                                     cognitive_sources,
-                                     cognitive_features,
-                                     baselines)
+    # Obtain parametrization, filter configuration if so specified
+    parametrization = filter_config(embedding_registry,
+                                    cog_sources_conf,
+                                    configuration,
+                                    config_dict,
+                                    embeddings,
+                                    modalities,
+                                    cognitive_sources,
+                                    cognitive_features,
+                                    baselines)
     
     if not parametrization:
         return
 
     config_dict, embeddings_list, emb_to_random_dict, cog_sources_list, cog_source_to_feature = parametrization
 
+    # Run parallelized evaluation and obtain results dictionary.
     results_dict = run_parallel(config_dict,
                                 emb_to_random_dict,
                                 embeddings_list,
@@ -156,6 +173,7 @@ def run(ctx,
         cprint('\nAborted run ...', 'red')
         return
     
+    # Process and write results (required for significance testing) and option files (required for aggregation) per modality
     for modality, results in results_dict.items():
         run_stats = {}
         for id_, (result_proper, result_random, rand_emb, options) in enumerate(zip(results["proper"],
@@ -170,8 +188,10 @@ def run(ctx,
     return config_dict
 
 
-def list_configs(ctx, resources_path):
+def list_configs(resources_path):
     general_param_dicts = []
+    
+    # Load all configuration files (except reference) and adjust for tabulation
     for entry in os.scandir(resources_path):
         if entry.name.endswith('config.json'):
             with open(entry) as f:
@@ -182,6 +202,7 @@ def list_configs(ctx, resources_path):
                     general_params['config'] = config
                     general_param_dicts.append(general_params)
 
+    # Build formatted table
     fgrid = tform.AlternatingRowGrid()
     cols = ['config'] + [k for k in general_param_dicts[0].keys() if not k == 'config']
     rows = [[colored(x['config'], attrs=['bold'], color='yellow')] + [v for k, v in x.items() if not k == 'config'] for x in general_param_dicts]
@@ -190,27 +211,49 @@ def list_configs(ctx, resources_path):
                                             columns=cols,
                                             grid_style=fgrid)
     header_msg = colored('List of available configurations. Note that the reference configuration is read-only and not listed.', 'green')
+    
+    # Return list intended for displaying in pagination
     formatted_list = [header_msg, '\n\n', formatted_table]
     return formatted_list
 
 
-def list_embeddings(ctx):
-    if ctx.debug:
+def list_embeddings(debug, embedding_registry):
+    if debug:
         emb_types = ['proper', 'random_static', 'random_multiseed']
     else:
         emb_types = ['proper', 'random_multiseed']
 
+    relevant_keys = ('embeddings', 'dimensions', 'installed', 'truncate_first_line', 'chunked', 'random_embedding')
+    titles = {'proper': 'Embeddings', 'random_multiseed': 'Baselines'}
+
+    # Tabulate relevant information of embeddings and random baselines
+    header_msg = colored('List of available and installed (custom) embeddings.', 'green')
+    formatted_list = [header_msg, '\n\n']
+
     for emb_type in emb_types:
-        cprint(emb_type.title(), attrs=['bold'])
-        for key, value in ctx.embedding_registry[emb_type].items():
-            cprint(key, 'cyan', end=' '*(25-len(key)))
-            if value['installed']:
-                cprint('imported', 'green', attrs=['bold'])
-            else:
-                cprint('not imported', 'red', attrs=['bold'])
+        title = colored(titles[emb_type], attrs=['bold'])
+        param_dicts = []
+        for key, value in embedding_registry[emb_type].items():
+            value['embeddings'] = key
+            param_dicts.append(value)
+        
+        fgrid = tform.AlternatingRowGrid()
+        if param_dicts:
+            cols = [x for x in relevant_keys if x in param_dicts[0]]
+            rows = [[colored(x['embeddings'], attrs=['bold'], color='yellow')] + [x[k] for k in relevant_keys if k in x and not k == 'embeddings'] for x in param_dicts]
+            rows.sort(key=lambda x: x[0])
+            
+            formatted_table = tform.generate_table(rows=rows,
+                                                    columns=cols,
+                                                    grid_style=fgrid)
+            
+            # Return list intended for displaying in pagination
+            formatted_list.extend([title, '\n\n', formatted_table, '\n\n'])
+    return formatted_list
 
 
 def list_cognitive_sources(cog_config):
+    # List cognitive sources along with features (where applicable)
     formatted_list = []
 
     for modality in cog_config['sources']:
@@ -232,13 +275,13 @@ def list_cognitive_sources(cog_config):
                     formatted_list.append('\n')
             formatted_list.append('\n')
         formatted_list.append('\n')
-
     return formatted_list
 
 
-def config_open(configuration, resources_path, edit, overwrite):
+def config_open(configuration, cognival_path, resources_path, edit, overwrite):    
     create = False
 
+    # Determine if config needs to be created or overwritten
     if os.path.exists(resources_path / '{}_config.json'.format(configuration)):
         if overwrite:
             create = yes_no_dialog(title='Configuration {} already exists.'.format(configuration),
@@ -251,23 +294,30 @@ def config_open(configuration, resources_path, edit, overwrite):
     else:
         create = True
 
+    # Open editor when creating (always) or opening (if edit=True)
     if create:
         config_dict = copy.deepcopy(MAIN_CONFIG_TEMPLATE)
-        _edit_config(config_dict, configuration)
+        _edit_config(resources_path, cognival_path, config_dict, configuration)
+        _backup_config(configuration, resources_path)
+        _save_config(config_dict, configuration, resources_path)
     else:
         config_dict = _open_config(configuration, resources_path)
         if not config_dict:
             return
         if edit:
-            _edit_config(config_dict, configuration)
-
-    return configuration
+            _edit_config(resources_path, cognival_path, config_dict, configuration)
+            _backup_config(configuration, resources_path)
+            _save_config(config_dict, configuration, resources_path)
+    
+    return configuration, config_dict
 
 
 def config_show(configuration, config_dict, details, cognitive_source, hide_baselines):
     fgrid = tform.FancyGrid()
     altgrid = tform.AlternatingRowGrid()
     table_strs = []
+    
+    # Tabulate general configuration properties
     if not cognitive_source:
         table_strs.append(colored("Note: Use 'config open {}' to edit the general properties of this configuration.".format(configuration), attrs=["bold"], color="green"))
         table_strs.append('\n')
@@ -298,6 +348,7 @@ def config_show(configuration, config_dict, details, cognitive_source, hide_base
         table_strs.append(formatted_table)
         table_strs.append('\n')
     
+    # Show details of cognitive source(s) if single source specified or details==True (all sources)
     if cognitive_source:
         cognitive_sources = [cognitive_source]
     elif details:
@@ -325,7 +376,6 @@ def config_show(configuration, config_dict, details, cognitive_source, hide_base
         formatted_table = tform.generate_table(rows=[[', '.join(x[1]) if isinstance(x[1], list) else x[1] for x in cog_source_properties]],
                                             columns=[x[0] for x in cog_source_properties],
                                             grid_style=fgrid,
-                                            #row_tagger=row_stylist,
                                             transpose=False)
         table_strs.append(formatted_table)
         table_strs.append('\n')
@@ -354,7 +404,7 @@ def config_show(configuration, config_dict, details, cognitive_source, hide_base
 
 def config_experiment(configuration,
                       main_conf_dict,
-                      cog_data_config_dict,
+                      cog_config_dict,
                       embedding_registry,
                       resources_path,
                       baselines,
@@ -396,18 +446,20 @@ def config_experiment(configuration,
         if scope not in ('all', 'config'):
             cprint("Error: Invalid value for parameter 'scope'.", 'red')
             raise AbortException
-
+    
+    # Resolve passed cognitive sources and embeddings, considering specified scope
     try:
         cognitive_sources, embeddings = resolve_cog_emb(modalities,
                                                         cognitive_sources,
                                                         embeddings,
                                                         main_conf_dict,
-                                                        cog_data_config_dict,
+                                                        cog_config_dict,
                                                         embedding_registry,
                                                         scope=scope)
     except AbortException:
         return
 
+    # Only edit cognitive sources or combinations of cognitive sources and embeddings
     if not embeddings or (embeddings and not cognitive_sources):
         return
 
@@ -418,12 +470,15 @@ def config_experiment(configuration,
             if populate_conf:
                 cprint('Source {} not yet registered, creating ...'.format(csource), 'yellow')
                 try:
-                    populate(configuration,
-                                main_conf_dict,
-                                rand_embeddings=False,
-                                cognitive_sources=[csource],
-                                embeddings=[],
-                                quiet=True)
+                    populate(resources_path,
+                             embedding_registry,
+                             cog_config_dict,
+                             configuration,
+                             main_conf_dict,
+                             rand_embeddings=False,
+                             cognitive_sources=[csource],
+                             embeddings=[],
+                             quiet=True)
                 except AbortException:
                     return
             else:
@@ -434,7 +489,7 @@ def config_experiment(configuration,
             embeddings = list(cog_data_config_dict[csource]["wordEmbSpecifics"].keys())
 
         if edit_cog_source_params:
-            # Run config editor for cognitive source
+            # Run config editor for cognitive source if parameter edit_cog_source_params is set
             config_patch = config_editor("cognitive",
                                             cog_data_config_dict[csource],
                                             [],
@@ -442,6 +497,7 @@ def config_experiment(configuration,
                                             singleton_params=['dataset', 'parent', 'type', 'modality'],
                                             skip_params=['wordEmbSpecifics'])
 
+            # If patch dictionary is set, apply, backup existing and save new configuration
             if config_patch:
                 cog_data_config_dict[csource].update(config_patch)
                 if not backed_up:
@@ -451,6 +507,7 @@ def config_experiment(configuration,
             else:
                 return
 
+        # Populate embeddings only if neither editing_cog_source_params nor editing embedding specifics of all embeddings
         if not edit_cog_source_params or not edit_all_embeddings:
             for emb in embeddings:
                 do_populate = False
@@ -462,12 +519,15 @@ def config_experiment(configuration,
 
                 if do_populate:
                     try:
-                        populate(configuration,
-                                main_conf_dict,
-                                rand_embeddings=baselines,
-                                cognitive_sources=[csource],
-                                embeddings=[emb],
-                                quiet=True)
+                        populate(resources_path,
+                                 embedding_registry,
+                                 cog_config_dict,
+                                 configuration,
+                                 main_conf_dict,
+                                 rand_embeddings=baselines,
+                                 cognitive_sources=[csource],
+                                 embeddings=[emb],
+                                 quiet=True)
                     except AbortException:
                         return
 
@@ -483,6 +543,7 @@ def config_experiment(configuration,
             else:
                 emb_to_label[emb] = emb
 
+        # Editing specifics of each embedding individually
         if single_edit:
             for idx, ((csource, emb), cdict) in enumerate(zip(cog_emb_pairs, config_dicts)):
                 config_template = copy.deepcopy(config_dicts[idx])
@@ -503,6 +564,7 @@ def config_experiment(configuration,
                         _backup_config(configuration, resources_path)
                         backed_up = True
                     _save_config(main_conf_dict, configuration, resources_path)
+        # Editing embedding specifics of multiple embeddings at once
         else:
             config_template = copy.deepcopy(config_dicts[0])
             # Generate template for multi-editing
@@ -546,15 +608,19 @@ def config_delete(configuration,
                   embedding_registry,
                   modalities,
                   cognitive_sources,
-                  embeddings):
-
+                  embeddings,
+                  force=False):
+    # Delete entire configuration
     if not cognitive_sources and not modalities and not embeddings:
-        delete_config = button_dialog(title='Deletion',
-                            text='You have not specified cognitive sources and embeddings for removal. Do you wish to delete configuration "{}"?'.format(configuration),
-                            buttons=[
-                                    ('No', False),
-                                    ('Yes', True),
-                                    ]).run()
+        if force:
+            delete_config = True
+        else:
+            delete_config = button_dialog(title='Deletion',
+                                text='You have not specified cognitive sources and embeddings for removal. Do you wish to delete configuration "{}"?'.format(configuration),
+                                buttons=[
+                                        ('No', False),
+                                        ('Yes', True),
+                                        ]).run()
         if delete_config:
             os.remove(resources_path / '{}_config.json'.format(configuration))
             cprint('Deleting configuration "{}" ...'.format(configuration), 'yellow')
@@ -562,13 +628,17 @@ def config_delete(configuration,
         else:
             return
     
+    # Delete embeddings from all sources
     elif not cognitive_sources and not modalities:
-        all_sources = button_dialog(title='Deletion',
-                            text='You have not specified cognitive sources or modalities. Do you wish to remove the specified embeddings for all sources?',
-                            buttons=[
-                                    ('No', False),
-                                    ('Yes', True),
-                                    ]).run()
+        if force:
+            all_sources = True
+        else:
+            all_sources = button_dialog(title='Deletion',
+                                text='You have not specified cognitive sources or modalities. Do you wish to remove the specified embeddings for all sources?',
+                                buttons=[
+                                        ('No', False),
+                                        ('Yes', True),
+                                        ]).run()
         if all_sources:
             cognitive_sources = ['all']
         else:
@@ -591,52 +661,64 @@ def config_delete(configuration,
     except AbortException:
         return
 
-    cog_data_config_dict = main_conf_dict['cogDataConfig']
+    main_conf_dict['cogDataConfig']
     
     # Remove experiments
     if embeddings:
         cprint("Removing experiments ...", "magenta")
         for csource in cognitive_sources:            
             for emb in embeddings:
-                if emb in cog_data_config_dict[csource]["wordEmbSpecifics"]:
+                if emb in main_conf_dict['cogDataConfig'][csource]["wordEmbSpecifics"]:
                     rand_emb = main_conf_dict["wordEmbConfig"][emb]["random_embedding"]
+
+                    del main_conf_dict['cogDataConfig'][csource]["wordEmbSpecifics"][emb]
+
+                    # Remove associated random embeddings if present
                     if rand_emb:
                         cprint ("Deleting {}/{} and associated random baselines set {}/{}...".format(csource, emb, csource, rand_emb), 'green')
                     else:
                         cprint ("Deleting {}/{} ...".format(csource, emb), 'green')
-                    del cog_data_config_dict[csource]["wordEmbSpecifics"][emb]
+
                     if rand_emb:
                         for rand_emb_part in main_conf_dict["randEmbSetToParts"][rand_emb]:
-                            del cog_data_config_dict[csource]["wordEmbSpecifics"][rand_emb_part]
+                            del main_conf_dict['cogDataConfig'][csource]["wordEmbSpecifics"][rand_emb_part]
 
                     # Delete embedding config and associated random embedding configs if not longer used by any cognitive source
-                    if not any(emb in cog_data_dict["wordEmbSpecifics"] for cog_data_dict in cog_data_config_dict.values()):
-                        cprint("Embedding {} no longer used by any cognitive source, removing (and associated random baselines if applicable and unused)".format(emb), 'yellow')
-                        assoc_rand_emb = main_conf_dict["wordEmbConfig"][emb]["random_embedding"]
-                        if assoc_rand_emb:
-                            for rand_emb_part in main_conf_dict["randEmbSetToParts"][assoc_rand_emb]:
-                                if not any(rand_emb_part in cog_data_dict["wordEmbSpecifics"] for cog_data_dict in cog_data_config_dict.values()):
-                                    del main_conf_dict["randEmbConfig"][rand_emb_part]
-                            del main_conf_dict["randEmbSetToParts"][assoc_rand_emb]
-                        del main_conf_dict["wordEmbConfig"][emb]
+                    remove_dangling_emb_random(emb, main_conf_dict)
                 else:
                     cprint ("Combination {}/{} not found in configuration {}, skipping ...".format(csource, emb, configuration), 'yellow')
         
-            # Remove source if empty
-            if not cog_data_config_dict[csource]["wordEmbSpecifics"]:
+            # Remove cognitive source if empty
+            if not main_conf_dict['cogDataConfig'][csource]["wordEmbSpecifics"]:
                 cprint("Deleting now empty source {} ...".format(csource), 'yellow')
-                del cog_data_config_dict[csource]
+                del main_conf_dict['cogDataConfig'][csource]
 
-    # Remove complete cognitive source
+    # Remove complete cognitive source along with embeddings
     else:
         cprint("Removing cognitive sources ...", "magenta")
         for csource in cognitive_sources:            
-            if csource in cog_data_config_dict:
+            if csource in main_conf_dict['cogDataConfig']:
                 cprint ("Deleting {} ...".format(csource), 'green')
-                del cog_data_config_dict[csource]
+                del main_conf_dict['cogDataConfig'][csource]
+                for emb in list(main_conf_dict["wordEmbConfig"]):
+                    remove_dangling_emb_random(emb, main_conf_dict)
             else:
                 cprint ("Cognitive source {} not found in configuration {}, skipping ...".format(csource, configuration), 'yellow')
 
+    return main_conf_dict
+
+
+def remove_dangling_emb_random(emb, main_conf_dict):
+    # Delete embedding config and associated random embedding configs if not longer used by any cognitive source
+    if not any(emb in cd_dict["wordEmbSpecifics"] for cd_dict in main_conf_dict['cogDataConfig'].values()):
+        cprint("Embedding {} no longer used by any cognitive source, removing (and associated random baselines if applicable and unused)".format(emb), 'yellow')
+        assoc_rand_emb = main_conf_dict["wordEmbConfig"][emb]["random_embedding"]
+        if assoc_rand_emb:
+            for rand_emb_part in main_conf_dict["randEmbSetToParts"][assoc_rand_emb]:
+                if not any(rand_emb_part in cd_dict["wordEmbSpecifics"] for cd_dict in main_conf_dict['cogDataConfig'].values()):
+                    del main_conf_dict["randEmbConfig"][rand_emb_part]
+            del main_conf_dict["randEmbSetToParts"][assoc_rand_emb]
+        del main_conf_dict["wordEmbConfig"][emb]
     return main_conf_dict
 
 
@@ -646,7 +728,6 @@ def significance(config_dict,
                  alpha,
                  test,
                  quiet):
-
     out_dir = Path(config_dict["PATH"]) / config_dict["outputDir"]
 
     # Get mapping of previous run_id (current not yet executed)
@@ -694,6 +775,7 @@ def significance(config_dict,
         
         embeddings = list(config_dict["wordEmbConfig"])
 
+        # Extract results for significance testing
         for ds in datasets:
             for feat in config_dict["cogDataConfig"][ds]["features"]:
                 for embed in embeddings:
@@ -703,14 +785,16 @@ def significance(config_dict,
                     except KeyError:
                         pass
 
+        # Determine number of hypotheses for significance testing
         hypotheses = sum([1 for filename in os.listdir(sig_test_res_dir) if 'embeddings_' in filename])
         
-        # Skip modality if no hypotheses found ...
+        # Skip modality if no hypotheses found
         if not hypotheses:
             if not quiet:
                 cprint('No hypotheses, skipping ...', 'yellow')
             continue
 
+        # Compute bonferroni-corrected alpha
         bf_corr_alpha = bonferroni_correction(alpha, hypotheses)
 
         if not quiet:
@@ -722,8 +806,10 @@ def significance(config_dict,
         results = collections.defaultdict(dict)
         results['bonferroni_alpha'] = bf_corr_alpha
 
+        # For each hypothesis (i.e. non-baseline)
         for filename in os.listdir(sig_test_res_dir):
             if not 'baseline' in filename:
+                # Obtain feature and average MSE
                 experiment = re.sub(r'embeddings_scores_(.*?).txt', r'\1', filename)
                 embedding = mapping_dict[experiment]['embedding']
                 with open(experiments_dir / mapping_dict[experiment]['proper'] / '{}.json'.format(embedding)) as f:
@@ -731,10 +817,12 @@ def significance(config_dict,
                 avg_mse = result_json['AVERAGE_MSE']
                 feature = mapping_dict[experiment]['feature']
 
+                # Perform significance testing
                 model_file = sig_test_res_dir / filename
                 baseline_file = sig_test_res_dir / 'baseline_{}'.format(filename.partition('_')[2])
                 significant, pval, name = test_significance(baseline_file, model_file, bf_corr_alpha, test)
                 
+                # Store and display results
                 results['hypotheses'][name] = {'p_value': pval,
                                                 'alpha': alpha,
                                                 'significant': significant,
@@ -753,8 +841,12 @@ def significance(config_dict,
                     cprint('    - {}'.format(name), attrs=['bold'], color=color, end='')
                     cprint(out_str, color)
 
-        with open(report, 'w', encoding='utf-8') as fp:
-            json.dump(dict(results), fp, indent=4)
+            json_str = json.dumps(dict(results), indent=4)
+            yield json_str
+            
+            with open(report, 'w', encoding='utf-8') as fp:
+                fp.write(json_str)
+                
 
 
 def aggregate(config_dict,
@@ -802,6 +894,8 @@ def aggregate(config_dict,
     modality_to_experiments = collections.defaultdict(list)
     
     options_dicts = []
+    
+    # Retrieve options dict per modality
     for modality in modalities:
         try:
             with open(Path(out_dir) / 'experiments' / modality / 'options_{}.json'.format(run_id)) as f:
@@ -816,6 +910,8 @@ def aggregate(config_dict,
             if properties['modality'] == modality:
                 modality_to_experiments[modality].append(properties['embedding'])
 
+    
+    # Collect embedding - baseline (random embedding) pairs
     emb_bl_pairs = []
 
     for k, v in config_dict["wordEmbConfig"].items():
@@ -830,6 +926,7 @@ def aggregate(config_dict,
         cprint('No embedding-baseline pairs, aborting ...', 'red')
         return
     
+    # Extract results for aggregation and aggregate significance scores
     for modality, options_dict in zip(modalities, options_dicts):
         if not quiet:
             cprint('\n[{}]\n'.format(modality.upper()), attrs=['bold'], color='green')
@@ -847,16 +944,21 @@ def aggregate(config_dict,
         df_rows = []
         df_rows_cli = []
 
+        # Tabulate aggregated scores for CLI display and JSON export
         for emb, base in zip(embeddings, baselines):
             try:
-                if modality == 'eye-tracking':
-                    avg_base = results[base]
-                    avg_emb = results[emb]
-                else:
-                    avg_base = results[base]
-                    avg_emb = results[emb]
-                df_rows_cli.append({'Word embedding':emb, 'Ø MSE Baseline':avg_base, 'Ø MSE Proper':avg_emb, 'Significance':  colored(significance[emb], 'yellow')})
-                df_rows.append({'Word embedding':emb, 'Ø MSE Baseline':avg_base, 'Ø MSE Proper':avg_emb, 'Significance': significance[emb]})
+                avg_base = results[base]
+                avg_emb = results[emb]
+                df_rows_cli.append({'Word embedding': emb,
+                                    'Ø MSE Baseline': avg_base,
+                                    'Ø MSE Proper': avg_emb,
+                                    'Significance': colored(significance[emb], 'yellow')})
+
+                df_rows.append({'Word embedding':emb,
+                                'Ø MSE Baseline':avg_base,
+                                'Ø MSE Proper':avg_emb,
+                                'Significance': significance[emb]})
+
             except KeyError:
                 pass
 
@@ -864,41 +966,51 @@ def aggregate(config_dict,
         df_cli.columns = [colored(col, attrs=['bold']) for col in df_cli.columns]
         df = pd.DataFrame(df_rows)
         df.set_index('Word embedding', drop=True, inplace=True)
-        df.to_json(report_dir / modality / str(run_id) / 'aggregated_scores.json')
+        df_json = df.to_json()
+
+        yield df_json
+        
+        with open(report_dir / modality / str(run_id) / 'aggregated_scores.json', 'w') as f:
+            f.write(df_json)
+        
         if not quiet:
             print(tabulate.tabulate(df_cli, headers="keys", tablefmt="fancy_grid", showindex=False))
 
 
-def update_vocabulary(ctx,
-                      cog_sources_path,
+def update_vocabulary(cog_sources_path,
                       old_vocab):
     old_vocab = set(old_vocab)
     old_len = len(old_vocab)
 
     new_vocab = set()
-    source_paths = [(Path(path) / source) for path, _, sources in os.walk(cog_sources_path) for source in sources if not source.startswith('.')]
+    source_paths = [(Path(path) / source) for path, _, sources in os.walk(cog_sources_path) for source in sources \
+                        if source.endswith('txt') and not source.startswith('.')]
     cprint("Updating CogniVal vocabulary from cognitive sources ...", "yellow")
-    with ProgressBar() as pb:
-        for source_path in pb(source_paths):
-            df = pd.read_csv(source_path,
-                             sep=" ",
-                             quotechar=None,
-                             quoting=csv.QUOTE_NONE,
-                             doublequote=False,
-                             keep_default_na=False)
-            is_nan_series = df['word'].isnull()
-            if is_nan_series.values.any():
-                # Row number: Correct for header
-                nan_indices = is_nan_series.index[is_nan_series == True] + 1
-                nan_indices = nan_indices.tolist()
-                cprint('Warning - NaNs in (rows: {}): {}'.format(', '.join(map(str, list(nan_indices))), source_path), 'yellow')
-                
-            df.fillna('', inplace=True)
-            new_vocab |= set(df['word'])
+    
+    # Iterate over sources
+    for source_path in tqdm(source_paths):
+        df = pd.read_csv(source_path,
+                            sep=" ",
+                            quotechar=None,
+                            quoting=csv.QUOTE_NONE,
+                            doublequote=False,
+                            keep_default_na=False)
+        
+        # Determine if any NaNs in word column, warn accordingly
+        is_nan_series = df['word'].isnull()
+        if is_nan_series.values.any():
+            nan_indices = is_nan_series.index[is_nan_series == True] + 1
+            nan_indices = nan_indices.tolist()
+            cprint('Warning - NaNs in (rows: {}): {}'.format(', '.join(map(str, list(nan_indices))), source_path), 'yellow')
+            
+        # Fill NaNs and perform inplace set union with new vocabulary set
+        df.fillna('', inplace=True)
+        new_vocab |= set(df['word'])
 
     new_vocab_list = sorted([x for x in new_vocab if x])
     new_len = len(new_vocab_list)
 
+    # Report changes in vocabulary size
     if new_len == old_len:
         cprint('Vocabulary size unchanged ({})'.format(old_len), 'magenta')
     else:
@@ -907,19 +1019,18 @@ def update_vocabulary(ctx,
         elif new_len < old_len:
             cprint('Vocabulary size decreased (previous/new): {}/{} (Caution: Vocabulary size has decreased!)'.format(old_len, new_len), 'yellow')
 
+    # Display a diff (union the sets minus intersection)
     diff_list = ', '.join(sorted(list((old_vocab | new_vocab) - (old_vocab & new_vocab))))
     if diff_list:
         cprint('Diff: {}'.format(diff_list))
-
+        
     return new_vocab_list
 
 
-def import_cognitive_sources(ctx,
-                             cognival_path,
+def import_cognitive_sources(cognival_path,
                              resources_path,
                              cog_config,
                              source):
-
     basepath = cognival_path / 'cognitive_sources'
 
     if source == 'cognival': 
@@ -1003,12 +1114,13 @@ def import_cognitive_sources(ctx,
         else:
             features = [x.strip() for x in features.split(',')]
 
-        # Prefix modality
+        # Add config dictionary
         cog_config['sources'][modality][source] = {'file': '{}.txt'.format(source),
                                                     'features': features,
                                                     'dimensionality': dimensionality,
                                                     'hypothesis_per_participant': False,
                                                     'installed': True}
+        # Add to index
         index = cog_config['index']
         index.append('{}_{}'.format(modality, source))
         cog_config['index'] = natsorted(list(set(index)))
@@ -1020,22 +1132,24 @@ def import_cognitive_sources(ctx,
     
     cprint("Completed importing cognitive sources ({})".format(source), "green")
 
+    # Display a tree of the cognitive-sources directory for reference
     paths = DisplayablePath.make_tree(basepath, max_len=10, max_depth=3)
 
     for path in paths:
         cprint(path.displayable(), 'cyan')
-    
     return cog_config
 
 
-def import_embeddings(ctx,
+def import_embeddings(x,
+                      embedding_registry,
+                      path2embeddings,
                       resources_path,
-                      embeddings_path,
-                      x,
-                      force,
-                      log_only_success,
-                      are_set,
-                      associate_rand_emb):
+                      embeddings_path,                      
+                      force=False,
+                      log_only_success=False,
+                      are_set=False,
+                      associate_rand_emb=False,
+                      debug=False):
     if not are_set:
         associate_rand_emb = yes_no_dialog(title='Random baseline generation',
                                             text='Do you wish to compare the embeddings with random baselines of identical dimensionality? \n').run()
@@ -1043,50 +1157,67 @@ def import_embeddings(ctx,
     
     # Download all embeddings
     if x == 'all':
-        for emb in ctx.embedding_registry['proper']:
+        for emb in embedding_registry['proper']:
             import_embeddings(emb,
-                            are_set=True,
-                            associate_rand_emb=associate_rand_emb)
+                              embedding_registry,
+                              path2embeddings,
+                              resources_path,
+                              embeddings_path,
+                              emb,
+                              are_set=True,
+                              associate_rand_emb=associate_rand_emb)
 
         # Download random baselines
-        if ctx.debug:
-            for rand_emb in ctx.embedding_registry['random_static']:
-                import_embeddings(rand_emb, log_only_success=True)
+        if debug:
+            for rand_emb in embedding_registry['random_static']:
+                import_embeddings(rand_emb,
+                                  embedding_registry,
+                                  path2embeddings,
+                                  resources_path,
+                                  embeddings_path,
+                                  rand_emb,
+                                  log_only_success=True)
         return
 
-    # Download all static random baselines
+    # Download all static random baselines (debug, not intended for productive use)
     elif x == 'all_random':
-        if ctx.debug:
-            for rand_emb in ctx.embedding_registry['random_static']:
-                import_embeddings(rand_emb, log_only_success=True)
-            folder = ctx.embedding_registry['random_static'][rand_emb]['path']
+        if debug:
+            for rand_emb in embedding_registry['random_static']:
+                import_embeddings(rand_emb,
+                                  embedding_registry,
+                                  path2embeddings,
+                                  resources_path,
+                                  embeddings_path,
+                                  rand_emb,
+                                  log_only_success=True)
+            folder = embedding_registry['random_static'][rand_emb]['path']
         else:
             cprint('Error: random baselines must be generated using "import random-baselines"', 'red')
             return
 
-    # Download a set of static random baselines
+    # Download a set of static random baselines (debug, not intended for productive use)
     elif x.startswith('random'):
-        if ctx.debug:
-            name = x
-            url = ctx.embedding_registry['random_static'][x]['url']
+        if debug:
+            emb_name = x
+            url = embedding_registry['random_static'][x]['url']
             path = 'random_static'
-            folder = ctx.embedding_registry['random_static'][name]['path']
+            folder = embedding_registry['random_static'][emb_name]['path']
         else:
             cprint('Error: random baselines must be generated using "import random-baselines"', 'red')
             return
 
-    # Download a set of default embeddings
-    elif x in ctx.embedding_registry['proper']:
+    # Download a set of default embeddings (pre-registered in the embeddings registry)
+    elif x in embedding_registry['proper']:
         if x.startswith('bert'):
             cprint('Warning:', attrs=['bold', 'reverse'], color='red', end='')
             print(' ', end='')
             cprint('BERT conversion is extremely memory-intensive. 16GB of RAM or more (depending on the embedding size) highly recommended. Press Ctrl-C to abort.', attrs=['reverse'], color='yellow')
-        name = x
-        url = ctx.embedding_registry['proper'][x]['url']
+        emb_name = x
+        url = embedding_registry['proper'][x]['url']
         # Always assume subdirectories to be part of the archive!
-        path = ctx.embedding_registry['proper'][x]['path'].split('/')[0]
-        folder = ctx.embedding_registry['proper'][name]['path']
-        emb_dim = ctx.embedding_registry['proper'][name]['dimensions']
+        path = embedding_registry['proper'][x]['path'].split('/')[0]
+        folder = embedding_registry['proper'][emb_name]['path']
+        emb_dim = embedding_registry['proper'][emb_name]['dimensions']
 
     # Download custom embedding via URL
     else:
@@ -1094,12 +1225,12 @@ def import_embeddings(ctx,
             local = True
         elif not x.startswith('http') and x is not None:
             cprint("Specified value is neither a default embedding, valid URL or path of an existing file, aborting ...", "red")
-            list_embeddings(ctx)
+            list_embeddings(debug, embedding_registry)
             return
 
         url = x
         
-        name = input_dialog(title='Embedding registration',
+        emb_name = input_dialog(title='Embedding registration',
                             text='You have provided a custom embedding URL/file path ({}). Please make sure that\n'
                                     'all of the following criteria are met:\n\n'
                                     '- The passed value is either a local path or an URL representing a direct HTTP(S) link to the file or a Google Drive link. \n'
@@ -1109,12 +1240,12 @@ def import_embeddings(ctx,
                                     'directory and \nregister them in {}/embedding_registry.json\n\n'
                                     'Please enter a short name for the embeddings:'.format(url, str(embeddings_path), str(resources_path)),
                             ).run()
-        if name is None:
+        if emb_name is None:
             cprint("Aborting ...", "red")
             return
         
-        elif not name:
-            name = 'my_custom_embeddings'
+        elif not emb_name:
+            emb_name = 'my_custom_embeddings'
             cprint('No name specified, using "my_custom_embeddings" ...', 'yellow')
 
         main_emb_file = input_dialog(title='Embedding registration',
@@ -1195,7 +1326,7 @@ def import_embeddings(ctx,
             if not chunk_number:
                 chunk_number = 4
 
-        ctx.embedding_registry['proper'][name] = {'url': url,
+        embedding_registry['proper'][emb_name] = {'url': url,
                                                 'dimensions': emb_dim,
                                                 'path': path,
                                                 'embedding_file': main_emb_file if not emb_binary else '{}.txt'.format(main_emb_file.rsplit('.', maxsplit=1)[0]),
@@ -1211,15 +1342,16 @@ def import_embeddings(ctx,
                                                 'random_embedding': None}
         
         # Make mapping for current session (loaded from config upon next start)
-        ctx.path2embeddings[folder] = [name]
+        path2embeddings[folder] = [emb_name]
 
     # Check if embeddings already installed
-    if x in ctx.embedding_registry['proper'] and ctx.embedding_registry['proper'][x]['installed'] and not force:
+    if x in embedding_registry['proper'] and embedding_registry['proper'][x]['installed'] and not force:
         if not log_only_success:
-            cprint('Embedding {} already imported. Use "force" to override'.format(name), 'yellow')
+            cprint('Embedding {} already imported. Use "force" to override'.format(emb_name), 'yellow')
         return
 
     if url:
+        # Get file name and paths
         fname = url.split('/')[-1]
         fpath = embeddings_path / fname
         fpath_extracted = embeddings_path / path
@@ -1233,7 +1365,8 @@ def import_embeddings(ctx,
             cprint('Copying and importing:', 'yellow', end =' ') 
         else:
             cprint('Downloading and importing:', 'yellow', end =' ') 
-        cprint('{}'.format(name), 'yellow', attrs=['bold'])
+        cprint('{}'.format(emb_name), 'yellow', attrs=['bold'])
+        
         # Google Drive downloads
         if 'drive.google.com' in url:
             gdown.download(url, str(embeddings_path / 'gdrive_embeddings.dat'), quiet=False)
@@ -1247,7 +1380,8 @@ def import_embeddings(ctx,
                     with open(fpath_extracted / '{}.bin'.format(path), 'wb') as f_out:
                         shutil.copyfileobj(f_in, f_out)
             os.remove(embeddings_path / 'gdrive_embeddings.dat')
-        # Normal HTTP downloads
+        
+        # Normal HTTP downloads and local file moves
         else:
             os.makedirs(fpath_extracted)
             # TODO: Test this
@@ -1266,39 +1400,42 @@ def import_embeddings(ctx,
                         shutil.copyfileobj(f_in, f_out)
                 os.remove(fpath)
             else:
+                # Local file move
                 shutil.move(fpath, fpath_extracted / fname)
+    
+    # Do nothing in case download and provision is handled by external library (e.g. allennlp/elmo)
     else:
         cprint('No URL specified, delegating embedding provision to external package ...', 'yellow')
 
-    # TODO: Test this properly
-    for name in ctx.path2embeddings[folder]:
-        base_path = embeddings_path / ctx.embedding_registry['proper'][name]['path']
+    # Iterate over all embedding files (e.g. GloVe has multiple files requiring processing)
+    for emb_name in path2embeddings[folder]:
+        base_path = embeddings_path / embedding_registry['proper'][emb_name]['path']
         try:
-            bin_file = Path(ctx.embedding_registry['proper'][name]['binary_file'])
+            bin_file = Path(embedding_registry['proper'][emb_name]['binary_file'])
         except TypeError:
             bin_file = None
-        emb_file = Path(ctx.embedding_registry['proper'][name]['embedding_file'])
+        emb_file = Path(embedding_registry['proper'][emb_name]['embedding_file'])
         try:
             bin_path = base_path / bin_file
         except TypeError:
             bin_path = None
         emb_path = base_path / emb_file
-        emb_dim = ctx.embedding_registry['proper'][name]['dimensions']
+        emb_dim = embedding_registry['proper'][emb_name]['dimensions']
         
         # Convert from binary to text
         try:
-            if ctx.embedding_registry['proper'][name]['binary']:
-                if ctx.embedding_registry['proper'][name]['binary_format'] == 'word2vec':
+            if embedding_registry['proper'][emb_name]['binary']:
+                if embedding_registry['proper'][emb_name]['binary_format'] == 'word2vec':
                     cprint('Converting binary to txt format ...', 'yellow')
                     word2vec_bin_to_txt(base_path, bin_file, emb_file)
                     os.remove(bin_path)
 
-                elif ctx.embedding_registry['proper'][name]['binary_format'] == 'elmo':
+                elif embedding_registry['proper'][emb_name]['binary_format'] == 'elmo':
                     elmo_to_text(resources_path / 'standard_vocab.txt',
                                 emb_path,
                                 layer='nocontext')
 
-                elif ctx.embedding_registry['proper'][name]['binary_format'] == 'bert':
+                elif embedding_registry['proper'][emb_name]['binary_format'] == 'bert':
                     bert_to_text(resources_path / 'standard_vocab.txt',
                                 base_path,
                                 emb_path,
@@ -1310,51 +1447,52 @@ def import_embeddings(ctx,
             cprint("Error: {}".format(str(e)), "red")
             return
 
-        # Chunk embeddings
-        if ctx.embedding_registry['proper'][name]['chunked']:
-            cprint('Chunking {} ...'.format(name), 'yellow')
+        # Chunk embeddings if necessary
+        if embedding_registry['proper'][emb_name]['chunked']:
+            cprint('Chunking {} ...'.format(emb_name), 'yellow')
             chunk(base_path,
                     base_path,
                     emb_file,
-                    ctx.embedding_registry['proper'][name]['chunked_file'],
-                    number_of_chunks=ctx.embedding_registry['proper'][name]['chunk_number'],
-                    truncate_first_line=ctx.embedding_registry['proper'][name]["truncate_first_line"])
-            ctx.embedding_registry['proper'][name]["truncate_first_line"] = False
+                    embedding_registry['proper'][emb_name]['chunked_file'],
+                    number_of_chunks=embedding_registry['proper'][emb_name]['chunk_number'],
+                    truncate_first_line=embedding_registry['proper'][emb_name]["truncate_first_line"])
+            embedding_registry['proper'][emb_name]["truncate_first_line"] = False
 
-        cprint('Finished importing embedding "{}"'.format(name), 'green')
+        cprint('Finished importing embedding "{}"'.format(emb_name), 'green')
 
+        # Associate random baselines with embeddings if set by user
         if associate_rand_emb:                                                
-            import_random_baselines(name)
+            import_random_baselines(embedding_registry, resources_path, embeddings_path, emb_name)
     
-    if name.startswith('random'):
-        ctx.embedding_registry['random_static'][name]['installed'] = True
+    if emb_name.startswith('random'):
+        embedding_registry['random_static'][emb_name]['installed'] = True
     else:
-        for name in ctx.path2embeddings[folder]:
-            ctx.embedding_registry['proper'][name]['installed'] = True
+        for emb_name in path2embeddings[folder]:
+            embedding_registry['proper'][emb_name]['installed'] = True
+    return embedding_registry
 
-    return ctx
 
-
-def import_random_baselines(ctx,
+def import_random_baselines(embedding_registry,
                             resources_path,
                             embeddings_path,
                             embeddings,
-                            num_baselines,
-                            seed_func,
-                            force):
+                            num_baselines=10,
+                            seed_func='exp_e_floored',
+                            force=False):
     if embeddings.startswith('random'):
         cprint('✗ Reference embedding must be non-random! Aborting ...'. format(embeddings), 'red')
         return
     
-    emb_properties = ctx.embedding_registry['proper'].get(embeddings, None)
+    emb_properties = embedding_registry['proper'].get(embeddings, None)
     if not emb_properties:
         cprint('✗ No specifications set for embeddings {}! Import custom embeddings or register them manually. Aborting ...'. format(embeddings), 'red')
         return
 
     emb_dim = emb_properties['dimensions']
 
+    # Get dimensions of existing random baselines
     available_dims = set()
-    for _, parameters in ctx.embedding_registry['random_multiseed'].items():
+    for _, parameters in embedding_registry['random_multiseed'].items():
         if parameters['installed']:
             available_dims.add(parameters['dimensions'])
 
@@ -1386,11 +1524,12 @@ def import_random_baselines(ctx,
         except FileExistsError:
             pass
 
-        with ProgressBar() as pb:
-            # TODO: Make n_jobs parametrizable
-            Parallel(n_jobs=(os.cpu_count()-1))(delayed(generate_random_df)(seed, vocabulary, emb_dim, emb_file, fullpath) for seed, emb_file in pb(list(zip(seeds, rand_emb_keys))))
+        dfs = Parallel((os.cpu_count() - 1))(delayed(generate_random_df)(seed, vocabulary, emb_dim) for seed in tqdm(seeds))
+        for df, emb_file in zip(dfs, rand_emb_keys):
+            df.to_csv(fullpath / '{}.txt'.format(emb_file), sep=" ", encoding="utf-8", header=False, index=False)
                 
-        ctx.embedding_registry['random_multiseed'][rand_emb_name] = {'url': 'locally generated',
+        # Register random baselines
+        embedding_registry['random_multiseed'][rand_emb_name] = {'url': 'locally generated',
                                                                     'dimensions': emb_dim,
                                                                     'path':str(rand_emb_path),
                                                                     'embedding_parts':{},
@@ -1398,14 +1537,15 @@ def import_random_baselines(ctx,
                                                                     'chunked': False,
                                                                     'associated_with':[embeddings]}
         for rand_emb_key in rand_emb_keys:
-            ctx.embedding_registry['random_multiseed'][rand_emb_name]['embedding_parts'][rand_emb_key] = '{}.txt'.format(rand_emb_key)
+            embedding_registry['random_multiseed'][rand_emb_name]['embedding_parts'][rand_emb_key] = '{}.txt'.format(rand_emb_key)
         
         cprint('✓ Generated random baselines (Naming scheme: random-<dimensionality>-<no. seeds>-<#seed>-<seed_value>)', 'green')
+    # Associate existing baseline otherwise, unless already associated
     else:
         try:
-            if not embeddings in ctx.embedding_registry['random_multiseed'][rand_emb_name]['associated_with']:
+            if not embeddings in embedding_registry['random_multiseed'][rand_emb_name]['associated_with']:
                 cprint('Random baselines of dimensionality {} already present, associating ...'.format(emb_dim), 'green')
-                ctx.embedding_registry['random_multiseed'][rand_emb_name]['associated_with'].append(embeddings)
+                embedding_registry['random_multiseed'][rand_emb_name]['associated_with'].append(embeddings)
             else:
                 cprint('Random baselines of dimensionality {} already present and associated.'.format(emb_dim), 'green')
                 return
@@ -1413,7 +1553,5 @@ def import_random_baselines(ctx,
             cprint('Random baselines of dimensionality {} present, but different fold count (no_emb). Use force to regenerate.'.format(emb_dim), 'yellow')
             return
     
-    # Associate random baselines with embeddings
     emb_properties['random_embedding'] = rand_emb_name
-    
-    return ctx
+    return embedding_registry

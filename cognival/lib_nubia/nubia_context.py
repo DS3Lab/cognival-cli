@@ -43,13 +43,17 @@ class NubiaCognivalContext(context.Context):
 
     def _load_configuration(self):
         if self.resources_path:
-            with open(self.resources_path / 'embedding_registry.json') as f:
-                self.embedding_registry = json.load(f)
-            for embedding_type_dict in self.embedding_registry.values():
-                for embeddings, embedding_params in embedding_type_dict.items():
-                    self.path2embeddings[embedding_params['path']].append(embeddings)
-            for path, emb_list in self.path2embeddings.items():
-                self.path2embeddings[path] = natsorted(emb_list)
+            try:
+                with open(self.resources_path / 'embedding_registry.json') as f:
+                    self.embedding_registry = json.load(f)
+            
+                for embedding_type_dict in self.embedding_registry.values():
+                    for embeddings, embedding_params in embedding_type_dict.items():
+                        self.path2embeddings[embedding_params['path']].append(embeddings)
+                for path, emb_list in self.path2embeddings.items():
+                    self.path2embeddings[path] = natsorted(emb_list)
+            except FileNotFoundError:
+                cprint('Cannot open embedding registry, please correct user directory path (command "properties")', 'red')
         else:
             cprint('Error: Could not load resources path, aborting ...', 'red')
             sys.exit(1)
