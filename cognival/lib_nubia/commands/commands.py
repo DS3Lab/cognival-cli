@@ -1163,7 +1163,6 @@ def import_embeddings(x,
                               path2embeddings,
                               resources_path,
                               embeddings_path,
-                              emb,
                               are_set=True,
                               associate_rand_emb=associate_rand_emb)
 
