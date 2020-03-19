@@ -230,7 +230,7 @@ def data_handler(mode, config, word_embedding, cognitive_data, feature, truncate
         df_join = multi_join(mode, config, df_cognitive_data, word_embedding)
     else:
         if truncate_first_line:
-            skip_rows = 1
+            skip_rows = 0
         else:
             skip_rows = None
 
