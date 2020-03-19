@@ -203,7 +203,7 @@ def list_configs(resources_path):
                     general_param_dicts.append(general_params)
 
     # Build formatted table
-    fgrid = tform.AlternatingRowGrid()
+    fgrid = tform.FancyGrid()
     cols = ['config'] + [k for k in general_param_dicts[0].keys() if not k == 'config']
     rows = [[colored(x['config'], attrs=['bold'], color='yellow')] + [v for k, v in x.items() if not k == 'config'] for x in general_param_dicts]
     rows.sort(key=lambda x: x[0])
@@ -237,7 +237,7 @@ def list_embeddings(debug, embedding_registry):
             value['embeddings'] = key
             param_dicts.append(value)
         
-        fgrid = tform.AlternatingRowGrid()
+        fgrid = tform.FancyGrid()
         if param_dicts:
             cols = [x for x in relevant_keys if x in param_dicts[0]]
             rows = [[colored(x['embeddings'], attrs=['bold'], color='yellow')] + [x[k] for k in relevant_keys if k in x and not k == 'embeddings'] for x in param_dicts]
@@ -316,7 +316,6 @@ def config_open(configuration, cognival_path, resources_path, edit, overwrite):
 
 def config_show(configuration, config_dict, details, cognitive_source, hide_baselines):
     fgrid = tform.FancyGrid()
-    altgrid = tform.AlternatingRowGrid()
     table_strs = []
     
     # Tabulate general configuration properties
@@ -397,7 +396,7 @@ def config_show(configuration, config_dict, details, cognitive_source, hide_base
                                 "validation_split": "validation_split (l.)"})
         df = df.applymap(field_concat)
         formatted_table = tform.generate_table(df,
-                                            grid_style=altgrid,
+                                            grid_style=fgrid,
                                             transpose=False) 
         table_strs.append(formatted_table)
         table_strs.append('\n')
@@ -778,6 +777,8 @@ def significance(configuration,
         
         embeddings = list(config_dict["wordEmbConfig"])
 
+        
+        hypothesis_counter = collections.Counter()
         # Extract results for significance testing
         for ds in datasets:
             for feat in config_dict["cogDataConfig"][ds]["features"]:
@@ -785,40 +786,38 @@ def significance(configuration,
                     experiment = '{}_{}_{}'.format(ds, feat, embed)
                     try:
                         st_extract_results(run_id, modality, experiment, mapping_dict, experiments_dir, sig_test_res_dir)
+                        hypothesis_counter[embed] += 1
                     except KeyError:
                         pass
 
-        # Determine number of hypotheses for significance testing
-        hypotheses = sum([1 for filename in os.listdir(sig_test_res_dir) if 'embeddings_' in filename])
-        
         # Skip modality if no hypotheses found
-        if not hypotheses:
+        if not hypothesis_counter:
             if not quiet:
                 cprint('No hypotheses, skipping ...', 'yellow')
             continue
-
-        # Compute bonferroni-corrected alpha
-        bf_corr_alpha = bonferroni_correction(alpha, hypotheses)
+        else:
+            # Compute bonferroni-corrected alpha (per embedding)
+            embedding_to_bonferroni = {}
+            for embed, num_hyp in hypothesis_counter.items():
+                embedding_to_bonferroni[embed] = bonferroni_correction(alpha, num_hyp)
 
         if not quiet:
-            cprint('Number of hypotheses: {}'.format(hypotheses), attrs=['bold'])
-            print('α (initial/after bonferroni correction): {} / {}'.format(alpha, bf_corr_alpha))
             cprint('\n[Significance tests]:', attrs=['bold'])
 
         report = report_dir / '{}.json'.format(test)
         results = collections.defaultdict(dict)
-        results['bonferroni_alpha'] = bf_corr_alpha
-
         # For each hypothesis (i.e. non-baseline)
         for filename in os.listdir(sig_test_res_dir):
             if not 'baseline' in filename:
                 # Obtain feature and average MSE
                 experiment = re.sub(r'embeddings_scores_(.*?).txt', r'\1', filename)
                 embedding = mapping_dict[experiment]['embedding']
+                
                 with open(experiments_dir / mapping_dict[experiment]['proper'] / '{}.json'.format(embedding)) as f:
                     result_json = json.load(f)
                 avg_mse = result_json['AVERAGE_MSE']
                 feature = mapping_dict[experiment]['feature']
+                bf_corr_alpha = embedding_to_bonferroni[embedding]
 
                 # Perform significance testing
                 model_file = sig_test_res_dir / filename
@@ -828,6 +827,7 @@ def significance(configuration,
                 # Store and display results
                 results['hypotheses'][name] = {'p_value': pval,
                                                 'alpha': alpha,
+                                                'bonferroni_alpha': bf_corr_alpha,
                                                 'significant': significant,
                                                 'wordEmbedding': embedding,
                                                 'feature': feature,
@@ -840,6 +840,8 @@ def significance(configuration,
                 else:
                     out_str, color = ': not significant (p = {:1.3e})'.format(pval), 'red'
                 
+                out_str += ' / hypotheses: {} / α (initial/after bonferroni correction): {} / {}'.format(hypothesis_counter[embedding], alpha, bf_corr_alpha)
+
                 if not quiet:
                     cprint('    - {}'.format(name), attrs=['bold'], color=color, end='')
                     cprint(out_str, color)
