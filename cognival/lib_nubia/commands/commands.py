@@ -297,17 +297,19 @@ def config_open(configuration, cognival_path, resources_path, edit, overwrite):
     # Open editor when creating (always) or opening (if edit=True)
     if create:
         config_dict = copy.deepcopy(MAIN_CONFIG_TEMPLATE)
-        _edit_config(resources_path, cognival_path, config_dict, configuration)
-        _backup_config(configuration, resources_path)
-        _save_config(config_dict, configuration, resources_path)
+        config_dict = _edit_config(resources_path, cognival_path, config_dict, configuration)
+        if config_dict:
+            _backup_config(configuration, resources_path)
+            _save_config(config_dict, configuration, resources_path)
     else:
         config_dict = _open_config(configuration, resources_path)
         if not config_dict:
             return
         if edit:
-            _edit_config(resources_path, cognival_path, config_dict, configuration)
-            _backup_config(configuration, resources_path)
-            _save_config(config_dict, configuration, resources_path)
+            config_dict = _edit_config(resources_path, cognival_path, config_dict, configuration)
+            if config_dict:
+                _backup_config(configuration, resources_path)
+                _save_config(config_dict, configuration, resources_path)
     
     return configuration, config_dict
 
@@ -722,7 +724,8 @@ def remove_dangling_emb_random(emb, main_conf_dict):
     return main_conf_dict
 
 
-def significance(config_dict,
+def significance(configuration,
+                 config_dict,
                  run_id,
                  modalities,
                  alpha,
@@ -848,8 +851,8 @@ def significance(config_dict,
                 fp.write(json_str)
                 
 
-
-def aggregate(config_dict,
+def aggregate(configuration,
+              config_dict,
               run_id,
               modalities,
               test,

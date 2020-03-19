@@ -386,12 +386,13 @@ def significance(run_id=0,
     if not config_dict:
         return
 
-    commands.significance(config_dict,
+    list(commands.significance(configuration,
+                          config_dict,
                           run_id,
                           modalities,
                           alpha,
                           test,
-                          quiet)
+                          quiet))
 
 
 @command
@@ -417,11 +418,12 @@ def aggregate(run_id=0,
     if not config_dict:
         return
 
-    commands.aggregate(config_dict,
+    list(commands.aggregate(configuration,
+                       config_dict,
                        run_id,
                        modalities,
                        test,
-                       quiet)
+                       quiet))
 
 
 @command

@@ -422,7 +422,7 @@ def _edit_config(resources_path,
             cprint('Prefixing outputDir with results ...', 'yellow')
             config_dict['outputDir'] = str(Path('results') / config_dict['outputDir'])
 
-            return config_dict
+        return config_dict
     else:
         cprint("Aborting ...", "red")
         return
