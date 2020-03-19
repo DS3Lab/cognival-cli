@@ -290,13 +290,13 @@ The following table contains reference results for the modality EEG for some of 
     <td class="tg-0lax">0.013</td>
   </tr>
   <tr>
-    <td class="tg-1wig">fasttext-crawl</td>
+    <td class="tg-1wig">fasttext-crawl-subword</td>
     <td class="tg-0lax">0.04</td>
     <td class="tg-0lax">0.013</td>
     <td class="tg-0lax">0.01</td>
   </tr>
   <tr>
-    <td class="tg-1wig">fasttext-wikinews</td>
+    <td class="tg-1wig">fasttext-wikinews-subword</td>
     <td class="tg-0lax">0.036</td>
     <td class="tg-0lax">0.012</td>
     <td class="tg-0lax">0.01</td>
