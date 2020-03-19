@@ -197,7 +197,7 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
                     {% else %}
                       {% if key == 'Significance' %}
                         {% if sig_status(value) == 'all' %}
-                          <td class="signficant">{{ value }}</td>
+                          <td class="significant">{{ value }}</td>
                         {% elif sig_status(value) == 'some' %}
                           <td class="partially-significant">{{ value }}</td>
                         {% else %}
