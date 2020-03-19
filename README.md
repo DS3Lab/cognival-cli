@@ -6,11 +6,14 @@ Nora Hollenstein, Antonio de la Torre, Ce Zhang & Nicolas Langer. "CogniVal: A F
 For practical purposes, this tool should be used. For reference, the original code base can be found in the [paper_code] (https://github.com/DS3Lab/cognival/tree/paper_code) branch of this repository (no longer maintained).
 
 **Notes**:
-    - CogniVal is in active (and relatively early) development and testing coverage is as of yet low, thus we highly recommend that you take the following precautions:
-        - **Verify** your configuration prior to runs. You can easily do so by executing `config show details=True`.
-        - Include (at least) one **default embedding** (e.g. `glove.6B.50`) and one **cognitive source** (e.g. `eeg_zuco`) bundled with CogniVal, along with any custom embeddings and custom cognitive sources you evaluate. Verify that the results match those reported (in the paper/in the table below) to rule out any regressions in the prediction pipeline, as well as significance testing and aggregation steps.
-    - Processing on GPUs is implemented, however is presently neither stable nor performant and is not tested, thus it is disabled by default. For productive use, evaluations should only be carried out on CPU.
-    - Experimental runs with results intended for publication should always include random baselines and be tested for significance.
+
+* CogniVal is in active (and relatively early) development and testing coverage is as of yet low, thus we highly recommend that you take the following precautions:
+
+    * **Verify** your configuration prior to runs. You can easily do so by executing `config show details=True`.
+    * Include (at least) one **default embedding** (e.g. `glove.6B.50`) with default parameters and one **cognitive source** (e.g. `eeg_zuco`) bundled with CogniVal, along with any custom embeddings and custom cognitive sources you evaluate. Verify that the results approximate those reported (slight variations are normal) to rule out any regressions in the prediction pipeline, as well as significance testing and aggregation steps. You can find a table with a subset of CogniVal results for the EEG modality [here](#reference-results).
+
+* Processing on GPUs is implemented, however is presently neither stable nor performant and is not tested, thus it is disabled by default. For productive use, evaluations should only be carried out on CPU.
+* Experimental runs with results intended for publication should always include random baselines and be tested for significance.
 
  Feel free to report issues and bugs you encounter.
 
@@ -245,6 +248,60 @@ Eye-tracking example:
 All cognitive data sources are freely available for you to download and preprocess. 
 
 The fully preprocessed vectors as described in the publication can however be downloaded from the tool, as well as [here](https://drive.google.com/uc?id=1ouonaByYn2cnDAWihnQ3cGmMT6bJ4NaP).
+
+## Reference results
+The following table contains reference results for the modality EEG for some of the default embeddings that are readily available for import in CogniVal. We recommend including default embeddings in your experiments and validating the results using this table.
+
+<table class="tg">
+  <tr>
+    <th class="tg-cly1"></th>
+    <th class="tg-1wig">N400</th>
+    <th class="tg-1wig">Natural</th>
+    <th class="tg-1wig">Zuco</th>
+  </tr>
+  <tr>
+    <td class="tg-1wig">glove-50</td>
+    <td class="tg-0lax">0.07</td>
+    <td class="tg-0lax">0.014</td>
+    <td class="tg-0lax">0.009</td>
+  </tr>
+  <tr>
+    <td class="tg-1wig">glove-100</td>
+    <td class="tg-0lax">0.13</td>
+    <td class="tg-0lax">0.023</td>
+    <td class="tg-0lax">0.011</td>
+  </tr>
+  <tr>
+    <td class="tg-1wig">glove-200</td>
+    <td class="tg-0lax">0.071</td>
+    <td class="tg-0lax">0.017</td>
+    <td class="tg-0lax">0.013</td>
+  </tr>
+  <tr>
+    <td class="tg-1wig">glove-300</td>
+    <td class="tg-0lax">0.066</td>
+    <td class="tg-0lax">0.019</td>
+    <td class="tg-0lax">0.014</td>
+  </tr>
+  <tr>
+    <td class="tg-1wig">word2vec</td>
+    <td class="tg-0lax">0.046</td>
+    <td class="tg-0lax">0.017</td>
+    <td class="tg-0lax">0.013</td>
+  </tr>
+  <tr>
+    <td class="tg-1wig">fasttext-crawl</td>
+    <td class="tg-0lax">0.04</td>
+    <td class="tg-0lax">0.013</td>
+    <td class="tg-0lax">0.01</td>
+  </tr>
+  <tr>
+    <td class="tg-1wig">fasttext-wikinews</td>
+    <td class="tg-0lax">0.036</td>
+    <td class="tg-0lax">0.012</td>
+    <td class="tg-0lax">0.01</td>
+  </tr>
+</table>
 
 ## Testing and Development
 In order to run the tests, you need to download the [test_data](https://drive.google.com/open?id=1f0hFulGIwqf6FRbPCv14d6yiEXh6WI49) and extract the archive into the `tests` directory. Note that testing coverage is fairly minimal at present time.

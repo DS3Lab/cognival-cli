@@ -271,7 +271,6 @@ def generate_report(configuration,
             mod_report = mod_report_run_ids.get(run_id, None)
             if not mod_report:
                 continue
-            bonferroni_alpha = mod_report['bonferroni_alpha']
 
             for experiment, sig_test_result in mod_report['hypotheses'].items():
                 with open(experiment_to_path[experiment]) as f:
@@ -284,7 +283,6 @@ def generate_report(configuration,
                         'Subject': result_dict['cognitiveData'] if result_dict['cognitiveData'] != result_dict['cognitiveParent'] else '-',
                         'Cognitive source': result_dict['cognitiveParent'],
                         'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature'],
-                        'bonferroni_alpha': bonferroni_alpha,
                         **sig_test_result}
                 results.append(result)
     # If no significance tests have been performed
