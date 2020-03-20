@@ -14,7 +14,7 @@ def aggregate_signi_fmri(result_dir,
             significant = 0
             hypotheses = 0
             for experiment in data['hypotheses']:
-                if experiment.endswith(emb):
+                if experiment.split('_')[-1] == emb:
                     hypotheses += 1
                     corrected_alpha = data['hypotheses'][experiment]['bonferroni_alpha']
                     if data['hypotheses'][experiment]['p_value'] < corrected_alpha:
@@ -38,7 +38,7 @@ def aggregate_signi_eeg(result_dir,
             significant = 0
             hypotheses = 0
             for experiment in data['hypotheses']:
-                if experiment.endswith(emb):
+                if experiment.split('_')[-1] == emb:
                     hypotheses += 1
                     corrected_alpha = data['hypotheses'][experiment]['bonferroni_alpha']
                     if data['hypotheses'][experiment]['p_value'] < corrected_alpha:
@@ -64,7 +64,7 @@ def aggregate_signi_gaze(result_dir,
             significant = 0
             hypotheses = 0
             for experiment in data['hypotheses']:
-                if experiment.endswith(emb):
+                if experiment.split('_')[-1] == emb:
                     hypotheses += 1
                     corrected_alpha = data['hypotheses'][experiment]['bonferroni_alpha']
                     if data['hypotheses'][experiment]['p_value'] < corrected_alpha:
