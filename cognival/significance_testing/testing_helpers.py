@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 from pathlib import Path
@@ -8,7 +9,7 @@ def bonferroni_correction(alpha, no_hypotheses):
 
 def test_significance(baseline, model, alpha, test, debug=False):
     command = ["python",
-               "cognival/significance_testing/testSignificanceNLP/testSignificance.py",
+               str(Path(os.path.dirname(__file__)) / "testSignificanceNLP/testSignificance.py"),
                baseline,
                model,
                str(alpha),
