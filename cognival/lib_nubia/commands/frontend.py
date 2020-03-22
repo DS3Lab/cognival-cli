@@ -248,7 +248,12 @@ class Config:
         ctx = context.get_context()
         cognival_path = ctx.cognival_path
         resources_path = ctx.resources_path
-        configuration, _ = commands.config_open(configuration, cognival_path, resources_path, edit, overwrite)
+        
+        try:
+            configuration, _ = commands.config_open(configuration, cognival_path, resources_path, edit, overwrite)
+        except TypeError:
+            return
+
         if configuration:
             ctx.open_config = configuration
     

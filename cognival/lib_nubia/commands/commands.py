@@ -343,7 +343,6 @@ def config_show(configuration, config_dict, details, cognitive_source, hide_base
                                             columns=[colored('Cognitive sources', attrs=['bold']),
                                                     colored('Embeddings (Rand. emb.)', attrs=['bold'])],
                                             grid_style=fgrid,
-                                            #row_tagger=row_stylist,
                                             transpose=True)
 
         table_strs.append(formatted_table)
