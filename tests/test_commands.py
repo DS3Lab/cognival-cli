@@ -640,7 +640,7 @@ def results_aggregate_large_example():
 
 @pytest.fixture
 def fixture_import_random_baselines(embedding_registry):
-    return {'resources_path': PosixPath('/home/adrian/.cognival/resources'), 'embeddings_path': PosixPath('tests/reference/.cognival/embeddings'), 
+    return {'resources_path': PosixPath('tests/reference/.cognival/resources'), 'embeddings_path': PosixPath('tests/reference/.cognival/embeddings'), 
     'embeddings': 'glove.6B.50', 'num_baselines': 10, 'seed_func': 'exp_e_floored', 'force': 'False', 'embedding_registry':embedding_registry}
 
 @pytest.fixture
@@ -712,7 +712,9 @@ def test_remove_dangling_emb_random(fixture_remove_dangling_emb_random, results_
 
 
 def test_significance(fixture_significance, results_significance):
-    results = json.loads(next(significance('test', **fixture_significance)))['hypotheses']
+    results = list(significance('test', **fixture_significance))
+    assert results[0] == '{}'
+    results = json.loads(results[1])['hypotheses']
     results_significance = results_significance['hypotheses']
     for key in results.keys():
         try:
