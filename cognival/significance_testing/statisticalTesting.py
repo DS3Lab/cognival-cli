@@ -53,5 +53,4 @@ def extract_results(run_id, modality, experiment, mapping_dict, input_dir, resul
                 'embeddings_scores_' + '{}.txt'.format(experiment),
                 baseline_scores,
                 'baseline_scores_' + '{}.txt'.format(experiment),
-                results_dir,
-                modality)
+                results_dir)

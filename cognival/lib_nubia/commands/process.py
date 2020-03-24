@@ -39,6 +39,7 @@ from .templates import (WORD_EMB_CONFIG_FIELDS,
                         COGNITIVE_CONFIG_TEMPLATE,
                         EMBEDDING_PARAMET_TEMPLATE)
 
+
 def filter_config(embedding_registry,
                   cog_sources_conf,
                   configuration,
@@ -148,14 +149,15 @@ def filter_config(embedding_registry,
         return
     return config_dict, embeddings_list, emb_to_random_dict, cog_sources_list, cog_source_to_feature
 
+
 def cumulate_random_emb_results(logging,
                                 word_error,
                                 history,
                                 cum_rand_word_error_df,
                                 cum_mse_prediction,
                                 cum_mse_prediction_all_dim,
-                                cum_average_mse_all_dim,
                                 cum_average_mse,
+                                cum_average_mse_all_dim,
                                 cum_rand_counter):
     # Cumulate logging
     mse_prediction = np.array([x['MSE_PREDICTION'] for x in logging['folds']])
@@ -174,14 +176,14 @@ def cumulate_random_emb_results(logging,
         # Init variables
         cum_mse_prediction = mse_prediction
         cum_mse_prediction_all_dim = mse_prediction_all_dim
-        cum_average_mse_all_dim = average_mse_all_dim
         cum_average_mse = average_mse
+        cum_average_mse_all_dim = average_mse_all_dim
     else:
         # Accumulate
         cum_mse_prediction += mse_prediction
         cum_mse_prediction_all_dim += mse_prediction_all_dim
-        cum_average_mse_all_dim += average_mse_all_dim
         cum_average_mse += average_mse
+        cum_average_mse_all_dim += average_mse_all_dim
 
     # Cumulate word errors
 
@@ -198,8 +200,8 @@ def cumulate_random_emb_results(logging,
     return cum_rand_word_error_df, \
            cum_mse_prediction, \
            cum_mse_prediction_all_dim, \
-           cum_average_mse_all_dim, \
            cum_average_mse, \
+           cum_average_mse_all_dim, \
            cum_rand_counter
 
 
@@ -208,8 +210,8 @@ def write_random_emb_results(rand_emb,
                              cum_rand_logging,
                              cum_mse_prediction,
                              cum_mse_prediction_all_dim,
-                             cum_average_mse_all_dim,
                              cum_average_mse,
+                             cum_average_mse_all_dim,
                              cum_rand_counter,
                              config_dict):
     # Get average measures by dividing with counter
@@ -219,8 +221,8 @@ def write_random_emb_results(rand_emb,
     cum_mse_prediction /= cum_rand_counter
     cum_mse_prediction_all_dim /= cum_rand_counter
     cum_mse_prediction_all_dim = list(cum_mse_prediction_all_dim)
-    cum_average_mse_all_dim /= cum_rand_counter
     cum_average_mse /= cum_rand_counter
+    cum_average_mse_all_dim /= cum_rand_counter
 
     # Do not report per-fold loss, only mse_prediction
     for idx, fold in enumerate(cum_rand_logging['folds']):
@@ -252,8 +254,8 @@ def process_and_write_results(proper_result,
     cum_rand_logging = None
     cum_mse_prediction = None
     cum_mse_prediction_all_dim = None
-    cum_average_mse_all_dim = None
     cum_average_mse = None
+    cum_average_mse_all_dim = None
     cum_rand_counter = 0
 
     # Obtain embedding results
@@ -272,34 +274,36 @@ def process_and_write_results(proper_result,
             cum_rand_word_error_df, \
             cum_mse_prediction, \
             cum_mse_prediction_all_dim, \
-            cum_average_mse_all_dim, \
             cum_average_mse, \
+            cum_average_mse_all_dim, \
             cum_rand_counter = cumulate_random_emb_results(logging,
                                                             word_error,
                                                             history,
                                                             cum_rand_word_error_df,
                                                             cum_mse_prediction,
                                                             cum_mse_prediction_all_dim,
-                                                            cum_average_mse_all_dim,
                                                             cum_average_mse,
+                                                            cum_average_mse_all_dim,
                                                             cum_rand_counter)
             # Discard history
             history = []
+        else:
+            raise RuntimeError
 
     # If random baselines, export (average) random embedding and store run_stats/options for results aggregation
     if cum_rand_counter:
-        rand_avg_mse = cum_average_mse / cum_rand_counter
         write_random_emb_results(rand_emb,
                                 cum_rand_word_error_df,
                                 cum_rand_logging,
                                 cum_mse_prediction,
                                 cum_mse_prediction_all_dim,
-                                cum_average_mse_all_dim,
                                 cum_average_mse,
+                                cum_average_mse_all_dim,
                                 cum_rand_counter,
                                 config_dict)
     
         # Collating options/results for aggregation
+        rand_avg_mse = cum_average_mse / cum_rand_counter
         proper_options, rand_options = copy.deepcopy(options), copy.deepcopy(options)
         rand_options['wordEmbedding'] = rand_options['random_embedding']
         del rand_options['random_embedding']

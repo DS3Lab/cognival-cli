@@ -782,7 +782,7 @@ def significance(configuration,
         for ds in datasets:
             for feat in config_dict["cogDataConfig"][ds]["features"]:
                 for embed in embeddings:
-                    experiment = '{}_{}_{}'.format(ds, feat, embed)
+                    experiment = '{}_{}#-#{}'.format(ds, feat, embed)
                     try:
                         st_extract_results(run_id, modality, experiment, mapping_dict, experiments_dir, sig_test_res_dir)
                         hypothesis_counter[embed] += 1
