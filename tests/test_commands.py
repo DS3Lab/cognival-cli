@@ -157,7 +157,7 @@ def fixture_significance(configuration):
 
 @pytest.fixture
 def results_significance():
-    return {'hypotheses': {'eeg_zuco_ALL_DIM_glove.6B.50': {'p_value': 3.4787905348455747e-23, 'alpha': 0.01, 'bonferroni_alpha': 0.01, 'significant': True, 'wordEmbedding': 'glove.6B.50', 'feature': 'ALL_DIM', 'AVERAGE_MSE': 0.21200930276251012}}}
+    return {'hypotheses': {'eeg_zuco_ALL_DIM#-#glove.6B.50': {'p_value': 3.4787905348455747e-23, 'alpha': 0.01, 'bonferroni_alpha': 0.01, 'significant': True, 'wordEmbedding': 'glove.6B.50', 'feature': 'ALL_DIM', 'AVERAGE_MSE': 0.21200930276251012}}}
 
 
 @pytest.fixture
@@ -170,7 +170,7 @@ def fixture_significance_large_example(configuration_large_example):
 def results_significance_large_example():
     return {
         "hypotheses": {
-            "eeg_n400_ALL_DIM_glove.6B.50": {
+            "eeg_n400_ALL_DIM#-#glove.6B.50": {
                 "p_value": 0.10381820148590677,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -179,7 +179,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.07245326154993977
             },
-            "eeg_n400_ALL_DIM_glove.6B.100": {
+            "eeg_n400_ALL_DIM#-#glove.6B.100": {
                 "p_value": 0.000956024091839402,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -188,7 +188,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.12633495342619663
             },
-            "eeg_n400_ALL_DIM_glove.6B.200": {
+            "eeg_n400_ALL_DIM#-#glove.6B.200": {
                 "p_value": 0.07880487724189973,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -197,7 +197,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.06913992699201159
             },
-            "eeg_n400_ALL_DIM_glove.6B.300": {
+            "eeg_n400_ALL_DIM#-#glove.6B.300": {
                 "p_value": 0.051291866990938954,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -206,7 +206,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.06918759344622685
             },
-            "eeg_n400_ALL_DIM_word2vec": {
+            "eeg_n400_ALL_DIM#-#word2vec": {
                 "p_value": 0.9079406652591488,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -215,7 +215,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.04426609165795349
             },
-            "eeg_n400_ALL_DIM_wnet2vec": {
+            "eeg_n400_ALL_DIM#-#wnet2vec": {
                 "p_value": 1.5347178673258566e-12,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -224,7 +224,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.026092069591566267
             },
-            "eeg_n400_ALL_DIM_fasttext-wiki": {
+            "eeg_n400_ALL_DIM#-#fasttext-wiki": {
                 "p_value": 0.47427196041639674,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -233,7 +233,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.040836877001510966
             },
-            "eeg_n400_ALL_DIM_fasttext-wiki-subword": {
+            "eeg_n400_ALL_DIM#-#fasttext-wiki-subword": {
                 "p_value": 0.19429885420246074,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -242,7 +242,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.03554813972509114
             },
-            "eeg_n400_ALL_DIM_fasttext-cc": {
+            "eeg_n400_ALL_DIM#-#fasttext-cc": {
                 "p_value": 0.46405491480124783,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -251,7 +251,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.052911464545133624
             },
-            "eeg_n400_ALL_DIM_fasttext-cc-subword": {
+            "eeg_n400_ALL_DIM#-#fasttext-cc-subword": {
                 "p_value": 0.021534353833522025,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -260,7 +260,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.04044899617980584
             },
-            "eeg_n400_ALL_DIM_bert-base": {
+            "eeg_n400_ALL_DIM#-#bert-base": {
                 "p_value": 2.8165460841308915e-16,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -269,7 +269,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.044186550840442644
             },
-            "eeg_naturalspeech_ALL_DIM_glove.6B.50": {
+            "eeg_naturalspeech_ALL_DIM#-#glove.6B.50": {
                 "p_value": 2.822908640608592e-20,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -278,7 +278,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.013266847768815584
             },
-            "eeg_naturalspeech_ALL_DIM_glove.6B.100": {
+            "eeg_naturalspeech_ALL_DIM#-#glove.6B.100": {
                 "p_value": 3.271543470142564e-41,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -287,7 +287,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.02265729816555514
             },
-            "eeg_naturalspeech_ALL_DIM_glove.6B.200": {
+            "eeg_naturalspeech_ALL_DIM#-#glove.6B.200": {
                 "p_value": 2.0150150004314406e-28,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -296,7 +296,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.017575674405670896
             },
-            "eeg_naturalspeech_ALL_DIM_glove.6B.300": {
+            "eeg_naturalspeech_ALL_DIM#-#glove.6B.300": {
                 "p_value": 3.3336255039303865e-16,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -305,7 +305,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.01838077458170163
             },
-            "eeg_naturalspeech_ALL_DIM_word2vec": {
+            "eeg_naturalspeech_ALL_DIM#-#word2vec": {
                 "p_value": 1.6237367244204258e-10,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -314,7 +314,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.01665191187061596
             },
-            "eeg_naturalspeech_ALL_DIM_wnet2vec": {
+            "eeg_naturalspeech_ALL_DIM#-#wnet2vec": {
                 "p_value": 1.9985026635366475e-74,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -323,7 +323,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.009688917085825756
             },
-            "eeg_naturalspeech_ALL_DIM_fasttext-wiki": {
+            "eeg_naturalspeech_ALL_DIM#-#fasttext-wiki": {
                 "p_value": 0.0020901137295973363,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -332,7 +332,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.01442351482751669
             },
-            "eeg_naturalspeech_ALL_DIM_fasttext-wiki-subword": {
+            "eeg_naturalspeech_ALL_DIM#-#fasttext-wiki-subword": {
                 "p_value": 3.508221529622025e-05,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -341,7 +341,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.01193777049955588
             },
-            "eeg_naturalspeech_ALL_DIM_fasttext-cc": {
+            "eeg_naturalspeech_ALL_DIM#-#fasttext-cc": {
                 "p_value": 2.6065488389541317e-07,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -350,7 +350,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.015855005039693882
             },
-            "eeg_naturalspeech_ALL_DIM_fasttext-cc-subword": {
+            "eeg_naturalspeech_ALL_DIM#-#fasttext-cc-subword": {
                 "p_value": 0.7284823323634009,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -359,7 +359,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.01333589584408045
             },
-            "eeg_naturalspeech_ALL_DIM_bert-base": {
+            "eeg_naturalspeech_ALL_DIM#-#bert-base": {
                 "p_value": 8.788828127926657e-87,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -368,7 +368,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.015416755474922009
             },
-            "eeg_ucl_ALL_DIM_glove.6B.50": {
+            "eeg_ucl_ALL_DIM#-#glove.6B.50": {
                 "p_value": 3.272071745666309e-08,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -377,7 +377,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.03262547091454947
             },
-            "eeg_ucl_ALL_DIM_glove.6B.100": {
+            "eeg_ucl_ALL_DIM#-#glove.6B.100": {
                 "p_value": 7.553234517697806e-09,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -386,7 +386,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.05563516590704437
             },
-            "eeg_ucl_ALL_DIM_glove.6B.200": {
+            "eeg_ucl_ALL_DIM#-#glove.6B.200": {
                 "p_value": 1.6021144297340433e-07,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -395,7 +395,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.04077259746971471
             },
-            "eeg_ucl_ALL_DIM_glove.6B.300": {
+            "eeg_ucl_ALL_DIM#-#glove.6B.300": {
                 "p_value": 0.011835531980693662,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -404,7 +404,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.04463811352454877
             },
-            "eeg_ucl_ALL_DIM_word2vec": {
+            "eeg_ucl_ALL_DIM#-#word2vec": {
                 "p_value": 0.18229247822355465,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -413,7 +413,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.034389047893963035
             },
-            "eeg_ucl_ALL_DIM_wnet2vec": {
+            "eeg_ucl_ALL_DIM#-#wnet2vec": {
                 "p_value": 0.005611592510688765,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -422,7 +422,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.02064029991871248
             },
-            "eeg_ucl_ALL_DIM_fasttext-wiki": {
+            "eeg_ucl_ALL_DIM#-#fasttext-wiki": {
                 "p_value": 0.1507620070432397,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -431,7 +431,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.032137203297666936
             },
-            "eeg_ucl_ALL_DIM_fasttext-wiki-subword": {
+            "eeg_ucl_ALL_DIM#-#fasttext-wiki-subword": {
                 "p_value": 0.9566043709691886,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -440,7 +440,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.025531786539704237
             },
-            "eeg_ucl_ALL_DIM_fasttext-cc": {
+            "eeg_ucl_ALL_DIM#-#fasttext-cc": {
                 "p_value": 0.08729189076962104,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -449,7 +449,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.036882159199660904
             },
-            "eeg_ucl_ALL_DIM_fasttext-cc-subword": {
+            "eeg_ucl_ALL_DIM#-#fasttext-cc-subword": {
                 "p_value": 0.00021231000962920038,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -458,7 +458,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.03095572073860847
             },
-            "eeg_ucl_ALL_DIM_bert-base": {
+            "eeg_ucl_ALL_DIM#-#bert-base": {
                 "p_value": 3.13470673538737e-05,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -467,7 +467,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.03390350747973886
             },
-            "eeg_zuco_ALL_DIM_glove.6B.50": {
+            "eeg_zuco_ALL_DIM#-#glove.6B.50": {
                 "p_value": 1.8233196062834477e-13,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -476,7 +476,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.008630088344428834
             },
-            "eeg_zuco_ALL_DIM_glove.6B.100": {
+            "eeg_zuco_ALL_DIM#-#glove.6B.100": {
                 "p_value": 7.967905302840501e-59,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -485,7 +485,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.011280584626558099
             },
-            "eeg_zuco_ALL_DIM_glove.6B.200": {
+            "eeg_zuco_ALL_DIM#-#glove.6B.200": {
                 "p_value": 3.1341245575822344e-70,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -494,7 +494,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.012563850881294301
             },
-            "eeg_zuco_ALL_DIM_glove.6B.300": {
+            "eeg_zuco_ALL_DIM#-#glove.6B.300": {
                 "p_value": 1.3892840350517257e-89,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -503,7 +503,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.014224421299763038
             },
-            "eeg_zuco_ALL_DIM_word2vec": {
+            "eeg_zuco_ALL_DIM#-#word2vec": {
                 "p_value": 1.2444256072172295e-37,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -512,7 +512,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.012286933225618432
             },
-            "eeg_zuco_ALL_DIM_wnet2vec": {
+            "eeg_zuco_ALL_DIM#-#wnet2vec": {
                 "p_value": 2.227957126693433e-30,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -521,7 +521,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.008670749521802853
             },
-            "eeg_zuco_ALL_DIM_fasttext-wiki": {
+            "eeg_zuco_ALL_DIM#-#fasttext-wiki": {
                 "p_value": 5.445413124702969e-39,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -530,7 +530,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.01194445458097336
             },
-            "eeg_zuco_ALL_DIM_fasttext-wiki-subword": {
+            "eeg_zuco_ALL_DIM#-#fasttext-wiki-subword": {
                 "p_value": 0.002583637544462843,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -539,7 +539,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.009533999310232674
             },
-            "eeg_zuco_ALL_DIM_fasttext-cc": {
+            "eeg_zuco_ALL_DIM#-#fasttext-cc": {
                 "p_value": 1.2827642433866356e-66,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -548,7 +548,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.013152672168505736
             },
-            "eeg_zuco_ALL_DIM_fasttext-cc-subword": {
+            "eeg_zuco_ALL_DIM#-#fasttext-cc-subword": {
                 "p_value": 0.011282244949708914,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -557,7 +557,7 @@ def results_significance_large_example():
                 "feature": "ALL_DIM",
                 "AVERAGE_MSE": 0.010230913468278816
             },
-            "eeg_zuco_ALL_DIM_bert-base": {
+            "eeg_zuco_ALL_DIM#-#bert-base": {
                 "p_value": 4.742665720552152e-10,
                 "alpha": 0.01,
                 "bonferroni_alpha": 0.0025,
@@ -612,7 +612,7 @@ def results_remove_dangling_emb_random():
 
 @pytest.fixture
 def fixture_aggregate(configuration):
-    wilcoxon_results = {'hypotheses': {'eeg_zuco_ALL_DIM_glove.6B.50': {'p_value': 3.4787905348455747e-23, 'alpha': 0.01, 'bonferroni_alpha': 0.01, 'significant': True, 'wordEmbedding': 'glove.6B.50', 'feature': 'ALL_DIM', 'AVERAGE_MSE': 0.21200930276251012}}}
+    wilcoxon_results = {'hypotheses': {'eeg_zuco_ALL_DIM#-#glove.6B.50': {'p_value': 3.4787905348455747e-23, 'alpha': 0.01, 'bonferroni_alpha': 0.01, 'significant': True, 'wordEmbedding': 'glove.6B.50', 'feature': 'ALL_DIM', 'AVERAGE_MSE': 0.21200930276251012}}}
 
     with open('tests/reference/.cognival/results/test_baselines/reports/eeg/1/Wilcoxon.json', 'w') as f:
         json.dump(wilcoxon_results, f)

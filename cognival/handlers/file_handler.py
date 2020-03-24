@@ -55,7 +55,7 @@ def write_results(config, log, word_error, history):
             rand_path = Path(log["modality"]) / log["cognitiveData"] / log["feature"] / rand_emb / str(config["run_id"])
 
     # Mapping dict patch
-    mapping_key = "{}_{}_{}".format(log["cognitiveData"], log["feature"], log["wordEmbedding"])
+    mapping_key = "{}_{}#-#{}".format(log["cognitiveData"], log["feature"], log["wordEmbedding"])
     map_dict_patch = {mapping_key: {'embedding': log["wordEmbedding"],
                                      'cognitive-source': log["cognitiveData"],
                                      'cognitive-parent': log["cognitiveParent"],
@@ -65,7 +65,7 @@ def write_results(config, log, word_error, history):
                                      }}
     if rand_emb:
         map_dict_patch[mapping_key]['random'] = str(rand_path)
-        map_dict_patch[mapping_key]['random_name'] = "{}_{}_{}".format(log["cognitiveData"], log["feature"], rand_emb)
+        map_dict_patch[mapping_key]['random_name'] = "{}_{}#-#{}".format(log["cognitiveData"], log["feature"], rand_emb)
 
     if not os.path.exists(mapping_path):
         with open(mapping_path, 'w') as f:
