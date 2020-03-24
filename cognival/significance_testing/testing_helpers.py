@@ -43,14 +43,13 @@ def test_significance(baseline, model, alpha, test, debug=False):
     return significant, pvalue, name
 
 
-def save_scores(emb_scores, emb_filename, base_scores, base_filename, output_dir, modality):
+def save_scores(emb_scores, emb_filename, base_scores, base_filename, output_dir):
     """Save scores to temporary file. Compare embedding scores to baseline
     scores since word order and number of words differ."""
 
     emb_file = open(Path(output_dir) / emb_filename, 'w')
     base_file = open(Path(output_dir) / base_filename, 'w')
     for word, score in emb_scores.items():
-        # todo: absolute values or not?
         if word in base_scores:
             print(abs(float(score)), file=emb_file)
             print(abs(float(base_scores[word])), file=base_file)
