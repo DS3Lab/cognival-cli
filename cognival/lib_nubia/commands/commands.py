@@ -806,7 +806,7 @@ def significance(configuration,
         report = report_dir / '{}.json'.format(test)
         results = collections.defaultdict(dict)
         # For each hypothesis (i.e. non-baseline)
-        for filename in os.listdir(sig_test_res_dir):
+        for filename in sorted(os.listdir(sig_test_res_dir)):
             if not 'baseline' in filename:
                 # Obtain feature and average MSE
                 experiment = re.sub(r'embeddings_scores_(.*?).txt', r'\1', filename)

@@ -11,7 +11,7 @@ from handlers.data_handler import *
 @pytest.fixture
 def config():
     return {
-    "PATH": "/home/adrian/repos/cognival/tests/",
+    "PATH": "tests/",
     "cogDataConfig": {
         "zuco-eeg": {
             "dataset": "cognitive-data/eeg/zuco/zuco_scaled.txt",
