@@ -53,8 +53,12 @@ def chunk(input_path_name,
                                             "w") as f_out:
                 print('Chunk {}/{}:'.format(i+1, number_of_chunks))
                 for _ in tqdm(list(range(0, chunk_size))):
-                    f_out.write(next(f))
+                    try:
+                        f_out.write(next(f))
+                    except StopIteration:
+                        break
                 print()
+
 
 def update(left_df, right_df, on_column, columns_to_omit, whole_row):
     '''
