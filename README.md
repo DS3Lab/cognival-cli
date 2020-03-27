@@ -3,7 +3,7 @@ This tool is based on the framework described in the following paper:
 Nora Hollenstein, Antonio de la Torre, Ce Zhang & Nicolas Langer. "CogniVal: A Framework for Cognitive Word Embedding Evaluation". _CoNLL_ 
 (2019).
 
-For practical purposes, this tool should be used. For reference, the original code base can be found in the [paper_code] (https://github.com/DS3Lab/cognival/tree/paper_code) branch of this repository (no longer maintained).
+For practical purposes, this tool should be used. It is based on the original code from the above paper, which can be found [here] (https://github.com/DS3Lab/cognival). Note that there are some changes as well as fixed issues compared with the original version. See the README of the corresponding repository for details.
 
 **Notes**:
 
