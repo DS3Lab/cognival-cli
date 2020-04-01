@@ -98,7 +98,9 @@ def filter_config(embedding_registry,
     if not cog_feat_list:
         for cog_source in cog_sources_list:
             modality, csource = cog_source.split('_')
-            cog_feat_list.append(cog_sources_conf['sources'][modality][csource]['features'] if not cog_sources_conf['sources'][modality][csource]['features'] == 'single' else ['ALL_DIM'])
+            cog_feat_list.append(cog_sources_conf['sources'][modality][csource]['features'] \
+                                    if not cog_sources_conf['sources'][modality][csource]['features'] == 'single' \
+                                    else ['ALL_DIM'])
 
     cog_source_to_feature = {i:j for i, j in zip(cog_sources_list, cog_feat_list)}
     
@@ -313,7 +315,8 @@ def process_and_write_results(proper_result,
         run_stats['{}_{}_proper'.format(config_dict["run_id"], id_)] = proper_options
         run_stats['{}_{}_random'.format(config_dict["run_id"], id_)] = rand_options
 
-    return {'run_stats':run_stats, 'proper_options':proper_options, 'rand_options':rand_options}
+        # For testing purposes
+        return {'run_stats':run_stats, 'proper_options':proper_options, 'rand_options':rand_options}
     
 
 def insert_config_dict(config_dict, reference_dict, mode, csource, target_emb, source_emb):
@@ -515,18 +518,17 @@ def populate(resources_path,
                     try:
                         # Populate from installed cognitive sources
                         modality, csource_suff = csource.split('_')
-                        csource_dict = cog_config_dict['sources'][modality][csource_suff]
-                        cdc_dict = {"dataset": str(Path('cognitive_sources') / modality / csource_dict['file']),
+                        csource_dict = cog_config_dict[modality][csource_suff]
+                        cdc_dict = {"parent": "{}_{}".format(modality, csource_suff),
+                                    "dataset": str(Path('cognitive_sources') / modality / csource_dict['file']),
                                     "modality": modality,
                                     "features": csource_dict['features'] if not csource_dict['features'] == 'single' else ['ALL_DIM'],
-                                    "type": 'single_output' if csource_dict['dimensionality'] > 1 else 'multivariate_output'
+                                    "type": 'multivariate_output' if csource_dict['dimensionality'] > 1 else 'single_output'
                                     }
                         config_dict['cogDataConfig'][key] = copy.deepcopy(cdc_dict)
                         config_dict['cogDataConfig'][key]['wordEmbSpecifics'] = {}
                     except KeyError:
-                        cprint('Cognitive source {} is unknown, adding empty ...'.format(csource), 'red')
-                        config_dict['cogDataConfig'][key] = copy.deepcopy(COGNITIVE_CONFIG_TEMPLATE)
-                        config_dict['cogDataConfig'][key]['wordEmbSpecifics'] = {}
+                        return
 
             elif mode == 'empty':
                 config_dict['cogDataConfig'][key] = copy.deepcopy(COGNITIVE_CONFIG_TEMPLATE)
