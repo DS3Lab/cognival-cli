@@ -33,7 +33,8 @@ deprecation._PRINT_DEPRECATION_WARNINGS = False
 
 from .form_editor import ConfigEditor
 from .utils import (_check_emb_installed,
-                   AbortException)
+                   AbortException,
+                   NothingToDoException)
 
 from .templates import (WORD_EMB_CONFIG_FIELDS,
                         COGNITIVE_CONFIG_TEMPLATE,
@@ -394,6 +395,8 @@ def resolve_cog_emb(modalities,
                     cprint('Cognitive source {} unknown, aborting ...'.format(source), 'red')
                     raise AbortException
     cognitive_sources = cognitive_sources_resolved
+    if not cognitive_sources:
+        raise NothingToDoException
     return cognitive_sources, embeddings
 
 
@@ -558,10 +561,10 @@ def populate(resources_path,
         
         config_dict[emb_key][emb] = copy.deepcopy({k:v for k, v in emb_dict.items() if k in WORD_EMB_CONFIG_FIELDS})
         config_dict[emb_key][emb]['path'] = str(Path('embeddings') / embedding_registry['proper'][emb]['path'] / embedding_registry['proper'][emb]['embedding_file'])
-        if rand_embeddings and emb_dict['random_embedding']:
+        if rand_embeddings:
             config_dict[emb_key][emb]['random_embedding'] = '{}_for_{}'.format(config_dict[emb_key][emb]['random_embedding'], emb)
             rand_emb = embedding_registry['proper'][emb]['random_embedding']
-            if rand_emb:
+            if rand_emb and emb_dict['random_embedding']:
                 emb_dict = copy.deepcopy(embedding_registry['random_multiseed'][rand_emb])
                 emb_part_list = natsorted(list(embedding_registry['random_multiseed'][rand_emb]['embedding_parts']))
                 config_dict['randEmbSetToParts']['{}_for_{}'.format(rand_emb, emb)] = ['{}_for_{}'.format(rand_emb_part, emb) for rand_emb_part in emb_part_list]
@@ -569,7 +572,8 @@ def populate(resources_path,
                     config_dict['randEmbConfig']['{}_for_{}'.format(rand_emb_part, emb)] = copy.deepcopy({k:v for k, v in emb_dict.items() if k in WORD_EMB_CONFIG_FIELDS})
                     config_dict['randEmbConfig']['{}_for_{}'.format(rand_emb_part, emb)]['path'] = str(Path('embeddings') / config_dict['randEmbConfig']['{}_for_{}'.format(rand_emb_part, emb)]['path'] / '{}.txt'.format(rand_emb_part))
             else:
-                cprint('Embedding {} has no associated random embedding, skipping ...'.format(emb), 'yellow')
+                cprint('Embedding {} has no associated random baseline. Generate with `import random-baselines {}`. Aborting ...'.format(emb, emb), 'red')
+                raise AbortException
         else:
             config_dict[emb_key][emb]['random_embedding'] = None
     

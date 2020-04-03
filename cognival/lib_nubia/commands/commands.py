@@ -87,6 +87,7 @@ from .utils import (tupleit,
                    DisplayablePath,
                    download_file,
                    AbortException,
+                   NothingToDoException,
                    chunked_list_concat_str,
                    field_concat,
                    chunks,
@@ -432,7 +433,7 @@ def config_experiment(configuration,
     config_dicts = []
     cog_emb_pairs = []
 
-    edit_all_embeddings = embeddings[0] == 'all'
+    edit_all_embeddings = embeddings[0] == 'all' if embeddings else False
 
     # When configuration is empty, 'all' pertains to all embeddings and cognitive-source. If sources
     # and embeddings have already been added, 'all' means all contained in config.
@@ -460,7 +461,7 @@ def config_experiment(configuration,
         return
 
     # Only edit cognitive sources or combinations of cognitive sources and embeddings
-    if not embeddings or (embeddings and not cognitive_sources):
+    if not cognitive_sources:
         return
 
     cog_data_config_dict = main_conf_dict['cogDataConfig']
@@ -488,7 +489,7 @@ def config_experiment(configuration,
         if edit_all_embeddings and not populate_conf:
             embeddings = list(cog_data_config_dict[csource]["wordEmbSpecifics"].keys())
 
-        if edit_cog_source_params:
+        if edit_cog_source_params or not embeddings:
             # Run config editor for cognitive source if parameter edit_cog_source_params is set
             config_patch = config_editor("cognitive",
                                             cog_data_config_dict[csource],
@@ -599,7 +600,6 @@ def config_experiment(configuration,
                 _backup_config(configuration, resources_path)
                 backed_up = True
             _save_config(main_conf_dict, configuration, resources_path)
-    return True
 
 
 def config_delete(configuration,

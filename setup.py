@@ -43,7 +43,7 @@ class PostInstallCommand(install):
 
 setuptools.setup(
     name="cognival", # Replace with your own username
-    version="0.0.3",
+    version="0.1.0",
     author="Multiple authors",
     author_email="foo@bar.com",
     description="CogniVal cognitive embedding evaluation",

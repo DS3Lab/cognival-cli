@@ -85,6 +85,7 @@ from .utils import (tupleit,
                    DisplayablePath,
                    download_file,
                    AbortException,
+                   NothingToDoException,
                    chunked_list_concat_str,
                    field_concat,
                    chunks,
@@ -314,7 +315,8 @@ class Config:
 
         main_conf_dict = _open_config(configuration, resources_path)
         cog_data_config_dict = _open_cog_config(resources_path)
-        result = commands.config_experiment(configuration,
+        try:
+            commands.config_experiment(configuration,
                                    main_conf_dict,
                                    cog_data_config_dict,
                                    embedding_registry,
@@ -327,10 +329,9 @@ class Config:
                                    edit_cog_source_params,
                                    scope)
 
-        if not result:
+        except NothingToDoException:
             cprint("Nothing to do. If the configuration is populated, pass scope=all to add embeddings and cognitive-sources in bulk.", "yellow")
 
-        # TODO: Backup auslagern?
 
     @command
     @argument('modalities', type=list, description="Modalities of cognitive sources to delete.")
