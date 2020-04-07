@@ -516,7 +516,7 @@ class Import:
                                          associate_rand_emb,
                                          debug)
 
-        if ctx:
+        if embedding_registry:
             ctx.save_configuration()
 
     @command()
