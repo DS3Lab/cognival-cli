@@ -33,8 +33,8 @@ sns.set(style="whitegrid", color_codes=True)
 sns.set_context('paper')
 
 MODALITIES_SHORT_TO_FULL = {'eeg':'EEG',
-              'eye-tracking': 'Eye-Tracking',
-              'fmri': 'fMRI'}
+                            'eye-tracking': 'Eye-Tracking',
+                            'fmri': 'fMRI'}
 
 def load_jinja_template(path=['reporting', 'templates'], template_file='cognival_report.html'):
     env = Environment(
@@ -275,12 +275,11 @@ def generate_report(configuration,
             for experiment, sig_test_result in mod_report['hypotheses'].items():
                 with open(experiment_to_path[experiment]) as f:
                     result_dict = json.load(f)
-                result = {'Experiment': experiment,
-                        'Modality': MODALITIES_SHORT_TO_FULL[modality],
+                result = {'Modality': MODALITIES_SHORT_TO_FULL[modality],
                         'Ø MSE': result_dict['AVERAGE_MSE'],
                         'SD MSE': np.std([x['MSE_PREDICTION'] for x in result_dict['folds']]),
                         'Word embedding': result_dict['wordEmbedding'],
-                        'Subject': result_dict['cognitiveData'] if result_dict['cognitiveData'] != result_dict['cognitiveParent'] else '-',
+                        'Subject': result_dict['cognitiveData'] if result_dict['multi_hypothesis'] == 'subject' else '-',
                         'Cognitive source': result_dict['cognitiveParent'],
                         'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature'],
                         **sig_test_result}
@@ -290,12 +289,11 @@ def generate_report(configuration,
         for experiment, result_json_path in experiment_to_path.items():
             with open(result_json_path) as f:
                 result_dict = json.load(f)
-                result = {'Experiment': experiment,
-                        'Modality': MODALITIES_SHORT_TO_FULL[result_dict['modality']],
+                result = {'Modality': MODALITIES_SHORT_TO_FULL[result_dict['modality']],
                         'Ø MSE': result_dict['AVERAGE_MSE'],
                         'SD MSE': np.std([x['MSE_PREDICTION'] for x in result_dict['folds']]),
                         'Word embedding': result_dict['wordEmbedding'],
-                        'Subject': result_dict['cognitiveData'] if result_dict['cognitiveData'] != result_dict['cognitiveParent'] else '-',
+                        'Subject': result_dict['cognitiveData'] if result_dict['multi_hypothesis'] == 'subject' else '-',
                         'Cognitive source': result_dict['cognitiveParent'],
                         'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature']}
                 results.append(result)
@@ -317,9 +315,8 @@ def generate_report(configuration,
         df_details_atomic = df_details.copy()[(df_details['Subject'] == '-') & (df_details['Feature'] == '-')]
         df_details_feat_avg = df_details.copy()[(df_details['Subject'] == '-') & (df_details['Feature'] != '-')]
         df_details_multi_subj_avg = df_details.copy()[df_details['Subject'] != '-']
-        df_details_atomic = df_details_atomic.drop(['Experiment', 'Subject'], axis='columns')
-        df_details_feat_avg = df_details_feat_avg.drop(['Experiment', 'Subject'], axis='columns')
-        df_details_multi_subj_avg = df_details_multi_subj_avg.drop(['Experiment'], axis='columns')
+        df_details_atomic = df_details_atomic.drop(['Subject'], axis='columns')
+        df_details_feat_avg = df_details_feat_avg.drop(['Subject'], axis='columns')
         df_details_atomic = df_details_atomic.groupby(group_by_keys).mean()
         df_details_atomic['Hypotheses'] = 1
         df_details_atomic['Features'] = '-'
@@ -369,7 +366,6 @@ def generate_report(configuration,
                                     'significant']]
         else:
             df_details = df_details[['Modality',
-                                    'Experiment',
                                     'Word embedding',
                                     'Cognitive source',
                                     'Subject',
@@ -391,7 +387,6 @@ def generate_report(configuration,
                                      'SD MSE']]
         else:
             df_details = df_details[['Modality',
-                                    'Experiment',
                                     'Word embedding',
                                     'Cognitive source',
                                     'Subject',
@@ -410,12 +405,11 @@ def generate_report(configuration,
         if 'random' in experiment:
             with open(exp_file) as f:
                 result_dict = json.load(f)
-            result = {'Experiment': random_to_proper[experiment],
-                      'Modality': MODALITIES_SHORT_TO_FULL[result_dict['modality']],
+            result = {'Modality': MODALITIES_SHORT_TO_FULL[result_dict['modality']],
                       'Ø MSE': result_dict['AVERAGE_MSE'],
                       'SD MSE': np.std([x['MSE_PREDICTION'] for x in result_dict['folds']]),
                       'Word embedding': result_dict['wordEmbedding'],
-                      'Subject': result_dict['cognitiveData'] if result_dict['cognitiveData'] != result_dict['cognitiveParent'] else '-',
+                      'Subject': result_dict['cognitiveData'] if result_dict['multi_hypothesis'] == 'subject' else '-',
                       'Cognitive source': result_dict['cognitiveParent'],
                       'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature']}
             results.append(result)
@@ -431,9 +425,8 @@ def generate_report(configuration,
             df_random_atomic = df_random.copy()[(df_random['Subject'] == '-') & (df_random['Feature'] == '-')]
             df_random_feat_avg = df_random.copy()[(df_random['Subject'] == '-') & (df_random['Feature'] != '-')]
             df_random_multi_subj_avg = df_random.copy()[df_random['Subject'] != '-']
-            df_random_atomic = df_random_atomic.drop(['Experiment', 'Subject'], axis='columns')
-            df_random_feat_avg = df_random_feat_avg.drop(['Experiment', 'Subject'], axis='columns')
-            df_random_multi_subj_avg = df_random_multi_subj_avg.drop(['Experiment'], axis='columns')
+            df_random_atomic = df_random_atomic.drop(['Subject'], axis='columns')
+            df_random_feat_avg = df_random_feat_avg.drop(['Subject'], axis='columns')
             df_random_atomic = df_random_atomic.groupby(group_by_keys).mean()
             df_random_atomic['Hypotheses'] = 1
             df_random_atomic['Features'] = '-'
@@ -467,7 +460,6 @@ def generate_report(configuration,
                                 'SD MSE']]
         else:
             df_random = df_random[['Modality',
-                                   'Experiment',
                                    'Word embedding',
                                    'Cognitive source',
                                    'Subject',

@@ -7,7 +7,7 @@ from prompt_toolkit import Application
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.layout.dimension import Dimension as D, sum_layout_dimensions, max_layout_dimensions, to_dimension
-from prompt_toolkit.widgets import TextArea, Label, Button, HorizontalLine
+from prompt_toolkit.widgets import TextArea, Label, Button, HorizontalLine, RadioList
 from prompt_toolkit.layout.containers import Window, VSplit, HSplit, HorizontalAlign, VerticalAlign
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.utils import take_using_weights
@@ -159,7 +159,7 @@ class Table(HSplit):
         height = 1
         for col, col_width in zip(row, column_widths_min):
             if isinstance(col, Label):
-                wrapped_list = textwrap.wrap(col.text, width=col_width)
+                wrapped_list = textwrap.wrap(col.text, width=int(col_width*1.4))
                 col.text = "\n".join(wrapped_list)
                 new_height = len(wrapped_list)
                 if new_height > height:

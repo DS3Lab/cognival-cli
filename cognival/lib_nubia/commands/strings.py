@@ -5,7 +5,9 @@ EDITOR_TITLES = {"properties": "CogniVal properties",
                  "embedding_conf": "Embedding Parameter Configuration"}
 
 EDITOR_DESCRIPTIONS = { "properties": {"cognival_path": "Path for storing user data (configurations, embeddings, cognitive sources and results)."},
-                        "main": {"PATH": "Main working directory. Defaults to $HOME/.cognival",
+                       "main": {"type": "Whether word embeddings or sentence embeddings should be evaluated. If sentence embeddings, baseline (average) embeddings are used "
+                                        "when adding experiments with word embeddings. Select using <SPACE>. Note: Can only be set when newly creating a configuration file.",
+                                "PATH": "Main working directory. Defaults to $HOME/.cognival",
                                 "n_proc": "Number of (parent) processes to spawn for parallel fitting and evaluation. Defaults to (1 - number of available logical CPU cores). "
                                           "Note: A single process can allocate cycles on more than CPU core! Reduce this value if encountering issues (e.g. due to ulimit settings).",
                                 "folds": "Number of folds evaluated in n-Fold cross-validation (CV)",
@@ -15,9 +17,13 @@ EDITOR_DESCRIPTIONS = { "properties": {"cognival_path": "Path for storing user d
                                 },
                        "cognitive": {"dataset": "Name of the cognitive data set. See resources/cognitive_sources.json for a list of all available source",
                                      "parent": "Name of parent data set in multi-hypothesis datasets (usually fMRI). Identical to the cognitive source name otherwise.",
+                                     "multi_hypothesis": "If the source has multiple hypotheses, either 'subject' for multi-subject sources (e.g. fmri) or 'feature' for multi-feature sources (e.g. eye-tracking). False otherwise.",
+                                     "multi_file": "True if the source has multiple files (subjects or feature), False otherwise.",
+                                     "stratified_sampling": "True if source is composite of multiple source and stratified (proportional) sampling is to be applied.",
+                                     "balance": "Balance the subsources of the composite source through random oversampling. Only available for strat. sampling.",
                                      "modality": "Cognitive source modality (eeg, eye-tracking or fmri)",
                                      "features": "Comma-separated list of features to be evaluated. Must be set to ALL_DIM for all sources with only one feature, represented by all dimensions.",
-                                     "type": "'single_output' for most multi-feature resources (typically eye-tracking) and 'multivariate_output' for most single-feature resources (typicall eeg, fmri)"
+                                     "type": "'single_output' for most multi-feature resources (typically eye-tracking) and 'multivariate_output' for most single-feature resources (typically eeg, fmri)"
                                     },
                        "embedding_exp": {"activations": "Activation function(s) used in the neural regression model. Comma-separated list for multiple values.",
                                          "batch_size": "Batch size used during training. Comma-separated list for multiple values.",
@@ -26,7 +32,8 @@ EDITOR_DESCRIPTIONS = { "properties": {"cognival_path": "Path for storing user d
                                          "layers": "List of lists of layer specifications. Each row corresponds to possible layer sizes for a layer (comma-separated). Layers are separated by newlines.",
                                          "validation_split": "Ratio training data used as validation data during training"
                                         },
-                        "embedding_conf":{"chunk_number": "Number of embedding chunks. Ignored if chunked == 0.",
+                       "embedding_conf":{"dimensions": "Dimensionality of embeddings. Should not be changed.",
+                                         "chunk_number": "Number of embedding chunks. Ignored if chunked == 0.",
                                          "chunked": "Whether the embedding is chunked (1) or not (0).",
                                          "chunked_file": "Prefix/root of chunk files. Ignored if chunked == 0.",
                                          "ending": "File suffix of chunk files. Ignored if chunked == 0.",

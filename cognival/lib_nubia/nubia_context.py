@@ -11,6 +11,7 @@ import collections
 import json
 import os
 import sys
+from pathlib import Path
 from termcolor import cprint
 
 from natsort import natsorted
@@ -47,9 +48,14 @@ class NubiaCognivalContext(context.Context):
                 with open(self.resources_path / 'embedding_registry.json') as f:
                     self.embedding_registry = json.load(f)
             
-                for embedding_type_dict in self.embedding_registry.values():
-                    for embeddings, embedding_params in embedding_type_dict.items():
-                        self.path2embeddings[embedding_params['path']].append(embeddings)
+                for emb_category, emb_category_dict in self.embedding_registry.items():
+                    if emb_category == 'random_multiseed':
+                        for emb_type, emb_type_dict in emb_category_dict.items():
+                            for embeddings, embedding_params in emb_type_dict.items():
+                                self.path2embeddings[Path(embedding_params['path']) / emb_type].append(embeddings)
+                    else:
+                        for embeddings, embedding_params in emb_category_dict.items():
+                            self.path2embeddings[embedding_params['path']].append(embeddings)
                 for path, emb_list in self.path2embeddings.items():
                     self.path2embeddings[path] = natsorted(emb_list)
             except FileNotFoundError:

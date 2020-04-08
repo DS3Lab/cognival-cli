@@ -1,4 +1,5 @@
-WORD_EMB_CONFIG_FIELDS = set(["chunk_number",
+WORD_EMB_CONFIG_FIELDS = set(["dimensions",
+                              "chunk_number",
                               "chunked",
                               "chunked_file",
                               "chunk_ending",
@@ -7,6 +8,7 @@ WORD_EMB_CONFIG_FIELDS = set(["chunk_number",
                               "random_embedding"])
 
 MAIN_CONFIG_TEMPLATE = {
+                        "type": None,
                         "PATH": None,
                         "cogDataConfig": {},
                         "n_proc": None,
@@ -21,6 +23,11 @@ MAIN_CONFIG_TEMPLATE = {
 
 COGNITIVE_CONFIG_TEMPLATE = {
                             "dataset": None,
+                            "parent": None,
+                            "multi_hypothesis": None,
+                            "multi_file": None,
+                            "stratified_sampling": None,
+                            "balance": None,
                             "modality": None,
                             "features": [],
                             "type": None,
@@ -37,9 +44,12 @@ EMBEDDING_PARAMET_TEMPLATE = {
                             }
 
 EMBEDDING_CONFIG_TEMPLATE = {
+                            "dimensions": None,
                             "chunk_number": 0,
                             "chunked": 0,
                             "chunked_file": None,
-                            "ending": None,
-                            "path": None
+                            "chunk_ending": None,
+                            "path": None,
+                            "truncate_first_line":False,
+                            "random_embedding":None
                             }

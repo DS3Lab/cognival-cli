@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-# Derived from: TODO
 # All rights reserved.
 #
 # This source code is licensed under the BSD-style license found in the
@@ -25,6 +24,7 @@ import subprocess
 import zipfile
 
 from pathlib import Path
+from pprint import pprint
 from textwrap import fill
 from tqdm import tqdm
 
@@ -36,7 +36,9 @@ import numpy as np
 import pandas as pd
 import tabulate
 import tableformatter as tform
+import spacy
 
+from gensim.models.fasttext import load_facebook_model
 from prompt_toolkit.shortcuts import input_dialog, button_dialog, yes_no_dialog, message_dialog, radiolist_dialog, ProgressBar
 from pygments import highlight
 from pygments.lexers import MarkdownLexer
@@ -47,11 +49,12 @@ from cog_evaluate_parallel import run_parallel
 from handlers.file_handler import write_options
 from handlers.data_handler import chunk
 from handlers.binary_to_text_conversion import bert_to_text, elmo_to_text
+from handlers.sentence_emb_generation import generate_avg_sent_embeddings
 
 from utils import word2vec_bin_to_txt
 
 #sys.path.insert(0, 'significance_testing/')
-from significance_testing.statisticalTesting import extract_results as st_extract_results
+from significance_testing.extract_errors import extract_errors
 from significance_testing.aggregated_eeg_results import extract_results as agg_eeg_extr_results
 from significance_testing.aggregated_fmri_results import extract_results as agg_fmri_extr_results
 from significance_testing.aggregated_gaze_results import extract_results_gaze as agg_et_extr_results
@@ -75,7 +78,8 @@ from .process import (filter_config,
                       _edit_config,
                       update_emb_config,
                       generate_random_df,
-                      populate)
+                      populate,
+                      remove_dangling_emb_random)
                       
 from .utils import (tupleit,
                    _open_config,
@@ -109,7 +113,7 @@ def custom_formatwarning(msg, *args, **kwargs):
 warnings.formatwarning = custom_formatwarning
 
 NUM_BERT_WORKERS = 1
-COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1ouonaByYn2cnDAWihnQ3cGmMT6bJ4NaP'
+COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1S0Fa_gGOJMuPxUrkZHW0RXk7bSPc7ffR'
 
 def run(configuration,
         config_dict,
@@ -256,25 +260,27 @@ def list_cognitive_sources(cog_config):
     # List cognitive sources along with features (where applicable)
     formatted_list = []
 
-    for modality in cog_config['sources']:
-        formatted_list.append(colored(modality.upper(), attrs=['bold']))
-        formatted_list.append('\n')
-        formatted_list.append(colored('Resource                           Features'))
-        formatted_list.append('\n')
-        for key, value in cog_config['sources'][modality].items():
-            label = '{}_{}'.format(modality, key)
-            formatted_list.append(colored(label, 'cyan')  + ' '*(35-len(label)))
-            if isinstance(value["features"], str):
-                formatted_list.append(colored(value["features"], 'green'))
-                formatted_list.append('\n')
-            else:
-                formatted_list.append(colored(value["features"][0], 'green'))
-                formatted_list.append('\n')
-                for feature in value["features"][1:]:
-                    formatted_list.append(colored(' '*35 + feature, 'green'))
-                    formatted_list.append('\n')
+    for emb_type in cog_config['sources']:
+        formatted_list.append(colored("{} aggregated sources\n\n".format(emb_type.title()), attrs=['bold', 'reverse'], color='yellow'))
+        for modality in cog_config['sources'][emb_type]:
+            formatted_list.append(colored(modality.upper(), attrs=['bold']))
             formatted_list.append('\n')
-        formatted_list.append('\n')
+            formatted_list.append(colored('Resource                           Features'))
+            formatted_list.append('\n')
+            for key, value in cog_config['sources'][emb_type][modality].items():
+                label = '{}_{}'.format(modality, key)
+                formatted_list.append(colored(label, 'cyan')  + ' '*(35-len(label)))
+                if isinstance(value["features"], str):
+                    formatted_list.append(colored(value["features"], 'green'))
+                    formatted_list.append('\n')
+                else:
+                    formatted_list.append(colored(value["features"][0], 'green'))
+                    formatted_list.append('\n')
+                    for feature in value["features"][1:]:
+                        formatted_list.append(colored(' '*35 + feature, 'green'))
+                        formatted_list.append('\n')
+                formatted_list.append('\n')
+            formatted_list.append('\n')
     return formatted_list
 
 
@@ -297,7 +303,7 @@ def config_open(configuration, cognival_path, resources_path, edit, overwrite):
     # Open editor when creating (always) or opening (if edit=True)
     if create:
         config_dict = copy.deepcopy(MAIN_CONFIG_TEMPLATE)
-        config_dict = _edit_config(resources_path, cognival_path, config_dict, configuration)
+        config_dict = _edit_config(resources_path, cognival_path, config_dict, configuration, create=create)
         if config_dict:
             _backup_config(configuration, resources_path)
             _save_config(config_dict, configuration, resources_path)
@@ -306,7 +312,7 @@ def config_open(configuration, cognival_path, resources_path, edit, overwrite):
         if not config_dict:
             return
         if edit:
-            config_dict = _edit_config(resources_path, cognival_path, config_dict, configuration)
+            config_dict = _edit_config(resources_path, cognival_path, config_dict, configuration, create=create)
             if config_dict:
                 _backup_config(configuration, resources_path)
                 _save_config(config_dict, configuration, resources_path)
@@ -370,7 +376,7 @@ def config_show(configuration, config_dict, details, cognitive_source, hide_base
             cprint('Cognitive source {} not registered in configuration {}, aborted ...'.format(cognitive_source, configuration), 'red')
             return
 
-        cog_source_properties = [(k, field_concat(v)) for k, v in cog_source_config_dict.items() if k != 'wordEmbSpecifics']
+        cog_source_properties = [(k, field_concat(v)) for k, v in cog_source_config_dict.items() if k not in ('dataset', 'wordEmbSpecifics')]
         table_strs.append(colored('Cognitive source properties ({})'.format(cognitive_source), attrs=['bold', 'reverse'], color='green'))
         table_strs.append('\n')
         formatted_table = tform.generate_table(rows=[[', '.join(x[1]) if isinstance(x[1], list) else x[1] for x in cog_source_properties]],
@@ -494,8 +500,15 @@ def config_experiment(configuration,
                                             cog_data_config_dict[csource],
                                             [],
                                             [csource],
-                                            singleton_params=['dataset', 'parent', 'type', 'modality'],
-                                            skip_params=['wordEmbSpecifics'])
+                                            singleton_params=['dataset',
+                                                              'parent',
+                                                              'type',
+                                                              'modality',
+                                                              'multi_hypothesis',
+                                                              'multi_file',
+                                                              'stratified_sampling',
+                                                              'balance'],
+                                            skip_params=['dataset', 'wordEmbSpecifics'])
 
             # If patch dictionary is set, apply, backup existing and save new configuration
             if config_patch:
@@ -708,20 +721,6 @@ def config_delete(configuration,
     return main_conf_dict
 
 
-def remove_dangling_emb_random(emb, main_conf_dict):
-    # Delete embedding config and associated random embedding configs if not longer used by any cognitive source
-    if not any(emb in cd_dict["wordEmbSpecifics"] for cd_dict in main_conf_dict['cogDataConfig'].values()):
-        cprint("Embedding {} no longer used by any cognitive source, removing (and associated random baselines if applicable and unused)".format(emb), 'yellow')
-        assoc_rand_emb = main_conf_dict["wordEmbConfig"][emb]["random_embedding"]
-        if assoc_rand_emb:
-            for rand_emb_part in main_conf_dict["randEmbSetToParts"][assoc_rand_emb]:
-                if not any(rand_emb_part in cd_dict["wordEmbSpecifics"] for cd_dict in main_conf_dict['cogDataConfig'].values()):
-                    del main_conf_dict["randEmbConfig"][rand_emb_part]
-            del main_conf_dict["randEmbSetToParts"][assoc_rand_emb]
-        del main_conf_dict["wordEmbConfig"][emb]
-    return main_conf_dict
-
-
 def significance(configuration,
                  config_dict,
                  run_id,
@@ -784,7 +783,7 @@ def significance(configuration,
                 for embed in embeddings:
                     experiment = '{}_{}#-#{}'.format(ds, feat, embed)
                     try:
-                        st_extract_results(run_id, modality, experiment, mapping_dict, experiments_dir, sig_test_res_dir)
+                        extract_errors(run_id, modality, experiment, mapping_dict, experiments_dir, sig_test_res_dir)
                         hypothesis_counter[embed] += 1
                     except KeyError:
                         pass
@@ -809,7 +808,7 @@ def significance(configuration,
         for filename in sorted(os.listdir(sig_test_res_dir)):
             if not 'baseline' in filename:
                 # Obtain feature and average MSE
-                experiment = re.sub(r'embeddings_scores_(.*?).txt', r'\1', filename)
+                experiment = re.sub(r'embeddings_avg_errors_(.*?).txt', r'\1', filename)
                 embedding = mapping_dict[experiment]['embedding']
                 
                 with open(experiments_dir / mapping_dict[experiment]['proper'] / '{}.json'.format(embedding)) as f:
@@ -822,6 +821,7 @@ def significance(configuration,
                 model_file = sig_test_res_dir / filename
                 baseline_file = sig_test_res_dir / 'baseline_{}'.format(filename.partition('_')[2])
                 significant, pval, name = test_significance(baseline_file, model_file, bf_corr_alpha, test)
+                name = re.sub(r'embeddings_avg_errors_(.*?)', r'\1', name)
                 
                 # Store and display results
                 results['hypotheses'][name] = {'p_value': pval,
@@ -847,7 +847,7 @@ def significance(configuration,
 
             json_str = json.dumps(dict(results), indent=4)
             yield json_str
-            
+
             with open(report, 'w', encoding='utf-8') as fp:
                 fp.write(json_str)
                 
@@ -981,13 +981,19 @@ def aggregate(configuration,
             print(tabulate.tabulate(df_cli, headers="keys", tablefmt="fancy_grid", showindex=False))
 
 
-def update_vocabulary(cog_sources_path,
+def update_vocabulary(resources_path,
+                      cog_sources_path,
                       old_vocab):
+
+    if not _check_cog_installed(resources_path):
+        cprint('CogniVal sources not installed! Aborted ...', 'red')
+        return
+ 
     old_vocab = set(old_vocab)
     old_len = len(old_vocab)
 
     new_vocab = set()
-    source_paths = [(Path(path) / source) for path, _, sources in os.walk(cog_sources_path) for source in sources \
+    source_paths = [(Path(path) / source) for path, _, sources in os.walk(cog_sources_path / 'word') for source in sources \
                         if source.endswith('txt') and not source.startswith('.')]
     cprint("Updating CogniVal vocabulary from cognitive sources ...", "yellow")
     
@@ -1031,6 +1037,109 @@ def update_vocabulary(cog_sources_path,
     return new_vocab_list
 
 
+def update_sentences(resources_path,
+                     cog_sources_path,
+                     old_sentences):
+    nlp = spacy.load('en_core_web_sm', disable=['ner', 'parser'])
+
+    if not _check_cog_installed(resources_path):
+        cprint('CogniVal sources not installed! Aborted ...', 'red')
+        return
+
+    old_sentences = set(old_sentences)
+    old_len = len(old_sentences)
+
+    new_sentences = set()
+    source_paths = [(Path(path) / source) for path, _, sources in os.walk(cog_sources_path / 'sentence') for source in sources \
+                        if source.endswith('txt') and not source.startswith('.')]
+
+    cprint("Updating CogniVal sentences from cognitive sources ...", "yellow")
+    
+    # Iterate over sources
+    for source_path in tqdm(source_paths):
+        df = pd.read_csv(source_path,
+                            sep=" ",
+                            quotechar='"',
+                            quoting=csv.QUOTE_NONNUMERIC,
+                            doublequote=True,
+                            keep_default_na=False)
+        
+        # Determine if any NaNs in word column, warn accordingly
+        is_nan_series = df['sentence'].isnull()
+        if is_nan_series.values.any():
+            nan_indices = is_nan_series.index[is_nan_series == True] + 1
+            nan_indices = nan_indices.tolist()
+            cprint('Warning - NaNs in (rows: {}): {}'.format(', '.join(map(str, list(nan_indices))), source_path), 'yellow')
+            
+        # Fill NaNs and perform inplace set union with new sentences set
+        df.fillna('', inplace=True)
+        new_sentences |= set(df['sentence'])
+
+    new_sentences_list = sorted([x for x in new_sentences if x])
+    new_len = len(new_sentences_list)
+
+    # Report changes in sentences size
+    if new_len == old_len:
+        cprint('Sentence list size unchanged ({})'.format(old_len), 'magenta')
+    else:
+        if new_len > old_len:
+            cprint('Sentence list size increased (previous/new): {}/{}'.format(old_len, new_len), 'green')
+        elif new_len < old_len:
+            cprint('Sentence list size decreased (previous/new): {}/{} (Caution: Sentence list size has decreased!)'.format(old_len, new_len), 'yellow')
+
+    # Display a diff (union the sets minus intersection)
+    diff_list = ', '.join(sorted(list((old_sentences | new_sentences) - (old_sentences & new_sentences))))
+    if diff_list:
+        cprint('Diff:')
+        pprint(diff_list)
+
+    # Only collect nouns, adjectives and content verbs
+    print("Compiling sentence vocabulary ...")
+    new_vocab_list = [token.text for sent in tqdm(new_sentences_list) for token in nlp(sent) if any(token.tag_.startswith(x) for x in ['NN', 'JJ', 'VB'])]
+
+    return new_sentences_list, new_vocab_list
+
+
+def update_embeddings(resources_path,
+                      embeddings_path,
+                      embedding_registry,
+                      embeddings=[]):
+    for emb_name in embedding_registry['proper']:
+        if not embeddings or (embeddings and emb_name in embeddings):
+            cprint("Updating {} ...".format(emb_name), attrs=['bold'], color='yellow')
+            if embedding_registry['proper'][emb_name]['installed']:
+                emb_type = embedding_registry['proper'][emb_name]['type'] 
+                base_path = embeddings_path / embedding_registry['proper'][emb_name]['path'] / emb_type
+                emb_file = Path(embedding_registry['proper'][emb_name]['embedding_file'])
+                emb_path = base_path / emb_file
+
+                if embedding_registry['proper'][emb_name]['binary_format'] == 'elmo':
+                    elmo_to_text(resources_path / 'standard_vocab.txt',
+                                emb_path,
+                                layer='nocontext')
+
+                elif embedding_registry['proper'][emb_name]['binary_format'] == 'bert':
+                    bert_to_text(resources_path / 'standard_vocab.txt',
+                                base_path,
+                                emb_path,
+                                NUM_BERT_WORKERS)
+
+                # If word embedding, generate baseline sentence embedding by averaging word embeddings
+                if embedding_registry['proper'][emb_name]['type'] == 'word':
+                    cprint("Generating baseline sentence embeddings for {} ...".format(emb_name))
+                    generate_avg_sent_embeddings(emb_name,
+                                                 resources_path,
+                                                 embedding_registry['proper'][emb_name],
+                                                 base_path,
+                                                 emb_file)
+
+                # Associate random baselines with embeddings if set by user
+                if embedding_registry['proper'][emb_name]['random_embedding']:
+                    import_random_baselines(embedding_registry, resources_path, embeddings_path, emb_name, force=True)
+
+    return embedding_registry
+
+
 def import_cognitive_sources(cognival_path,
                              resources_path,
                              cog_config,
@@ -1057,12 +1166,15 @@ def import_cognitive_sources(cognival_path,
                     shutil.rmtree(basepath / path)
                 except NotADirectoryError:
                     os.remove(basepath / path)
+                except FileNotFoundError:
+                    pass
             cog_config['cognival_installed'] = True
             cognival_sources = set(cog_config['cognival_sources'])
-            for modality in cog_config['sources'].values():
-                for csource, source_props in modality.items():
-                    if csource in cognival_sources:
-                        source_props['installed'] = True
+            for agg_type in cog_config['sources'].values():
+                for modality in agg_type.values():
+                    for csource, source_props in modality.items():
+                        if csource in cognival_sources:
+                            source_props['installed'] = True
         else:
             cprint("CogniVal sources already present!", "green")
             return 
@@ -1078,9 +1190,13 @@ def import_cognitive_sources(cognival_path,
                             'after running this assistant:\n\n'
                             '{}/cognitive_sources/<modality>/\n\n'
                             'The specified name ({}) must match the corresponding text file! \n'
-                            'Multi-hypothesis (multi-file) sources must currently be added manually to: \n\n'
+                            'Multi-hypothesis (multi-file) sources and composite sources requiring stratified sampling must currently be added manually to: \n\n'
                             '{}/cognitive_sources/resources/cognitive_sources.json'.format(str(cognival_path), source, str(cognival_path))).run()
-
+        
+        emb_type = radiolist_dialog(title='Cognitive source registration',
+                                    text='Specify the aggregation level of the cognitive source:',
+                                    values=[('word', 'word'),
+                                            ('sentence', 'sentence')]).run()
 
         modality = radiolist_dialog(title='Cognitive source registration',
                                     text='Specify cognitive source modality:',
@@ -1119,20 +1235,29 @@ def import_cognitive_sources(cognival_path,
             features = [x.strip() for x in features.split(',')]
 
         # Add config dictionary
-        cog_config['sources'][modality][source] = {'file': '{}.txt'.format(source),
-                                                    'features': features,
-                                                    'dimensionality': dimensionality,
-                                                    'hypothesis_per_participant': False,
-                                                    'installed': True}
+        cog_config['sources'][emb_type][modality][source] = {'file': '{}.txt'.format(source),
+                                                             'features': features,
+                                                             'dimensionality': dimensionality,
+                                                             'multi_file': False,
+                                                             'multi_hypothesis': False if features == 'single' else True,
+                                                             'stratified_sampling': False,
+                                                             'installed': True}
         # Add to index
         index = cog_config['index']
-        index.append('{}_{}'.format(modality, source))
+        index.append('{}_{}_{}'.format(emb_type, modality, source))
         cog_config['index'] = natsorted(list(set(index)))
     
         message_dialog(title='Cognitive source registration',
                         text='Please ensure that the file has the following path and name after import:\n\n'
                                 '{}/cognitive_sources/{}/{}.txt\n\n'
-                                'Afterwards, run the command "update-vocabulary" to update the evaluation vocabulary.'.format(str(cognival_path), modality, source)).run()
+                                'Afterwards, run the command "update-listings" to update the evaluation listings (vocabulary and sentences).\n'
+                                'Note: If you are evaluating word embeddings of type BERT or ELMo, or sentence embeddings, you also have to \n'
+                                'run "update-embeddings".'
+                                'The cognitive source will be available under {}_{}'.format(str(cognival_path),
+                                                                                                modality,
+                                                                                                source,
+                                                                                                modality,
+                                                                                                source)).run()
     
     cprint("Completed importing cognitive sources ({})".format(source), "green")
 
@@ -1154,6 +1279,11 @@ def import_embeddings(x,
                       are_set=False,
                       associate_rand_emb=False,
                       debug=False):
+
+    if not _check_cog_installed(resources_path):
+        cprint('CogniVal sources not installed! Aborted ...', 'red')
+        return
+    
     if not are_set:
         associate_rand_emb = yes_no_dialog(title='Random baseline generation',
                                             text='Do you wish to compare the embeddings with random baselines of identical dimensionality? \n').run()
@@ -1246,8 +1376,13 @@ def import_embeddings(x,
         if emb_name is None:
             cprint("Aborting ...", "red")
             return
+          
+        emb_type = radiolist_dialog(title='Embedding registration',
+                text='Specify whether the embeddings are of type word or sentence embedding:',
+                                            values=[('word', 'word'),
+                                                    ('sentence', 'sentence')]).run()
         
-        elif not emb_name:
+        if not emb_name:
             emb_name = 'my_custom_embeddings'
             cprint('No name specified, using "my_custom_embeddings" ...', 'yellow')
 
@@ -1288,9 +1423,12 @@ def import_embeddings(x,
             cprint('Error: {} is not a valid embedding dimensionality, aborting ...'.format(emb_dim), 'red')
             return
 
-        emb_binary = yes_no_dialog(title='Embedding registration',
-                                    text='Is the embedding file binary? If "No" is chosen, the file \n'
-                                    'will be treated as text (only-space separated formats supported).').run()
+        if emb_type == 'word':
+            emb_binary = yes_no_dialog(title='Embedding registration',
+                                        text='Is the embedding file binary? If "No" is chosen, the file \n'
+                                        'will be treated as text (only-space separated formats supported).').run()
+        else:
+            emb_binary = False
 
         emb_binary_format = None
         truncate_first_line = False
@@ -1318,7 +1456,7 @@ def import_embeddings(x,
         chunk_number = 0
         if chunk_embeddings:
             chunk_number = input_dialog(title='Embedding registration',
-                                            text='Please specify the number of chunks. If left empty, the value is set to 4.').run()
+                                        text='Please specify the number of chunks. If left empty, the value is set to 4.').run()
             try:
                 if chunk_number:
                     chunk_number = int(chunk_number)
@@ -1329,7 +1467,8 @@ def import_embeddings(x,
             if not chunk_number:
                 chunk_number = 4
 
-        embedding_registry['proper'][emb_name] = {'url': url,
+        embedding_registry['proper'][emb_name] = {'type': emb_type,
+                                                'url': url,
                                                 'dimensions': emb_dim,
                                                 'path': path,
                                                 'embedding_file': main_emb_file if not emb_binary else '{}.txt'.format(main_emb_file.rsplit('.', maxsplit=1)[0]),
@@ -1357,7 +1496,7 @@ def import_embeddings(x,
         # Get file name and paths
         fname = url.split('/')[-1]
         fpath = embeddings_path / fname
-        fpath_extracted = embeddings_path / path
+        fpath_extracted = embeddings_path / path / 'word'
 
         try:
             shutil.rmtree(fpath_extracted)
@@ -1378,7 +1517,7 @@ def import_embeddings(x,
                     zip_ref.extractall(fpath_extracted) 
             except zipfile.BadZipFile:
                 # Assume gzipped bin (requires manually creating path and setting filename)
-                os.mkdir(fpath_extracted)
+                os.makedirs(fpath_extracted)
                 with gzip.open(embeddings_path / 'gdrive_embeddings.dat', 'rb') as f_in:
                     with open(fpath_extracted / '{}.bin'.format(path), 'wb') as f_out:
                         shutil.copyfileobj(f_in, f_out)
@@ -1387,7 +1526,6 @@ def import_embeddings(x,
         # Normal HTTP downloads and local file moves
         else:
             os.makedirs(fpath_extracted)
-            # TODO: Test this
             if local:
                 shutil.copy(url, fpath)
             else:
@@ -1412,7 +1550,8 @@ def import_embeddings(x,
 
     # Iterate over all embedding files (e.g. GloVe has multiple files requiring processing)
     for emb_name in path2embeddings[folder]:
-        base_path = embeddings_path / embedding_registry['proper'][emb_name]['path']
+        emb_type = embedding_registry['proper'][emb_name]['type'] 
+        base_path = embeddings_path / embedding_registry['proper'][emb_name]['path'] / emb_type
         try:
             bin_file = Path(embedding_registry['proper'][emb_name]['binary_file'])
         except TypeError:
@@ -1461,12 +1600,22 @@ def import_embeddings(x,
                     truncate_first_line=embedding_registry['proper'][emb_name]["truncate_first_line"])
             embedding_registry['proper'][emb_name]["truncate_first_line"] = False
 
-        cprint('Finished importing embedding "{}"'.format(emb_name), 'green')
+        # If word embedding, generate baseline sentence embedding by averaging word embeddings
+        if embedding_registry['proper'][emb_name]['type'] == 'word':
+            cprint("Generating baseline sentence embeddings for {} ...".format(emb_name))
+            generate_avg_sent_embeddings(emb_name,
+                                         resources_path,
+                                         embedding_registry['proper'][emb_name],
+                                         base_path,
+                                         emb_file)
 
         # Associate random baselines with embeddings if set by user
         if associate_rand_emb:                                                
             import_random_baselines(embedding_registry, resources_path, embeddings_path, emb_name)
-    
+        
+        cprint('Finished importing embedding "{}"'.format(emb_name), 'green')
+
+
     if emb_name.startswith('random'):
         embedding_registry['random_static'][emb_name]['installed'] = True
     else:
@@ -1492,12 +1641,14 @@ def import_random_baselines(embedding_registry,
         return
 
     emb_dim = emb_properties['dimensions']
+    emb_type = emb_properties['type']
 
     # Get dimensions of existing random baselines
     available_dims = set()
-    for _, parameters in embedding_registry['random_multiseed'].items():
-        if parameters['installed']:
-            available_dims.add(parameters['dimensions'])
+    if embedding_registry['random_multiseed']:
+        for _, parameters in embedding_registry['random_multiseed'].items():
+            if parameters[emb_type]['installed']:
+                available_dims.add(parameters[emb_type]['dimensions'])
 
     # Obtain seed values from non-linear function
     if seed_func == 'exp_e_floored':
@@ -1514,47 +1665,78 @@ def import_random_baselines(embedding_registry,
         else:
             cprint('No pre-existing random baselines of dimensionality {}, generating ...'.format(emb_dim), 'yellow')
 
-        with open(resources_path / 'standard_vocab.txt') as f:
-            vocabulary = f.read().split('\n')
-        cprint('Generating {}-dim. random baselines using standard CogniVal vocabulary ({} tokens)...'.format(emb_dim, len(vocabulary)), 'yellow')
+        for listing_fname, unit_label, unit_type in [('standard_vocab', 'tokens', 'word'), ('standard_sentences', 'sentences', 'sentence')]:
+            if emb_type == 'sentence' and unit_type == 'word':
+                continue
 
-        # Generate random baselines
-        rand_emb_keys = ['{}_{}_{}'.format(rand_emb_name, idx+1, seed) for idx, seed in enumerate(seeds)]
-        rand_emb_path = Path('random_multiseed') / '{}_dim'.format(emb_dim) / '{}_seeds'.format(len(seeds))
-        fullpath = embeddings_path / rand_emb_path
-        try:
-            os.makedirs(fullpath)
-        except FileExistsError:
-            pass
+            with open(resources_path / '{}.txt'.format(listing_fname)) as f:
+                listing = f.read().split('\n')
 
-        dfs = Parallel((os.cpu_count() - 1))(delayed(generate_random_df)(seed, vocabulary, emb_dim) for seed in tqdm(seeds))
-        for df, emb_file in zip(dfs, rand_emb_keys):
-            df.to_csv(fullpath / '{}.txt'.format(emb_file), sep=" ", encoding="utf-8", header=False, index=False)
-                
-        # Register random baselines
-        embedding_registry['random_multiseed'][rand_emb_name] = {'url': 'locally generated',
-                                                                    'dimensions': emb_dim,
-                                                                    'path':str(rand_emb_path),
-                                                                    'embedding_parts':{},
-                                                                    'installed': True,
-                                                                    'chunked': False,
-                                                                    'associated_with':[embeddings]}
-        for rand_emb_key in rand_emb_keys:
-            embedding_registry['random_multiseed'][rand_emb_name]['embedding_parts'][rand_emb_key] = '{}.txt'.format(rand_emb_key)
-        
+            cprint('Generating {}-dim. random baselines ({} {})...'.format(emb_dim, len(listing), unit_label), 'yellow')
+
+            # Generate random baselines
+            rand_emb_keys = ['{}_{}_{}'.format(rand_emb_name, idx+1, seed) for idx, seed in enumerate(seeds)]
+            rand_emb_path = Path('random_multiseed') / '{}_dim'.format(emb_dim) / '{}_seeds'.format(len(seeds))
+            fullpath = embeddings_path / rand_emb_path / unit_type
+
+            try:
+                os.makedirs(fullpath)
+            except FileExistsError:
+                pass
+
+            dfs = Parallel((os.cpu_count() - 1))(delayed(generate_random_df)(emb_type, seed, listing, emb_dim) for seed in tqdm(seeds))
+
+            for df, emb_file in zip(dfs, rand_emb_keys):
+                if unit_type == 'word':
+                    df.to_csv(fullpath / '{}.txt'.format(emb_file),
+                              sep=" ",
+                              encoding="utf-8",
+                              header=False, 
+                              index=False)
+                elif unit_type == 'sentence':
+                    df.to_csv(fullpath / '{}.txt'.format(emb_file),
+                              sep=" ",
+                              quotechar='"',
+                              quoting=csv.QUOTE_NONNUMERIC,
+                              doublequote=True,
+                              encoding="utf-8",
+                              header=False, 
+                              index=False)
+                else:
+                    raise RuntimeError
+                    
+            # Register random baselines
+            if not rand_emb_name in embedding_registry['random_multiseed']:
+                embedding_registry['random_multiseed'][rand_emb_name] = {}
+            rand_emb_params = embedding_registry['random_multiseed'][rand_emb_name]
+            rand_emb_params[unit_type] = {'url': 'locally generated',
+                                          'dimensions': emb_dim,
+                                          'path':str(rand_emb_path),
+                                          'embedding_parts':{},
+                                          'installed': True,
+                                          'chunked': False,
+                                          'associated_with':[embeddings]}
+
+            for rand_emb_key in rand_emb_keys:
+                rand_emb_params[unit_type]['embedding_parts'][rand_emb_key] = '{}.txt'.format(rand_emb_key)
+            
         cprint('✓ Generated random baselines (Naming scheme: random-<dimensionality>-<no. seeds>-<#seed>-<seed_value>)', 'green')
     # Associate existing baseline otherwise, unless already associated
     else:
-        try:
-            if not embeddings in embedding_registry['random_multiseed'][rand_emb_name]['associated_with']:
-                cprint('Random baselines of dimensionality {} already present, associating ...'.format(emb_dim), 'green')
-                embedding_registry['random_multiseed'][rand_emb_name]['associated_with'].append(embeddings)
-            else:
-                cprint('Random baselines of dimensionality {} already present and associated.'.format(emb_dim), 'green')
+        for listing_fname, unit_label, unit_type in [('standard_vocab', 'tokens', 'word'), ('standard_sentences', 'sentences', 'sentence')]:
+            if emb_type == 'sentence' and unit_type == 'word':
+                continue
+            try:
+                 rand_emb_params = embedding_registry['random_multiseed'][rand_emb_name]
+                 if not embeddings in rand_emb_params[unit_type]['associated_with']:
+                     cprint('Random baselines of dimensionality {} already present, associating ...'.format(emb_dim), 'green')
+                     rand_emb_params[unit_type]['associated_with'].append(embeddings)
+                 else:
+                     cprint('Random baselines of dimensionality {} already present and associated.'.format(emb_dim), 'green')
+                     return
+            except KeyError:
+                cprint('Random baselines of dimensionality {} present, but different fold count (no_emb). Use force to regenerate.'.format(emb_dim), 'yellow')
                 return
-        except KeyError:
-            cprint('Random baselines of dimensionality {} present, but different fold count (no_emb). Use force to regenerate.'.format(emb_dim), 'yellow')
-            return
-    
+
     emb_properties['random_embedding'] = rand_emb_name
     return embedding_registry

@@ -9,3 +9,5 @@ include user/resources/embedding_registry.json
 include user/resources/reference_config.json
 include user/resources/demo_config.json
 include user/resources/standard_vocab.txt
+include user/resources/standard_sentences.txt
+include user/resources/standard_sent_vocab.txt
