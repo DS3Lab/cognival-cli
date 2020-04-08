@@ -49,15 +49,6 @@ from handlers.binary_to_text_conversion import bert_to_text, elmo_to_text
 
 from utils import word2vec_bin_to_txt
 
-#sys.path.insert(0, 'significance_testing/')
-from significance_testing.statisticalTesting import extract_results as st_extract_results
-from significance_testing.aggregated_eeg_results import extract_results as agg_eeg_extr_results
-from significance_testing.aggregated_fmri_results import extract_results as agg_fmri_extr_results
-from significance_testing.aggregated_gaze_results import extract_results_gaze as agg_et_extr_results
-from significance_testing.aggregate_significance import aggregate_signi_eeg, aggregate_signi_fmri
-from significance_testing.aggregate_significance import aggregate_signi_gaze as aggregate_signi_et
-from significance_testing.testing_helpers import bonferroni_correction, test_significance
-
 from lib_nubia.prompt_toolkit_table import *
 from lib_nubia.commands import messages, commands
 
@@ -432,27 +423,100 @@ def aggregate(run_id=0,
 
 
 @command
-def update_vocabulary():
+class Update:
+    """Update CogniVal resources (vocabulary, sentences and embeddings)
+    [Sub-commands]
+    - vocabulary: Update the vocabulary based on all imported cognitive sources.
+    - sentences: Update the CogniVal sentence listbased on all imported cognitive sources.
+    - listings: Update both the CogniVal vocabulary and sentence list based on all imported cognitive_sources.
+    - embeddings: Update embeddings that are generated in CogniVal (BERT, ELMo), average sentence embeddings and random embeddings.
+―
     """
-    Update the vocabulary based on all imported cognitive sources.
-    """
-    ctx = context.get_context()
-    resources_path = ctx.resources_path
-    cog_sources_path = ctx.cog_sources_path
-    vocab_path = resources_path / 'standard_vocab.txt'
 
-    with open(vocab_path) as f:
-        old_vocab = [x.rstrip('\n') for x in f]
+    def __init__(self) -> None:
+        pass
 
-    new_vocab_list = commands.update_vocabulary(cog_sources_path,
-                                                old_vocab)
+    """This is the super command help"""
 
-    if new_vocab_list:
-        cprint('Writing vocabulary to {} ...'.format(str(vocab_path)), 'green')
-        with open(vocab_path, 'w') as f:
-            for word in new_vocab_list:
-                if word:
-                    f.write('{}\n'.format(word))
+    @command
+    def vocabulary(self):
+        """
+        Update the vocabulary based on all imported cognitive sources.
+        """
+        ctx = context.get_context()
+        resources_path = ctx.resources_path
+        cog_sources_path = ctx.cog_sources_path
+        vocab_path = resources_path / 'standard_vocab.txt'
+
+        with open(vocab_path) as f:
+            old_vocab = [x.rstrip('\n') for x in f]
+
+        new_vocab_list = commands.update_vocabulary(resources_path,
+                                                    cog_sources_path,
+                                                    old_vocab)
+
+        if new_vocab_list:
+            cprint('Writing vocabulary to {} ...'.format(str(vocab_path)), 'green')
+            with open(vocab_path, 'w') as f:
+                for word in new_vocab_list:
+                    if word:
+                        f.write('{}\n'.format(word))
+
+    @command
+    def sentences(self):
+        """
+        Update the CogniVal sentence listbased on all imported cognitive sources.
+        """
+        ctx = context.get_context()
+        resources_path = ctx.resources_path
+        cog_sources_path = ctx.cog_sources_path
+        sentences_path = resources_path / 'standard_sentences.txt'
+        sent_vocab_path = resources_path / 'standard_sent_vocab.txt'    
+
+        with open(sentences_path) as f:
+            old_sentences = [x.rstrip('\n') for x in f]
+
+        new_sentences, new_vocab_list = commands.update_sentences(resources_path,
+                                                                  cog_sources_path,
+                                                                  old_sentences)
+
+        if new_sentences:
+            cprint('Writing sentences to {} ...'.format(str(sentences_path)), 'green')
+            with open(sentences_path, 'w') as f:
+                for sent in new_sentences:
+                    if sent:
+                        f.write('{}\n'.format(sent))
+
+            cprint('Writing sentence vocabulary to {} ...'.format(str(sent_vocab_path)), 'green')
+            with open(sent_vocab_path, 'w') as f:
+                for word in new_vocab_list:
+                    if word:
+                        f.write('{}\n'.format(word))
+     
+    @command
+    def listings(self):
+        """
+        Update both the CogniVal vocabulary and sentence list based on all imported cognitive_sources.
+        """
+        update_vocabulary()
+        update_sentences()
+
+
+    @command
+    @argument('embeddings', type=list, description="Either list of embeddings or None (all embeddings, default).")
+    def embeddings(self, embeddings=None):
+        """
+        Update embeddings that are generated in CogniVal (BERT, ELMo), average sentence embeddings and random embeddings.
+        """
+        ctx = context.get_context()
+        embeddings_path = ctx.embeddings_path
+        resources_path = ctx.resources_path
+        embedding_registry = ctx.embedding_registry
+
+        embedding_registry = commands.update_embeddings(resources_path, embeddings_path, embedding_registry, embeddings=embeddings)
+
+        if embedding_registry:
+            ctx.save_configuration()
 
 
 @command
@@ -515,8 +579,9 @@ class Import:
                                          associate_rand_emb,
                                          debug)
 
-        if ctx:
+        if embedding_registry:
             ctx.save_configuration()
+
 
     @command()
     @argument('embeddings',

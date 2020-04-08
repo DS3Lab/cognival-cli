@@ -1,6 +1,7 @@
 {
     "proper": {
         "glove.6B.50": {
+	    "type": "word",
             "url": "http://nlp.stanford.edu/data/glove.6B.zip",
             "dimensions": 50,
             "binary": false,
@@ -14,6 +15,7 @@
             "random_embedding": null
         },
         "glove.6B.100": {
+	    "type": "word",
             "url": "http://nlp.stanford.edu/data/glove.6B.zip",
             "dimensions": 100,
             "binary": false,
@@ -27,6 +29,7 @@
             "random_embedding": null
         },
         "glove.6B.200": {
+	    "type": "word",
             "url": "http://nlp.stanford.edu/data/glove.6B.zip",
             "dimensions": 200,
             "binary": false,
@@ -40,6 +43,7 @@
             "random_embedding": null
         },
         "glove.6B.300": {
+	    "type": "word",
             "url": "http://nlp.stanford.edu/data/glove.6B.zip",
             "dimensions": 300,
             "binary": false,
@@ -53,6 +57,7 @@
             "random_embedding": null
         },
         "word2vec": {
+	    "type": "word",
             "url": "https://drive.google.com/uc?id=1CRCVNKW5SJ2fwNwLziIibuJoTZN9NHHw",
             "dimensions": 300,
             "binary": true,
@@ -69,6 +74,7 @@
             "random_embedding": null
         },
         "wnet2vec": {
+	    "type": "word",
             "url": "http://lxcenter.di.fc.ul.pt/wn2vec.zip",
             "dimensions": 850,
             "binary": false,
@@ -82,6 +88,7 @@
             "random_embedding": null
         },
         "fasttext-wiki": {
+	    "type": "word",
             "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-english/wiki-news-300d-1M.vec.zip",
             "dimensions": 300,
             "binary": false,
@@ -98,6 +105,7 @@
             "random_embedding": null
         },
         "fasttext-wiki-subword": {
+	    "type": "word",
             "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-english/wiki-news-300d-1M-subword.vec.zip",
             "dimensions": 300,
             "binary": false,
@@ -114,6 +122,7 @@
             "random_embedding": null
         },
         "fasttext-cc": {
+	    "type": "word",
             "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip",
             "dimensions": 300,
             "binary": false,
@@ -130,6 +139,7 @@
             "random_embedding": null
         },
         "fasttext-cc-subword": {
+	    "type": "word",
             "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M-subword.zip",
             "dimensions": 300,
             "binary": false,
@@ -146,6 +156,7 @@
             "random_embedding": null
         },
         "elmo": {
+	    "type": "word",
             "url": null,
             "dimensions": 1024,
             "binary": true,
@@ -159,6 +170,7 @@
             "random_embedding": null
         },
         "bert-base": {
+	    "type": "word",
             "url": "https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-12_H-768_A-12.zip",
             "dimensions": 768,
             "binary": true,
@@ -172,6 +184,7 @@
             "random_embedding": null
         },
         "bert-large": {
+	    "type": "word",
             "url": "https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-24_H-1024_A-16.zip",
             "dimensions": 1024,
             "binary": true,
@@ -183,7 +196,83 @@
             "truncate_first_line": false,
             "chunked": false,
             "random_embedding": null
-        }
+        },
+        "power-mean": {
+	    "type": "sentence",
+	    "url": "https://public.ukp.informatik.tu-darmstadt.de/arxiv2018-xling-sentence-embeddings/tf-hub/monolingual/1",
+	    "dimensions": 3600,
+            "binary": false,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "",
+            "embedding_file": "",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": null
+
+	},
+	"skip-thought": {
+	    "type": "sentence",
+	    "urls": ["http://www.cs.toronto.edu/~rkiros/models/dictionary.txt",
+		     "http://www.cs.toronto.edu/~rkiros/models/utable.npy",
+		     "http://www.cs.toronto.edu/~rkiros/models/btable.npy",
+		     "http://www.cs.toronto.edu/~rkiros/models/bi_skip.npz",
+		     "http://www.cs.toronto.edu/~rkiros/models/bi_skip.npz.pkl"],
+	   "dimensions": 4800,
+            "binary": false,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "",
+            "embedding_file": "",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": null
+	},
+	"quick-thought":{
+	    "type": "sentence",
+	    "url": "https://drive.google.com/uc?id=1Q365PEnfGRGC96_Xt2-cyo_nEuzhDg3R",
+	    "dimensions": 1200,
+            "binary": false,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "",
+            "embedding_file": "",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": null
+	},
+	"infersent":{
+	    "type": "sentence",
+	    "urls": ["https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip",
+		     "https://dl.fbaipublicfiles.com/infersent/infersent2.pkl"],
+	    "dimensions": 4096,
+            "binary": false,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "",
+            "embedding_file": "",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": null
+	},
+	"use":{
+	    "type": "sentence",
+	    "url": "https://tfhub.dev/google/universal-sentence-encoder/2",
+	    "dimensions": 512,
+            "binary": false,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "",
+            "embedding_file": "",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": null
+	}
     },
     "random_static": {
         "random-50": {
