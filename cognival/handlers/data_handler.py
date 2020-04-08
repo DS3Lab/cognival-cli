@@ -180,7 +180,7 @@ def split_folds(words, X, y, folds, seed):
     np.random.shuffle(y)
 
 
-    kf = KFold(n_splits=folds, shuffle=False, random_state=None)
+    kf = KFold(n_splits=folds, shuffle=False, random_state=seed)
     kf.get_n_splits(X)
 
     X_train = []
