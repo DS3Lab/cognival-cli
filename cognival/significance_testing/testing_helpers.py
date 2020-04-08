@@ -1,7 +1,9 @@
+import csv
 import os
 import subprocess
 
 from pathlib import Path
+import pandas as pd
 
 def bonferroni_correction(alpha, no_hypotheses):
     return float(alpha / no_hypotheses)
@@ -43,13 +45,34 @@ def test_significance(baseline, model, alpha, test, debug=False):
     return significant, pvalue, name
 
 
-def save_scores(emb_scores, emb_filename, base_scores, base_filename, output_dir):
-    """Save scores to temporary file. Compare embedding scores to baseline
-    scores since word order and number of words differ."""
+def save_errors(emb_scores, emb_filename, base_scores, base_filename, output_dir):
+    emb_scores['error'] = emb_scores['error'].abs()
+    base_scores['error'] = base_scores['error'].abs()
 
-    emb_file = open(Path(output_dir) / emb_filename, 'w')
-    base_file = open(Path(output_dir) / base_filename, 'w')
-    for word, score in emb_scores.items():
-        if word in base_scores:
-            print(abs(float(score)), file=emb_file)
-            print(abs(float(base_scores[word])), file=base_file)
+    words = []
+    emb_scores_col = []
+    base_scores_col = []
+
+    for word in emb_scores.index:
+        try:
+            emb_score = emb_scores.loc[word]['error']
+            base_score = base_scores.loc[word]['error']
+            emb_scores_col.append(emb_score)
+            base_scores_col.append(base_score)
+            words.append(word)
+        except KeyError:
+            continue
+    
+    df_emb = pd.DataFrame({'error': emb_scores_col})
+    df_base = pd.DataFrame({'error': base_scores_col})
+
+    for df, out_file in [(df_emb, Path(output_dir) / emb_filename),
+                         (df_base, Path(output_dir) / base_filename)]:
+        df.to_csv(out_file,
+                  sep=" ",
+                  quotechar='"',
+                  quoting=csv.QUOTE_NONNUMERIC,
+                  doublequote=True,
+                  encoding="utf-8",
+                  header=False,
+                  index=False) 

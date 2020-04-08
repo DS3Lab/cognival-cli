@@ -56,12 +56,18 @@ def filter_config(embedding_registry,
     if not config_dict['cogDataConfig']:
         cprint("No cognitive sources specified in configuration. Have you populated the configuration via 'config experiment ...'? Aborting ...", "red")
         return
-    
+
+    emb_type = config_dict['type']
+
     installed_embeddings = []
-    for emb_type, emb_type_dict in embedding_registry.items():
-        for emb, embedding_params in emb_type_dict.items():
-            if embedding_params['installed']:
-                installed_embeddings.append(emb)
+    for emb_category, emb_category_dict in embedding_registry.items():
+        for emb, embedding_params in emb_category_dict.items():
+            try:
+                if embedding_params['installed']:
+                    installed_embeddings.append(emb)
+            except KeyError:
+                if embedding_params[emb_type]['installed']:
+                    installed_embeddings.append(emb)
     
     # Collect embeddings
     if embeddings[0] == 'all':
@@ -99,8 +105,8 @@ def filter_config(embedding_registry,
     if not cog_feat_list:
         for cog_source in cog_sources_list:
             modality, csource = cog_source.split('_')
-            cog_feat_list.append(cog_sources_conf['sources'][modality][csource]['features'] \
-                                    if not cog_sources_conf['sources'][modality][csource]['features'] == 'single' \
+            cog_feat_list.append(cog_sources_conf['sources'][emb_type][modality][csource]['features'] \
+                                    if not cog_sources_conf['sources'][emb_type][modality][csource]['features'] == 'single' \
                                     else ['ALL_DIM'])
 
     cog_source_to_feature = {i:j for i, j in zip(cog_sources_list, cog_feat_list)}
@@ -191,7 +197,7 @@ def cumulate_random_emb_results(logging,
     # Cumulate word errors
 
     rand_word_error_df = pd.DataFrame(word_error[1:], columns=word_error[0])
-    rand_word_error_df.set_index('word', drop=True, inplace=True)
+    rand_word_error_df.set_index(logging['type'], drop=True, inplace=True)
     rand_word_error_df = rand_word_error_df.applymap((lambda x: float(x)))
     if not cum_rand_counter:
         cum_rand_word_error_df = rand_word_error_df
@@ -220,7 +226,7 @@ def write_random_emb_results(rand_emb,
     # Get average measures by dividing with counter
     cum_rand_word_error_df = cum_rand_word_error_df / cum_rand_counter
     cum_rand_word_error = cum_rand_word_error_df.reset_index().to_numpy()
-    cum_rand_word_error = np.vstack([np.array(['word', *list(cum_rand_word_error_df.columns)]), cum_rand_word_error])
+    cum_rand_word_error = np.vstack([np.array([config_dict['type'], *list(cum_rand_word_error_df.columns)]), cum_rand_word_error])
     cum_mse_prediction /= cum_rand_counter
     cum_mse_prediction_all_dim /= cum_rand_counter
     cum_mse_prediction_all_dim = list(cum_mse_prediction_all_dim)
@@ -350,14 +356,16 @@ def resolve_cog_emb(modalities,
     if (not modalities and all_cog) or (modalities and modalities[0] == 'all'):
         modalities = ['eye-tracking', 'fmri', 'eeg']
 
+    emb_type = config_dict['type']
+
     # Resolve modalities or parameter 'all to cognitive sources
     if modalities:
         if scope == 'all':
             cognitive_sources = []
-            for type_, type_dict in cog_config_dict['sources'].items():
+            for type_, type_dict in cog_config_dict['sources'][emb_type].items():
                 if type_ in modalities:
                     for source, source_dict in type_dict.items():
-                        if source_dict['hypothesis_per_participant']:
+                        if source_dict['multi_file']:
                             for idx in range(len(source_dict['files'])):
                                 cognitive_sources.append('{}_{}-{}'.format(type_, source, idx))
                         else:
@@ -368,28 +376,36 @@ def resolve_cog_emb(modalities,
     # If parameter 'all' passed, return all embeddings (overall or in config)
     if all_emb:
         if scope == 'all':
-            embeddings = [k for k, v in embedding_registry['proper'].items() if v['installed']]
+            # Allow only word embeddings if configuration type is 'word', else all embeddings
+            embeddings = [k for k, v in embedding_registry['proper'].items() if \
+                            v['installed'] and (v['type'] == 'word' or emb_type == 'sentence')]
         elif scope == 'config':
             embeddings = list(config_dict["wordEmbConfig"])
 
     # Checks
     if embeddings:
         for emb in embeddings:
-            if not emb in embedding_registry['proper'] or not embedding_registry['proper'][emb]['installed']:
+            if not emb in embedding_registry['proper'] or \
+               not embedding_registry['proper'][emb]['installed']:
                 cprint('Embedding {} unknown or not installed, aborting ...'.format(emb), 'red')
+                raise AbortException
+
+            if emb in embedding_registry['proper'] and emb_type == 'word' \
+               and not embedding_registry['proper'][emb]['type'] == 'sentence':
+                cprint('Embedding {} is a sentence embedding, but the configuration has been parametrized for word embeddings!'.format(emb), 'red')
                 raise AbortException
 
     cog_source_index = set(cog_config_dict['index'])
     cognitive_sources_resolved = []
 
-    # Checks and resolution of multi-subject sources
+    # Checks and resolution of multi-file sources
     if cognitive_sources:
         for source in cognitive_sources:
-            if source in cog_source_index:
+            if '{}_{}'.format(emb_type, source) in cog_source_index:
                 cognitive_sources_resolved.append(source)
             else:
-                if source in cog_config_dict['source_to_participant_index']:
-                    for subj_source in cog_config_dict['source_to_participant_index'][source]:
+                if source in cog_config_dict['source_to_file_index'][emb_type]:
+                    for subj_source in cog_config_dict['source_to_file_index'][emb_type][source]:
                         cognitive_sources_resolved.append(subj_source)
                 else:
                     cprint('Cognitive source {} unknown, aborting ...'.format(source), 'red')
@@ -403,7 +419,8 @@ def resolve_cog_emb(modalities,
 def _edit_config(resources_path,
                  cognival_path,
                  config_dict,
-                 configuration):
+                 configuration,
+                 create=False):
     config_patch = {}
 
     # Prefill fields (general configuration properties only)
@@ -419,8 +436,12 @@ def _edit_config(resources_path,
                                 config_dict,
                                 config_patch,
                                 singleton_params='all',
-                                skip_params=['cogDataConfig', 'wordEmbConfig', 'randEmbConfig', 'randEmbSetToParts'],
-                                prefill_fields=prefill_fields)
+                                skip_params=['cogDataConfig',
+                                             'wordEmbConfig',
+                                             'randEmbConfig',
+                                             'randEmbSetToParts'],
+                                prefill_fields=prefill_fields,
+                                create=create)
     conf_editor()
 
     # Apply config patch if returned by editor
@@ -460,12 +481,12 @@ def update_emb_config(emb, csource, cdict, config_patch, rand_embeddings, main_c
     return main_conf_dict
 
 
-def generate_random_df(seed, vocabulary, embedding_dim):
+def generate_random_df(emb_type, seed, vocabulary, embedding_dim):
     # Generate random embeddings for given vocabulary and dimensionality
     np.random.seed(seed)
     rand_emb = np.random.uniform(low=-1.0, high=1.0, size=(len(vocabulary), embedding_dim))
     df = pd.DataFrame(rand_emb, columns=['x{}'.format(i+1) for i in range(embedding_dim)])
-    df.insert(loc=0, column='word', value=vocabulary)
+    df.insert(loc=0, column=emb_type, value=vocabulary)
     return df
 
 
@@ -495,18 +516,21 @@ def populate(resources_path,
     if not config_dict:
         cprint('populate: Configuration {} does not yet exist!'.format(configuration), 'red')
         return
-
-    if mode == 'reference':
-        reference_path = resources_path / 'reference_config.json'
-        with open(reference_path) as f:
-            reference_dict = json.load(f)
-    
+   
     if not cog_config_dict['cognival_installed']:
         cprint("Error: CogniVal cognitive vectors unavailable!", "red")
         raise AbortException
     else:
-        cog_config_dict = cog_config_dict["sources"] 
+        emb_type = config_dict['type']
+        cog_source_to_file_index = cog_config_dict["source_to_file_index"]
+        cog_file_to_source_index = cog_config_dict["file_to_source_index"]
+        cog_config_dict = cog_config_dict["sources"][emb_type]
 
+    if mode == 'reference':
+        reference_path = resources_path / 'reference_config.json'
+        with open(reference_path) as f:
+            reference_dict = json.load(f)[emb_type]
+ 
     # Add cognitive source dicts
     for csource in cognitive_sources:
         if not csource in config_dict['cogDataConfig']:
@@ -520,17 +544,51 @@ def populate(resources_path,
                     cprint('Source {} not a CogniVal default source, looking up installed cog. sources ...'.format(csource), 'yellow')
                     try:
                         # Populate from installed cognitive sources
-                        modality, csource_suff = csource.split('_')
-                        csource_dict = cog_config_dict[modality][csource_suff]
-                        cdc_dict = {"parent": "{}_{}".format(modality, csource_suff),
-                                    "dataset": str(Path('cognitive_sources') / modality / csource_dict['file']),
+
+                        # Resolve cog. source if part of multi-hypothesis source
+                        csource_resolved = cog_file_to_source_index[emb_type].get(csource, csource)
+                        modality, csource_suff = csource.split('_', maxsplit=1)
+                        modality, csource_resolved_suff = csource_resolved.split('_', maxsplit=1)
+                        csource_dict = cog_config_dict[modality][csource_resolved_suff]
+
+                        # Single file cognitive source
+                        if not csource_dict['multi_file']:
+                            keys = [key]
+                            csource_resolved_suffs = [csource_resolved_suff]
+                            features = csource_dict['features'] if not csource_dict['features'] == 'single' else ['ALL_DIM']
+                        # Multi file cognitive source
+                        else:
+                            keys = cog_source_to_file_index[emb_type][csource_resolved] 
+                            csource_resolved_suffs = [csource_file.split('_', maxsplit=1)[1] for csource_file in keys]
+                            
+                            if csource_dict['multi_hypothesis'] == 'feature':
+                                # Features list must match source to file index
+                                features = [csource_dict['hypothesis_to_feature'][csource_suff]]
+                            else:
+                                features = csource_dict['features'] if not csource_dict['features'] == 'single' else ['ALL_DIM']
+
+                        if not csource_dict['multi_file']:
+                            dataset = str(Path('cognitive_sources') / emb_type / modality / csource_dict['file'])
+                        else:
+                            dataset = str(Path('cognitive_sources') / emb_type / modality / csource_resolved_suff / csource_dict['hypothesis_to_file'][csource_suff])
+
+                        cdc_dict = {
+                                    "parent": "{}_{}".format(modality, csource_resolved_suff),
+                                    "dataset": dataset,
+                                    "multi_hypothesis": csource_dict['multi_hypothesis'],
+                                    "multi_file": csource_dict['multi_file'],
+                                    "stratified_sampling": csource_dict['stratified_sampling'],
+                                    "balance": csource_dict['balance'],
                                     "modality": modality,
-                                    "features": csource_dict['features'] if not csource_dict['features'] == 'single' else ['ALL_DIM'],
+                                    "features": features, 
                                     "type": 'multivariate_output' if csource_dict['dimensionality'] > 1 else 'single_output'
                                     }
+
                         config_dict['cogDataConfig'][key] = copy.deepcopy(cdc_dict)
                         config_dict['cogDataConfig'][key]['wordEmbSpecifics'] = {}
                     except KeyError:
+                        raise
+                        cprint('Source {} unknown, aborting ...'.format(csource), 'red')
                         return
 
             elif mode == 'empty':
@@ -550,7 +608,8 @@ def populate(resources_path,
             if rand_embeddings or config_dict['randEmbConfig']:
                 rand_emb = embedding_registry['proper'][emb]['random_embedding']
                 if rand_emb and rand_embeddings:
-                    emb_part_list = ['{}_for_{}'.format(rand_emb_part, emb) for rand_emb_part in embedding_registry['random_multiseed'][rand_emb]['embedding_parts']]
+                    emb_part_list = ['{}_for_{}'.format(rand_emb_part, emb) for rand_emb_part \
+                                        in embedding_registry['random_multiseed'][rand_emb][emb_type]['embedding_parts']]
                     for rand_emb_part in emb_part_list:
                         insert_config_dict(config_dict, reference_dict, mode, csource, rand_emb_part, emb)
 
@@ -560,17 +619,24 @@ def populate(resources_path,
         emb_dict = copy.deepcopy(embedding_registry['proper'][emb])
         
         config_dict[emb_key][emb] = copy.deepcopy({k:v for k, v in emb_dict.items() if k in WORD_EMB_CONFIG_FIELDS})
-        config_dict[emb_key][emb]['path'] = str(Path('embeddings') / embedding_registry['proper'][emb]['path'] / embedding_registry['proper'][emb]['embedding_file'])
-        if rand_embeddings:
+        config_dict[emb_key][emb]['path'] = \
+                str(Path('embeddings') / embedding_registry['proper'][emb]['path'] / config_dict['type'] / embedding_registry['proper'][emb]['embedding_file'])
+        if rand_embeddings and emb_dict['random_embedding']:
             config_dict[emb_key][emb]['random_embedding'] = '{}_for_{}'.format(config_dict[emb_key][emb]['random_embedding'], emb)
             rand_emb = embedding_registry['proper'][emb]['random_embedding']
-            if rand_emb and emb_dict['random_embedding']:
-                emb_dict = copy.deepcopy(embedding_registry['random_multiseed'][rand_emb])
-                emb_part_list = natsorted(list(embedding_registry['random_multiseed'][rand_emb]['embedding_parts']))
+            if rand_emb:
+                emb_dict = copy.deepcopy(embedding_registry['random_multiseed'][rand_emb][emb_type])
+                emb_part_list = natsorted(list(embedding_registry['random_multiseed'][rand_emb][emb_type]['embedding_parts']))
                 config_dict['randEmbSetToParts']['{}_for_{}'.format(rand_emb, emb)] = ['{}_for_{}'.format(rand_emb_part, emb) for rand_emb_part in emb_part_list]
                 for rand_emb_part in emb_part_list:
-                    config_dict['randEmbConfig']['{}_for_{}'.format(rand_emb_part, emb)] = copy.deepcopy({k:v for k, v in emb_dict.items() if k in WORD_EMB_CONFIG_FIELDS})
-                    config_dict['randEmbConfig']['{}_for_{}'.format(rand_emb_part, emb)]['path'] = str(Path('embeddings') / config_dict['randEmbConfig']['{}_for_{}'.format(rand_emb_part, emb)]['path'] / '{}.txt'.format(rand_emb_part))
+                    # Add random embedding parameters
+                    config_dict['randEmbConfig']['{}_for_{}'.format(rand_emb_part, emb)] = \
+                            copy.deepcopy({k:v for k, v in emb_dict.items() if k in WORD_EMB_CONFIG_FIELDS})
+
+                    # Resolve path
+                    config_dict['randEmbConfig']['{}_for_{}'.format(rand_emb_part, emb)]['path'] = \
+                            str(Path('embeddings') / config_dict['randEmbConfig']['{}_for_{}'.format(rand_emb_part, emb)]['path'] \
+                                    / config_dict['type'] / '{}.txt'.format(rand_emb_part))
             else:
                 cprint('Embedding {} has no associated random baseline. Generate with `import random-baselines {}`. Aborting ...'.format(emb, emb), 'red')
                 raise AbortException
@@ -578,3 +644,17 @@ def populate(resources_path,
             config_dict[emb_key][emb]['random_embedding'] = None
     
     return config_dict
+
+
+def remove_dangling_emb_random(emb, main_conf_dict):
+    # Delete embedding config and associated random embedding configs if not longer used by any cognitive source
+    if not any(emb in cd_dict["wordEmbSpecifics"] for cd_dict in main_conf_dict['cogDataConfig'].values()):
+        cprint("Embedding {} no longer used by any cognitive source, removing (and associated random baselines if applicable and unused)".format(emb), 'yellow')
+        assoc_rand_emb = main_conf_dict["wordEmbConfig"][emb]["random_embedding"]
+        if assoc_rand_emb:
+            for rand_emb_part in main_conf_dict["randEmbSetToParts"][assoc_rand_emb]:
+                if not any(rand_emb_part in cd_dict["wordEmbSpecifics"] for cd_dict in main_conf_dict['cogDataConfig'].values()):
+                    del main_conf_dict["randEmbConfig"][rand_emb_part]
+            del main_conf_dict["randEmbSetToParts"][assoc_rand_emb]
+        del main_conf_dict["wordEmbConfig"][emb]
+    return main_conf_dict

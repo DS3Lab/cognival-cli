@@ -49,8 +49,13 @@ def run_parallel(config_dict,
             for word_embedding in embeddings_list:
                 truncate_first_line = config_dict["wordEmbConfig"][word_embedding]["truncate_first_line"]
                 option = {"cognitiveData": "empty", "feature": "empty", "wordEmbedding": "empty"}
+                option["type"] = config_dict["type"]
                 option["cognitiveData"] = cognitive_data
                 option["cognitiveParent"] = config_dict["cogDataConfig"][cognitive_data]["parent"]
+                option["multiHypothesis"] = config_dict["cogDataConfig"][cognitive_data]["multi_hypothesis"]  
+                option["multiFile"] = config_dict["cogDataConfig"][cognitive_data]["multi_file"]
+                option["stratifiedSampling"]  = config_dict["cogDataConfig"][cognitive_data]["stratified_sampling"]
+                option["balance"]  = config_dict["cogDataConfig"][cognitive_data]["balance"]
                 option["modality"] = config_dict["cogDataConfig"][cognitive_data]["modality"]
                 option["feature"] = feature
                 option["wordEmbedding"] = word_embedding if word_embedding in config_dict["cogDataConfig"][cognitive_data]['wordEmbSpecifics'] else None
@@ -100,9 +105,14 @@ def run_parallel(config_dict,
             rand_embeddings.append(random_embeddings)
             result_proper = pool.apply_async(cog_evaluate.run_single, args=('proper',
                                                                             config_dict,
+                                                                            option["type"],
                                                                             option["wordEmbedding"],
                                                                             option["cognitiveData"],
                                                                             option["cognitiveParent"],
+                                                                            option["multiHypothesis"],
+                                                                            option["multiFile"],
+                                                                            option["stratifiedSampling"],
+                                                                            option["balance"],
                                                                             option["modality"],
                                                                             option["feature"],
                                                                             option["truncate_first_line"],
@@ -113,9 +123,14 @@ def run_parallel(config_dict,
                 for random_embedding in config_dict["randEmbSetToParts"][random_embeddings]:
                     result_random.append(pool.apply_async(cog_evaluate.run_single, args=('random',
                                                                                         config_dict,
+                                                                                        option["type"],
                                                                                         random_embedding,
                                                                                         option["cognitiveData"],
                                                                                         option["cognitiveParent"],
+                                                                                        option["multiHypothesis"],
+                                                                                        option["multiFile"],
+                                                                                        option["stratifiedSampling"],
+                                                                                        option["balance"],
                                                                                         option["modality"],
                                                                                         option["feature"],
                                                                                         option["truncate_first_line"],

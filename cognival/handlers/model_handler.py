@@ -77,13 +77,14 @@ def model_predict(grid, words, X_test, y_test):
     return mse, word_error
 
 
-def model_handler(config, words_test, X_train, y_train, X_test, y_test):
+def model_handler(config, emb_type, words_test, X_train, y_train, X_test, y_test):
     '''
     Performs cross-validation on chunks of training data to determine best parametrization
     based on parameter grid given in config. Predicts with best-performing model on chunks
     of test data. Returns word error, best-performing model and MSEs.
 
     :param config: embedding configuration dictionary
+    :param emb_type: 'word' or 'sentence' embeddings
     :param words_test: words corresponding to test data
     :param X_train: training data (embeddings)    
     :param y_train: training labels (cognitive data)
@@ -93,15 +94,23 @@ def model_handler(config, words_test, X_train, y_train, X_test, y_test):
     grids = []
     grids_result = []
     mserrors = []
+
     if y_test[0].shape[1] == 1:
-        word_error = np.array(['word', 'error'],dtype='str')
+        word_error = np.array([emb_type, 'error'],dtype='str')
     else:
-        word_error = np.array(['word'] + ['e' + str(i) for i in range(1,y_test[0].shape[1]+1)], dtype='str')
+        word_error = np.array([emb_type] + ['e' + str(i) for i in range(1, y_test[0].shape[1]+1)], dtype='str')
+
     for i in range(len(X_train)):
-        grid, grid_result = model_cv(create_model,config,X_train[i],y_train[i])
+        grid, grid_result = model_cv(create_model,
+                                     config,
+                                     X_train[i],
+                                     y_train[i])
         grids.append(grid)
         grids_result.append(grid_result)
-        mse, w_e = model_predict(grid,words_test[i],X_test[i],y_test[i])
+        mse, w_e = model_predict(grid,
+                                 words_test[i],
+                                 X_test[i],
+                                 y_test[i])
         mserrors.append(mse)
         word_error = np.vstack([word_error,w_e])
     return word_error, grids_result, mserrors

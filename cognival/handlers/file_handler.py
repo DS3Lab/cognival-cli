@@ -1,6 +1,8 @@
+import csv
 import json
 import os
 import numpy as np
+import pandas as pd
 
 from pathlib import Path
 from handlers.plot_handler import plot_handler
@@ -56,7 +58,8 @@ def write_results(config, log, word_error, history):
 
     # Mapping dict patch
     mapping_key = "{}_{}#-#{}".format(log["cognitiveData"], log["feature"], log["wordEmbedding"])
-    map_dict_patch = {mapping_key: {'embedding': log["wordEmbedding"],
+    map_dict_patch = {mapping_key: {'type': log['type'],
+                                     'embedding': log["wordEmbedding"],
                                      'cognitive-source': log["cognitiveData"],
                                      'cognitive-parent': log["cognitiveParent"],
                                      'modality': log["modality"],
@@ -85,7 +88,16 @@ def write_results(config, log, word_error, history):
     with open(experiments_dir / '{}.json'.format(log["wordEmbedding"]),'w') as f:
         json.dump(log,f,indent=4, sort_keys=True)
 
-    np.savetxt(experiments_dir / '{}.txt'.format(log["wordEmbedding"]), word_error, delimiter=" ", fmt="%s")
+    df = pd.DataFrame(word_error[1:, :], columns=word_error[0, :])
+
+    df.to_csv(experiments_dir / '{}.txt'.format(log["wordEmbedding"]),
+	      sep=" ",
+	      quotechar='"',
+	      quoting=csv.QUOTE_NONNUMERIC,
+	      doublequote=True,
+	      encoding="utf-8",
+	      header=True,
+	      index=False)
     
     if history:
         plot_handler(title, history, log, str(experiments_dir))
