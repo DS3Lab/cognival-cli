@@ -6,7 +6,14 @@ from handlers.data_handler import data_handler
 from handlers.model_handler import model_handler
 from handlers.file_handler import *
 
-def handler(mode, config, word_embedding, cognitive_data, feature, truncate_first_line):
+def handler(mode,
+            config,
+            stratified_sampling,
+            balance,
+            word_embedding,
+            cognitive_data,
+            feature,
+            truncate_first_line):
     '''
     Takes a configuration dictionary and keys for a word embedding and cognitive
     data source, applies a model (as per configuration) and returns
@@ -21,14 +28,40 @@ def handler(mode, config, word_embedding, cognitive_data, feature, truncate_firs
     :param truncate_first_line: If the first line of the embedding file should be truncated (when containing meta data)
     '''
 
-    words_test, X_train, y_train, X_test, y_test = data_handler(mode, config,word_embedding,cognitive_data,feature,truncate_first_line)
+    words_test, X_train, y_train, X_test, y_test = data_handler(mode,
+                                                                config,
+                                                                stratified_sampling,
+                                                                balance,
+                                                                word_embedding,
+                                                                cognitive_data,
+                                                                feature,
+                                                                truncate_first_line)
+
     word_error, grids_result, mserrors = model_handler(config["cogDataConfig"][cognitive_data]["wordEmbSpecifics"][word_embedding],
-                                         words_test, X_train, y_train, X_test, y_test)
+                                                       config['type'],
+                                                       words_test,
+                                                       X_train,
+                                                       y_train,
+                                                       X_test,
+                                                       y_test)
 
     return word_error, grids_result, mserrors
 
 
-def run_single(mode, config, word_embedding, cognitive_data, cognitive_parent, modality, feature, truncate_first_line, gpu_id):
+def run_single(mode,
+               config,
+               emb_type,
+               word_embedding,
+               cognitive_data,
+               cognitive_parent,
+               multi_hypothesis,
+               multi_file,
+               stratified_sampling,
+               balance,
+               modality,
+               feature,
+               truncate_first_line,
+               gpu_id):
     '''
     Takes a configuration dictionary and keys for a word embedding and cognitive
     data source, runs model, logs results and prepares output for plotting.
@@ -71,9 +104,12 @@ def run_single(mode, config, word_embedding, cognitive_data, cognitive_parent, m
     
     logging = {"folds":[]}
 
+    logging["type"] = emb_type
     logging["wordEmbedding"] = word_embedding
     logging["cognitiveData"] = cognitive_data
     logging["cognitiveParent"] = cognitive_parent
+    logging["multi_hypothesis"] = multi_hypothesis
+    logging["multi_file"] = multi_file
     logging["modality"] = modality
     logging["feature"] = feature
 
@@ -83,7 +119,14 @@ def run_single(mode, config, word_embedding, cognitive_data, cognitive_parent, m
 
     startTime = datetime.now()
 
-    word_error, grids_result, mserrors = handler(mode, config, word_embedding, cognitive_data, feature, truncate_first_line)
+    word_error, grids_result, mserrors = handler(mode,
+                                                 config,
+                                                 stratified_sampling,
+                                                 balance,
+                                                 word_embedding,
+                                                 cognitive_data,
+                                                 feature,
+                                                 truncate_first_line)
 
     history = {'loss':[],'val_loss':[]}
     loss_list =[]
@@ -137,4 +180,3 @@ def run_single(mode, config, word_embedding, cognitive_data, cognitive_parent, m
 
     return word_embedding, logging, word_error, history
 
-    

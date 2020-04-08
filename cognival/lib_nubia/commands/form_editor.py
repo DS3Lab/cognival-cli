@@ -23,6 +23,11 @@ from lib_nubia.commands.strings import *
 # TODO: Make parametrizable
 BINARY_CONVERSION_LIMIT = 1000
 NUM_BERT_WORKERS = 1
+LABEL_MAP = {'word': 'word embedding',
+             'sentence': 'sentence embedding'}
+
+STRING_TO_BOOLEAN = {'true': True,
+                     'false': False}
 
 _2D_FIELDS = set(['layers'])
 
@@ -43,13 +48,16 @@ class ConfigEditor():
                  skip_params=None,
                  cognitive_sources=None,
                  embeddings=None,
-                 prefill_fields=None):
+                 prefill_fields=None,
+                 create=False):
         self.conf_type = conf_type
+        self.type_radio = None
         self.buffers = {}
         self.config_dict_updated = config_dict_updated
         self.singleton_params = singleton_params if singleton_params else []
         self.skip_params = skip_params if skip_params else []
         self.table_fields = []
+        self.create = create
         if not prefill_fields:
             self.prefill_fields = {}
         else:
@@ -95,33 +103,43 @@ class ConfigEditor():
 
         # Add row to editor table/form with label, buffer and description for each configuration item
         for k, v in config_dict.items():
-            if k in self.skip_params:
-                continue
-            if v is None:
-                v = ""
-                style = "fg:ansiwhite"
-            elif isinstance(v, (list, tuple)):
-                if v and isinstance(v[0], (list, tuple)):
-                    v = "\n".join([", ".join([str(y) for y in x]) for x in v])
-                else:
-                    v = ", ".join([str(x) for x in v])
-                style = "fg:ansigreen"
-            elif v == '<multiple values>':
-                style = "fg:ansimagenta italic"
+            if conf_type == "main" and k == "type":
+                row = [Label(k, style="fg:ansicyan bold"), Label(EDITOR_DESCRIPTIONS[conf_type][k], style="italic")]
+                self.table_fields.append(row)
+                if self.create:
+                    self.type_radio = RadioList(values=[('word', 'word embeddings'),
+                                                        ('sentence', 'sentence embeddings')])
+                    self.table_fields.append(Merge(self.type_radio, 2))
+                else: 
+                    self.table_fields.append(Merge(Label(LABEL_MAP[v]), 2))
             else:
-                v = str(v)
-                style = "fg:ansiwhite"
+                if k in self.skip_params:
+                    continue
+                if v is None:
+                    v = ""
+                    style = "fg:ansiwhite"
+                elif isinstance(v, (list, tuple)):
+                    if v and isinstance(v[0], (list, tuple)):
+                        v = "\n".join([", ".join([str(y) for y in x]) for x in v])
+                    else:
+                        v = ", ".join([str(x) for x in v])
+                    style = "fg:ansigreen"
+                elif v == '<multiple values>':
+                    style = "fg:ansimagenta italic"
+                else:
+                    v = str(v)
+                    style = "fg:ansiwhite"
 
-            # Prefill specified empty fields
-            if not v and k in self.prefill_fields:
-                v = str(self.prefill_fields[k])
+                # Prefill specified empty fields
+                if not v and k in self.prefill_fields:
+                    v = str(self.prefill_fields[k])
 
-            buffer = TextArea(v, style=style)
-            self.buffers[k] = buffer
-            row = [Label(k, style="fg:ansicyan bold"), Label(EDITOR_DESCRIPTIONS[conf_type][k], style="italic")]
-            self.table_fields.append(row)
-            self.table_fields.append(Merge(buffer, 2))
-                        
+                buffer = TextArea(v, style=style)
+                self.buffers[k] = buffer
+                row = [Label(k, style="fg:ansicyan bold"), Label(EDITOR_DESCRIPTIONS[conf_type][k], style="italic")]
+                self.table_fields.append(row)
+                self.table_fields.append(Merge(buffer, 2))
+                            
         
         self.layout = Layout(
                         HSplit([
@@ -146,12 +164,15 @@ class ConfigEditor():
 
     def _cast_single(self, v):
         try:
-            return int(v.text)
-        except ValueError:
+            return STRING_TO_BOOLEAN[v.text.lower()]
+        except KeyError:
             try:
-                return float(v.text)
+                return int(v.text)
             except ValueError:
-                return v.text
+                try:
+                    return float(v.text)
+                except ValueError:
+                    return v.text
 
     def _cast_list(self, v_list):
         if isinstance(v_list[0], list):
@@ -214,6 +235,9 @@ class ConfigEditor():
                     values = None
 
             self.config_dict_updated[k] = values
+
+        if self.create:
+            self.config_dict_updated['type'] = self.type_radio.current_value
 
         get_app().exit(result=True)
 

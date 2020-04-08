@@ -29,7 +29,9 @@ class PostInstallCommand(install):
                                 ('resources', 'demo_config.json'),
                                 ('resources', 'embedding_registry.json'),
                                 ('resources', 'reference_config.json'),
-                                ('resources', 'standard_vocab.txt')
+                                ('resources', 'standard_vocab.txt'),
+                                ('resources', 'standard_sentences.txt'),
+                                ('resources', 'standard_sent_vocab.txt')
                         ]:
                 try:
                     os.makedirs(cognival_usr_dir / path)
@@ -42,8 +44,13 @@ class PostInstallCommand(install):
         install.run(self)
 
 setuptools.setup(
+<<<<<<< HEAD
     name="cognival", # Replace with your own username
     version="0.1.1",
+=======
+    name="cognival",
+    version="0.2.0",
+>>>>>>> WIP: Extending with sentence embeddings
     author="Multiple authors",
     author_email="foo@bar.com",
     description="CogniVal cognitive embedding evaluation",

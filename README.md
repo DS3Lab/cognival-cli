@@ -78,7 +78,6 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
 - quit / exit: Terminates the shell session.
 - example-calls: Lists example calls for a single or all commands.
 - browse: Browses the user directory and view files using vim, per default in read-only mode. (requires that vim is installed).
-- update-vocabulary: Scans all imported cognitive sources and updates the vocabulary file.
 - properties: Edit general CogniVal properties (user directory, etc.). Currently only used to set the directory for user
                   data (embeddings, cognitive sources, configurations and results), in case this data should not reside
                   in $HOME (e.g. due to quota restrictions).
@@ -162,6 +161,13 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
 for all cognitive-sources. Each inner list must be specified as semicolon-separated string within quotes.
     Call: `run [embeddings=[all]] [modalities=None] [cognitive-sources=[all]] [cognitive-features=None] [baselines=True]`
 
+- update
+    - vocabulary: Scans all imported cognitive sources with word-level aggregation and updates the vocabulary file.
+    - sentence: Scans all imported cognitive sources with sentence-level aggregation and updates the sentence file.
+    - listings: Performs both vocabulary and sentence updates.
+    - embeddings: Updates embeddings generated on the fly (context-free representations of BERT, ELMo), sentence embedding baselines of word embeddings and random embeddings, based on
+		  the current vocabulary and sentence files.
+
 - significance:  Compute the significance of results of an experimental run. Note that this requires that random baselines have been
                  associated and evaluated during the run. Evaluates the results of the last run by default. Results are printed to the
                  shell and stored in the reports directory of the results path.
@@ -230,20 +236,37 @@ Embeddings in binary formats must be converted. Supported formats are word2vec- 
 
 The input format for the cognitive data source is also raw text, and all feature values are scale between 0 and 1.
 
-EEG example:
+Following, the constraints are specified in detail for the cognitive sources. **Note:** All technical constraints also apply to embedding files.
+
+### word-level
+Word strings may not contain spaces. Compound words must be escaped with underscores, e.g. `New_York`.
+
+EEG and fMRI:
 
 ``word e1 e2 e3 e4 e5 ...``  
 ``his 0.5394774791900334 0.4356708610374691 0.523294558226597 0.5059544824545096 0.466957449316214 ...``
 
-fMRI example:
-
-``word v0 v1 v2 v3 ...``  
-``beginning 0.3585450775710978 0.43270347838578155 0.7947947579149615 ...``
-
-Eye-tracking example:
+Eye-tracking:
 
 ``word WORD_FIXATION_COUNT WORD_GAZE_DURATION WORD_FIRST_FIXATION_DURATION ...``  
 ``the 0.1168531943034873 0.11272377054039184 0.25456297601240524 ...`` 
+
+### sentence-level
+The sentence-level format differs from the word-level in the following aspects:
+- Rows correspond to sentences and each sentence is represented as string.
+- All non-numeric fields (including headers) must be quoted.
+- Double-quotes inside fields must be represented/escaped as doubled double-quotes.
+- For eye-tracking, a file corresponds to a single feature. Each row is the sequence of word-level eye-tracking metrics of a sentence and must be zero-padded such that all rows correspond to the length of the longest sequence.
+
+Due to the much smaller number of data points when aggregating on the sentence level, PCA is typically applied to EEG and fMRI to reduce the dimensionality. Thus, the dimensionality of the vectors corresponds to the number of principal components for these modalities, while it is determined by the longest sentence for Eye-Tacking.
+
+EEG and fMRI:
+``"sentence" "e1" "e2" "e3" "e4" "e5"` ...`
+``"Beekeeping encourages the conservation of local habitats." 0.5367426492864596 0.4926509188003651 ....``
+
+Eye-tracking:
+``"sentence" "e1" "e2" "e3" "e4" "e5" ... "e92" "e93"``
+``"Are tourists enticed by these attractions threatening their very existence?" 0.29411764705882354 0.47276688453159044 ... 0.0 0.0``
 
 All cognitive data sources are freely available for you to download and preprocess. 
 
