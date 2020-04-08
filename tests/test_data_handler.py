@@ -68,7 +68,6 @@ def config():
 
 
 def test_chunker(tmpdir):
-    #TODO: Why did I need to add the header information to the embeddings
     refdir = Path('tests/reference')
     outdir = tmpdir.mkdir('output')
     chunk('tests/input',
