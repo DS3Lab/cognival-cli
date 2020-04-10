@@ -200,11 +200,14 @@ def split_folds(strings, X, y, folds, seed, balance, sub_sources):
 
     # Apply stratified K-Folds if composite source, to preserve the percentage of each subsource
     if sub_sources is not None:
-        selector = StratifiedKFold(n_splits=folds, shuffle=False, random_state=seed)
+        np.random.seed(seed)
+        np.random.shuffle(sub_sources)
+
+        selector = StratifiedKFold(n_splits=folds, shuffle=False, random_state=None)
         #print(selector.get_n_splits(X, sub_sources))
         selector_splits = selector.split(X, sub_sources)
     else:
-        selector = KFold(n_splits=folds, shuffle=False, random_state=seed)
+        selector = KFold(n_splits=folds, shuffle=False, random_state=None)
         #print(selector.get_n_splits(X))
         selector_splits = selector.split(X)
 

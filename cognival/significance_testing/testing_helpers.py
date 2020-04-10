@@ -34,7 +34,7 @@ def test_significance(baseline, model, alpha, test, debug=False):
         raise ValueError("testSignificance has returned: {}".format(repr(output_str)))
     
     model = str(model).split('/')[-1]
-    name = model.replace('.txt', '').replace('embeddings_scores_', '')
+    name = model.replace('.txt', '').replace('embeddings_avg_errors_', '')
 
     if debug:
         if "not significant" in str(output):
