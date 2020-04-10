@@ -55,6 +55,7 @@ def config():
     "outputDir": "zuco-feature-wordEmbedding",
     "seed": 123,
     "run_id": 11,
+    "type":"word",
     "wordEmbConfig": {
         "glove-50": {
             "chunk_number": 4,
@@ -136,6 +137,7 @@ def test_multiJoin(config):
     df_cognitive_data = pd.read_csv('tests/cognitive-data/eeg/zuco/zuco_scaled.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE)
     df_join = multi_join('proper',
                          config,
+                         'word',
                          df_cognitive_data,
                          'glove-50')
     assert len(df_join[df_join['x_1'].notnull()]) == 4162
@@ -146,6 +148,8 @@ def test_dataHandler(config):
     #TODO: Ascertain: 75:25 Train test split, then 80:20 CV on train set, and 3-fold CV on train-train set?
     words_test, X_train, y_train, X_test, y_test = data_handler('proper',
                                                                 config,
+                                                                False,
+                                                                False,
                                                                'glove-50',
                                                                'zuco-eeg',
                                                                'ALL_DIM',
@@ -159,7 +163,7 @@ def test_dataHandler(config):
 
 def test_split_folds(config):
     df_cognitive_data = pd.read_csv('tests/cognitive-data/eeg/zuco/zuco_scaled.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE)
-    df_join = multi_join('proper', config, df_cognitive_data, 'glove-50')
+    df_join = multi_join('proper', config, 'word', df_cognitive_data, 'glove-50')
     df_join.dropna(inplace=True)
     words = df_join['word']
     words = np.array(words, dtype='str').reshape(-1,1)
@@ -174,7 +178,9 @@ def test_split_folds(config):
                                                                X,
                                                                y,
                                                                config['folds'],
-                                                               config['seed'])
+                                                               config['seed'],
+                                                               False,
+                                                               None)
     
     assert [len(chunk) for chunk in X_train] == [3327, 3327, 3327, 3327, 3328]
     assert [len(chunk) for chunk in y_train] == [3327, 3327, 3327, 3327, 3328]
