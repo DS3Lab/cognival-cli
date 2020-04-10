@@ -25,7 +25,7 @@ def generate_avg_sent_embeddings(name,
     emb_dict = {}
 
     # Handle fasttext subwords 
-    if 'fasttext' in name and 'subword' in name:
+    if 'fasttext' in name:
         embeddings = loast_facebook_model(base_path / emb_params["embedding_file"])
         for word in vocabulary_set:
             emb_dict[word] = embeddings.wv[word]
