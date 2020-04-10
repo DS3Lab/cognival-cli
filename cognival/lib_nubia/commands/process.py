@@ -627,7 +627,7 @@ def populate(resources_path,
             if rand_emb:
                 emb_dict = copy.deepcopy(embedding_registry['random_multiseed'][rand_emb][emb_type])
                 emb_part_list = natsorted(list(embedding_registry['random_multiseed'][rand_emb][emb_type]['embedding_parts']))
-               config_dict['randEmbSetToParts']['{}_for_{}'.format(rand_emb, emb)] = ['{}_for_{}'.format(rand_emb_part, emb) for rand_emb_part in emb_part_list]
+                config_dict['randEmbSetToParts']['{}_for_{}'.format(rand_emb, emb)] = ['{}_for_{}'.format(rand_emb_part, emb) for rand_emb_part in emb_part_list]
                 for rand_emb_part in emb_part_list:
                     # Add random embedding parameters
                     config_dict['randEmbConfig']['{}_for_{}'.format(rand_emb_part, emb)] = \
