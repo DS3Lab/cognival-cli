@@ -33,7 +33,8 @@ deprecation._PRINT_DEPRECATION_WARNINGS = False
 
 from .form_editor import ConfigEditor
 from .utils import (_check_emb_installed,
-                   AbortException)
+                   AbortException,
+                   NothingToDoException)
 
 from .templates import (WORD_EMB_CONFIG_FIELDS,
                         COGNITIVE_CONFIG_TEMPLATE,
@@ -410,6 +411,8 @@ def resolve_cog_emb(modalities,
                     cprint('Cognitive source {} unknown, aborting ...'.format(source), 'red')
                     raise AbortException
     cognitive_sources = cognitive_sources_resolved
+    if not cognitive_sources:
+        raise NothingToDoException
     return cognitive_sources, embeddings
 
 
@@ -624,7 +627,7 @@ def populate(resources_path,
             if rand_emb:
                 emb_dict = copy.deepcopy(embedding_registry['random_multiseed'][rand_emb][emb_type])
                 emb_part_list = natsorted(list(embedding_registry['random_multiseed'][rand_emb][emb_type]['embedding_parts']))
-                config_dict['randEmbSetToParts']['{}_for_{}'.format(rand_emb, emb)] = ['{}_for_{}'.format(rand_emb_part, emb) for rand_emb_part in emb_part_list]
+               config_dict['randEmbSetToParts']['{}_for_{}'.format(rand_emb, emb)] = ['{}_for_{}'.format(rand_emb_part, emb) for rand_emb_part in emb_part_list]
                 for rand_emb_part in emb_part_list:
                     # Add random embedding parameters
                     config_dict['randEmbConfig']['{}_for_{}'.format(rand_emb_part, emb)] = \
@@ -635,7 +638,7 @@ def populate(resources_path,
                             str(Path('embeddings') / config_dict['randEmbConfig']['{}_for_{}'.format(rand_emb_part, emb)]['path'] \
                                     / config_dict['type'] / '{}.txt'.format(rand_emb_part))
             else:
-                cprint('Embedding {} has no associated random baseline. Generate with import random-embeddings. aborting ...'.format(emb), 'red')
+                cprint('Embedding {} has no associated random baseline. Generate with `import random-baseliens {}. Aborting ...'.format(emb), 'red')
                 raise AbortException
         else:
             config_dict[emb_key][emb]['random_embedding'] = None
