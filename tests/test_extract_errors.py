@@ -11,35 +11,35 @@ import pandas as pd
 sys.path.insert(0, 'cognival')
 sys.path.insert(0, 'cognival/significance_testing')
 
-from significance_testing.statisticalTesting import extract_results
-from testing_helpers import bonferroni_correction, test_significance as significance_test, save_scores
+from significance_testing.extract_errors import extract_errors
+from testing_helpers import bonferroni_correction, test_significance as significance_test, save_errors
 
 # Note: filecmp's diff_files attribute only lists differing files existing in both paths!
 
 @pytest.fixture
 def mapping_dict():
-    with open('tests/reference/test_extract_results_results/mapping_1.json') as f:
+    with open('tests/reference/test_extract_errors_results/mapping_1.json') as f:
         return json.load(f)
 
 
 @pytest.fixture
 def refdir():
-    return Path('tests/reference/test_extract_results_results')
+    return Path('tests/reference/test_extract_errors_results')
 
 
 @pytest.fixture
 def refdir_eye_tracking():
-    return Path('tests/reference/test_extract_results_results/experiments/eye-tracking')
+    return Path('tests/reference/test_extract_errors_results/experiments/eye-tracking')
 
 
 @pytest.fixture
 def refdir_eeg():
-    return Path('tests/reference/test_extract_results_results/experiments/eeg')
+    return Path('tests/reference/test_extract_errors_results/experiments/eeg')
 
 
 @pytest.fixture
 def refdir_fmri():
-    return Path('tests/reference/test_extract_results_results/experiments/fmri')
+    return Path('tests/reference/test_extract_errors_results/experiments/fmri')
 
 
 @pytest.fixture
@@ -59,12 +59,12 @@ def outdir():
 
 @pytest.fixture
 def result_dir():
-    res_path = Path('tests/reference/test_extract_results_results/experiments')
+    res_path = Path('tests/reference/test_extract_errors_results/experiments')
     return res_path
 
 
-def test_extract_results_eye_tracking(mapping_dict, refdir_eye_tracking, result_dir, outdir):
-    extract_results(1,
+def test_extract_errors_eye_tracking(mapping_dict, refdir_eye_tracking, result_dir, outdir):
+    extract_errors(1,
                     'gaze',
                     "eye-tracking_zuco_nFixations#-#glove.6B.50",
                     mapping_dict,
@@ -73,8 +73,8 @@ def test_extract_results_eye_tracking(mapping_dict, refdir_eye_tracking, result_
     assert not filecmp.dircmp(refdir_eye_tracking, outdir / 'tmp' / 'eye-tracking').diff_files
 
 
-def test_extract_results_eeg(mapping_dict, refdir_eeg, result_dir, outdir):
-    extract_results(1,
+def test_extract_errors_eeg(mapping_dict, refdir_eeg, result_dir, outdir):
+    extract_errors(1,
                     'eeg',
                     'eeg_zuco_ALL_DIM#-#glove.6B.50',
                     mapping_dict,
@@ -83,8 +83,8 @@ def test_extract_results_eeg(mapping_dict, refdir_eeg, result_dir, outdir):
     assert not filecmp.dircmp(refdir_eeg, outdir / 'tmp' / 'eeg').diff_files
 
 
-def test_extract_results_fmri(mapping_dict, refdir_fmri, result_dir, outdir):
-    extract_results(1,
+def test_extract_errors_fmri(mapping_dict, refdir_fmri, result_dir, outdir):
+    extract_errors(1,
                     'fmri',
                     'fmri_pereira-1_ALL_DIM#-#glove.6B.50',
                     mapping_dict,
@@ -104,8 +104,8 @@ def test_informal_bonferroni_correction_5():
 
 
 def test_informal_significance_test_eeg(refdir):
-    baseline_file = refdir / 'sig_test_results' / 'eeg' / '1' /  'baseline_scores_eeg_zuco_ALL_DIM#-#glove.6B.50.txt'
-    model_file = refdir / 'sig_test_results' / 'eeg' / '1' / 'embeddings_scores_eeg_zuco_ALL_DIM#-#glove.6B.50.txt'
+    baseline_file = refdir / 'sig_test_results' / 'eeg' / '1' /  'baseline_avg_errors_eeg_zuco_ALL_DIM#-#glove.6B.50.txt'
+    model_file = refdir / 'sig_test_results' / 'eeg' / '1' / 'embeddings_avg_errors_eeg_zuco_ALL_DIM#-#glove.6B.50.txt'
     significant, pval, name = significance_test(str(baseline_file), str(model_file), 0.01, 'Wilcoxon')
     assert significant == True
     assert pval == pytest.approx(5.3231470579107915e-06 , rel=10e-50, abs=10e-50)
@@ -113,8 +113,8 @@ def test_informal_significance_test_eeg(refdir):
 
 
 def test_informal_significance_test_fmri(refdir):
-    baseline_file = refdir / 'sig_test_results' / 'fmri' / '1' /  'baseline_scores_fmri_pereira-1_ALL_DIM#-#glove.6B.50.txt'
-    model_file = refdir / 'sig_test_results' / 'fmri' / '1' / 'embeddings_scores_fmri_pereira-1_ALL_DIM#-#glove.6B.50.txt'
+    baseline_file = refdir / 'sig_test_results' / 'fmri' / '1' /  'baseline_avg_errors_fmri_pereira-1_ALL_DIM#-#glove.6B.50.txt'
+    model_file = refdir / 'sig_test_results' / 'fmri' / '1' / 'embeddings_avg_errors_fmri_pereira-1_ALL_DIM#-#glove.6B.50.txt'
     significant, pval, name = significance_test(str(baseline_file), str(model_file), 0.01, 'Wilcoxon')
     assert significant == False
     assert pval == pytest.approx(0.85824021397514, rel=10e-3, abs=10e-3)
@@ -122,8 +122,8 @@ def test_informal_significance_test_fmri(refdir):
 
 
 def test_informal_significance_test_eye_tracking(refdir):
-    baseline_file = refdir / 'sig_test_results' / 'eye-tracking' / '1'  / 'baseline_scores_eye-tracking_zuco_nFixations#-#glove.6B.50.txt'
-    model_file = refdir / 'sig_test_results' / 'eye-tracking' / '1' / 'embeddings_scores_eye-tracking_zuco_nFixations#-#glove.6B.50.txt'
+    baseline_file = refdir / 'sig_test_results' / 'eye-tracking' / '1'  / 'baseline_avg_errors_eye-tracking_zuco_nFixations#-#glove.6B.50.txt'
+    model_file = refdir / 'sig_test_results' / 'eye-tracking' / '1' / 'embeddings_avg_errors_eye-tracking_zuco_nFixations#-#glove.6B.50.txt'
     significant, pval, name = significance_test(str(baseline_file), str(model_file), 0.01, 'Wilcoxon')
     assert significant == True
     assert pval == pytest.approx(3.6664582563418876e-06, rel=10e-10, abs=10e-10)

@@ -332,7 +332,7 @@
                     }
                 },
                 "wehbe_concat": {
-                    "dimensionality": 128,
+                    "dimensionality": 243,
                     "features": "single",
                     "multi_file": false,
                     "multi_hypothesis": false,
@@ -401,6 +401,16 @@
                     "stratified_sampling": false,
                     "balance": null,
                     "installed": false
+                },
+                "all_concat": {
+                    "dimensionality": 243,
+                    "features": "single",
+                    "multi_file": false,
+                    "multi_hypothesis": false,
+                    "stratified_sampling": true,
+                    "balance": true,
+                    "installed": false,
+                    "file": "all_concat_scaled.txt"
                 }
             },
             "eeg": {
@@ -441,7 +451,7 @@
                     "multi_file": false,
                     "multi_hypothesis": false,
                     "stratified_sampling": true,
-                    "balance": false,
+                    "balance": true,
                     "installed": false
                 }
             },
