@@ -205,6 +205,7 @@ def download_file(url, filename):
 
 class AbortException(Exception): pass
 
+class NothingToDoException(Exception): pass
 
 # Source: https://stackoverflow.com/a/312464
 def chunks(lst, n):
