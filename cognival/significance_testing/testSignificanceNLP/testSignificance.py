@@ -1,7 +1,9 @@
+import csv
 import sys
 import warnings
 import numpy as np
 from scipy import stats
+import pandas as pd
 
 #np.seterr(all='raise')
 warnings.filterwarnings("error", category=RuntimeWarning)
@@ -117,17 +119,24 @@ def main():
     alpha = sys.argv[3]
     name = sys.argv[4]
 
+    data_A = pd.read_csv(filename_A,
+                             sep=" ",
+                             encoding="utf-8",
+                             quotechar='"',
+                             quoting=csv.QUOTE_NONNUMERIC,
+                             doublequote=True)
 
-    with open(filename_A) as f:
-        data_A = f.read().splitlines()
+    data_B = pd.read_csv(filename_B,
+                             sep=" ",
+                             encoding="utf-8",
+                             quotechar='"',
+                             quoting=csv.QUOTE_NONNUMERIC,
+                             doublequote=True)
+    
+    data_A = data_A['error'].to_numpy()
+    data_B = data_B['error'].to_numpy()
 
-    with open(filename_B) as f:
-        data_B = f.read().splitlines()
-
-    data_A = list(map(float,data_A))
-    data_B = list(map(float,data_B))
-
-    #print("\nPossible statistical tests: Shapiro-Wilk, Anderson-Darling, Kolmogorov-Smirnov, t-test, Wilcoxon, McNemar, Permutation, Bootstrap")
+#print("\nPossible statistical tests: Shapiro-Wilk, Anderson-Darling, Kolmogorov-Smirnov, t-test, Wilcoxon, McNemar, Permutation, Bootstrap")
     #name = input("\nEnter name of statistical test: ")
 
     ### Normality Check
