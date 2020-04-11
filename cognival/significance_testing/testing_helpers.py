@@ -49,22 +49,22 @@ def save_errors(emb_scores, emb_filename, base_scores, base_filename, output_dir
     emb_scores['error'] = emb_scores['error'].abs()
     base_scores['error'] = base_scores['error'].abs()
 
-    words = []
+    strings = []
     emb_scores_col = []
     base_scores_col = []
 
-    for word in emb_scores.index:
+    for string in emb_scores.index:
         try:
-            emb_score = emb_scores.loc[word]['error']
-            base_score = base_scores.loc[word]['error']
+            emb_score = emb_scores.loc[string]['error']
+            base_score = base_scores.loc[string]['error']
             emb_scores_col.append(emb_score)
             base_scores_col.append(base_score)
-            words.append(word)
+            strings.append(string)
         except KeyError:
             continue
     
-    df_emb = pd.DataFrame({'error': emb_scores_col})
-    df_base = pd.DataFrame({'error': base_scores_col})
+    df_emb = pd.DataFrame({'string': strings, 'error': emb_scores_col})
+    df_base = pd.DataFrame({'string': strings, 'error': base_scores_col})
 
     for df, out_file in [(df_emb, Path(output_dir) / emb_filename),
                          (df_base, Path(output_dir) / base_filename)]:
@@ -74,5 +74,5 @@ def save_errors(emb_scores, emb_filename, base_scores, base_filename, output_dir
                   quoting=csv.QUOTE_NONNUMERIC,
                   doublequote=True,
                   encoding="utf-8",
-                  header=False,
+                  header=True,
                   index=False) 
