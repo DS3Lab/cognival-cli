@@ -1377,10 +1377,10 @@ def import_embeddings(x,
                 with zipfile.ZipFile(embeddings_path / 'gdrive_embeddings.dat', 'r') as zip_ref:
                     zip_ref.extractall(fpath_extracted) 
             except zipfile.BadZipFile:
-                # Assume gzipped bin (requires manually creating path and setting filename)
+                # Assume gzipped txt (requires manually creating path and setting filename)
                 os.mkdir(fpath_extracted)
                 with gzip.open(embeddings_path / 'gdrive_embeddings.dat', 'rb') as f_in:
-                    with open(fpath_extracted / '{}.bin'.format(path), 'wb') as f_out:
+                    with open(fpath_extracted / '{}.txt'.format(path), 'wb') as f_out:
                         shutil.copyfileobj(f_in, f_out)
             os.remove(embeddings_path / 'gdrive_embeddings.dat')
         

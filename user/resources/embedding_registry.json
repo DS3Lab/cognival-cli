@@ -53,11 +53,11 @@
             "random_embedding": null
         },
         "word2vec": {
-            "url": "https://drive.google.com/uc?id=1CRCVNKW5SJ2fwNwLziIibuJoTZN9NHHw",
+            "url": "https://drive.google.com/uc?id=1axgz0weQ8nujW1OLzEA4USPK89g7PkoY",
             "dimensions": 300,
-            "binary": true,
-            "binary_file": "word2vec-300d.bin",
-            "binary_format": "word2vec",
+            "binary": false,
+            "binary_file": null,
+            "binary_format": null,
             "path": "word2vec-300d",
             "embedding_file": "word2vec-300d.txt",
             "installed": false,
@@ -68,7 +68,7 @@
             "chunk_ending": ".txt",
             "random_embedding": null
         },
-        "wnet2vec": {
+	"wnet2vec": {
             "url": "http://lxcenter.di.fc.ul.pt/wn2vec.zip",
             "dimensions": 850,
             "binary": false,
