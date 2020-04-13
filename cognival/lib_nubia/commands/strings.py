@@ -23,7 +23,7 @@ EDITOR_DESCRIPTIONS = { "properties": {"cognival_path": "Path for storing user d
                                          "batch_size": "Batch size used during training. Comma-separated list for multiple values.",
                                          "cv_split": "Number of cross-validation (CV) splits",
                                          "epochs": "Number of training epochs. Comma-separated list for multiple values.",
-                                         "layers": "List of lists of layer specifications. Each row corresponds to possible layer sizes for a layer (comma-separated). Layers are separated by newlines.",
+                                         "layers": "Nested list of hidden layer specifications. Each row is comma-separated and corresponds to a parametrization, i.e. '50, 20' (without quotes) results in two hidden layers of corresponding sizes. Parametrizations are separated by newlines.",
                                          "validation_split": "Ratio training data used as validation data during training"
                                         },
                         "embedding_conf":{"chunk_number": "Number of embedding chunks. Ignored if chunked == 0.",

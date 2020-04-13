@@ -44,6 +44,7 @@ class ConfigEditor():
                  cognitive_sources=None,
                  embeddings=None,
                  prefill_fields=None):
+        self.conf_type = conf_type
         self.buffers = {}
         self.config_dict_updated = config_dict_updated
         self.singleton_params = singleton_params if singleton_params else []
@@ -153,16 +154,19 @@ class ConfigEditor():
                 return v.text
 
     def _cast_list(self, v_list):
-        if len(v_list) > 1:
-            return [int(x) if x.isdigit() else x for x in v_list]
+        if isinstance(v_list[0], list):
+            return [self._cast_list(x) for x in v_list]
         else:
-            try:
-                return [int(v_list[0])]
-            except ValueError:
+            if len(v_list) > 1:
+                return [int(x) if x.isdigit() else x for x in v_list]
+            else:
                 try:
-                    return [float(v_list[0])]
+                    return [int(v_list[0])]
                 except ValueError:
-                    return v_list
+                    try:
+                        return [float(v_list[0])]
+                    except ValueError:
+                        return v_list
 
     def save(self):
         for k, v in self.buffers.items():
@@ -195,7 +199,10 @@ class ConfigEditor():
                             values_list_cast.append(v_list)
                         values = values_list_cast
                     else:
-                        values_list = v.text.replace(' ', '').split(',')    
+                        values_list = v.text.replace(' ', '').split(',')
+                        # Ensure doubly nested list for layers in (embedding) experiment specifications
+                        if self.conf_type == 'embedding_exp' and k == 'layers':
+                            values_list = [values_list]
                         values = self._cast_list(values_list)
             else:
                 if k in self.prefill_fields:
