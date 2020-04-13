@@ -2,12 +2,78 @@ import collections
 import csv
 import os
 
-import gensim
+import fasttext
 import numpy as np
 import pandas as pd
 import spacy
 
 from tqdm import tqdm
+
+def generate_bert_sentence_embs():
+    import torch
+    from transformers import BertTokenizer, BertModel
+
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    model = BertModel.from_pretrained('bert-base-uncased')
+    input_ids = torch.tensor(tokenizer.encode("Hello, my dog is cute")).unsqueeze(0)  # Batch size 1
+    outputs = model(input_ids)
+    last_hidden_states = outputs[0][0]  # The last hidden-state is the first element of the output tuple
+    cls_embeddings = last_hidden_states[0].detach().numpy()
+
+
+def generate_elmo_sentence_embs():
+    elmo = ElmoEmbedder()
+    y = elmo.embed_sentence(words.split()) # pass in as list of tokens
+    y_2 =  y.swapaxes(0, 1)
+    z = y_2.reshape(5, 3072)
+    z = z.mean(axis=0)
+
+
+def generate_powermean_sentence_embs():
+    import tensorflow as tf
+    import tensorflow_hub as hub
+    import time
+    with tf.Graph().as_default():
+        embed = hub.Module('https://public.ukp.informatik.tu-darmstadt.de/arxiv2018-xling-sentence-embeddings/tf-hub/monolingual/1')
+        emb_tensor = embed(["A long sentence .", "another sentence"])   
+        sess = tf.train.SingularMonitoredSession()
+        embeddings = emb_tensor.eval(session=sess)
+        print(embeddings)
+
+
+def generate_skipthought_sentence_embs():
+    pass
+
+
+def generate_quickthought_sentence_embs():
+    pass
+
+
+def generate_use_sentence_embs():
+    pass
+
+
+def generate_infersent_sentence_embs():
+    pass
+
+
+def generate_sent_embeddings(name):
+    if 'bert' in name:
+        pass
+    elif name == 'elmo-sentence':
+        pass
+    elif name == 'powermean':
+        pass
+    elif name == 'skipthought':
+        pass
+    elif name == 'quickthought':
+        pass
+    elif name == 'use':
+        pass
+    elif name == 'infersent':
+        pass
+    else:
+        return
 
 def generate_avg_sent_embeddings(name,
                                  resources_path,
@@ -24,25 +90,27 @@ def generate_avg_sent_embeddings(name,
     
     emb_dict = {}
 
+    print("Getting word embeddings ...")
     # Handle fasttext subwords 
-    if 'fasttext' in name:
-        embeddings = loast_facebook_model(base_path / emb_params["embedding_file"])
-        for word in vocabulary_set:
-            emb_dict[word] = embeddings.wv[word]
+    if 'fasttext-cc-2018' in name:
+        embeddings = fasttext.load_model(str(base_path / emb_params["binary_file"]))
+        for word in tqdm(vocabulary_set):
+            emb_dict[word] = embeddings[word]
     else:
+        skiprows = 1 if emb_params['truncate_first_line'] else None
         df = pd.read_csv(base_path / emb_file,
                          sep=" ",
                          quoting=csv.QUOTE_NONE,
                          doublequote=True,
                          keep_default_na=False,
+                         skiprows=skiprows,
                          names=['word', *['x{}'.format(idx+1) for idx in range(emb_params['dimensions'])]])
-                         
         df.set_index('word', inplace=True)
         assert df.index.is_unique
         counter = collections.Counter()
         
         # collect word embeddings
-        for word in vocabulary_set:
+        for word in tqdm(vocabulary_set):
             if word in df.index:
                 emb_dict[word] = df.loc[word].to_numpy().ravel()
                 counter['normal'] += 1

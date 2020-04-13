@@ -499,8 +499,8 @@ class Update:
         """
         Update both the CogniVal vocabulary and sentence list based on all imported cognitive_sources.
         """
-        update_vocabulary()
-        update_sentences()
+        self.vocabulary()
+        self.sentences()
 
 
     @command
