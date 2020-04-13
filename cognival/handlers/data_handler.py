@@ -298,9 +298,9 @@ def data_handler(mode, config, stratified_sampling, balance, word_embedding, cog
         df_join = multi_join(mode, config, emb_type, df_cognitive_data, word_embedding)
     else:
         if truncate_first_line:
-            skip_rows = 0
+            skip_rows = 1
         else:
-            skip_rows = None
+            skip_rows = 0
 
         dimensions = config[emb_key][word_embedding]["dimensions"]
         

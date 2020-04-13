@@ -3,7 +3,7 @@
         "PATH": null,
         "cogDataConfig": {
             "eye-tracking_all": {
-                "dataset": "cognitive_sources/eye-tracking/all_scaled.txt",
+                "dataset": "cognitive_sources/word/eye-tracking/all_scaled.txt",
                 "modality": "eye-tracking",
                 "features": [
                     "ffd",
@@ -481,10 +481,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "eye-tracking_all"
+                "parent": "eye-tracking_all",
+                "multi_hypothesis": "feature",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": false
             },
             "fmri_brennan-0": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_18.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_18.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -957,10 +961,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-1": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_47.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_47.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -1433,10 +1441,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-10": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_30.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_30.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -1909,10 +1921,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-11": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_45.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_45.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -2385,10 +2401,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-12": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_24.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_24.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -2861,10 +2881,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-13": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_42.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_42.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -3337,10 +3361,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-14": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_48.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_48.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -3813,10 +3841,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-15": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_53.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_53.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -4289,10 +4321,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-16": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_52.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_52.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -4765,10 +4801,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-17": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_40.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_40.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -5241,10 +5281,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-18": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_22.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_22.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -5717,10 +5761,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-19": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_26.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_26.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -6193,10 +6241,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-2": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_51.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_51.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -6669,10 +6721,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-20": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_43.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_43.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -7145,10 +7201,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-21": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_28.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_28.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -7621,10 +7681,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-22": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_36.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_36.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -8097,10 +8161,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-23": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_49.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_49.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -8573,10 +8641,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-24": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_31.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_31.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -9049,10 +9121,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-25": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_38.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_38.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -9525,10 +9601,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-26": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_35.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_35.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -10001,10 +10081,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-3": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_37.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_37.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -10477,10 +10561,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-4": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_41.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_41.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -10953,10 +11041,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-5": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_50.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_50.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -11429,10 +11521,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-6": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_39.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_39.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -11905,10 +12001,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-7": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_23.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_23.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -12381,10 +12481,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-8": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_44.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_44.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -12857,10 +12961,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_brennan-9": {
-                "dataset": "cognitive_sources/fmri/alice/scaled_6_brennan_targets_46.txt",
+                "dataset": "cognitive_sources/word/fmri/alice/scaled_6_brennan_targets_46.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -13333,10 +13441,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_brennan"
+                "parent": "fmri_brennan",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "eye-tracking_cfilt-sarcasm": {
-                "dataset": "cognitive_sources/eye-tracking/cfilt-sarcasm_scaled.txt",
+                "dataset": "cognitive_sources/word/eye-tracking/cfilt-sarcasm_scaled.txt",
                 "modality": "eye-tracking",
                 "features": [
                     "Fixation_Duration"
@@ -13809,10 +13921,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "eye-tracking_cfilt-sarcasm"
+                "parent": "eye-tracking_cfilt-sarcasm",
+                "multi_hypothesis": "feature",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": false
             },
             "eye-tracking_cfilt-scanpath": {
-                "dataset": "cognitive_sources/eye-tracking/cfilt-scanpath_scaled.txt",
+                "dataset": "cognitive_sources/word/eye-tracking/cfilt-scanpath_scaled.txt",
                 "modality": "eye-tracking",
                 "features": [
                     "Fixation_Duration"
@@ -14285,10 +14401,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "eye-tracking_cfilt-scanpath"
+                "parent": "eye-tracking_cfilt-scanpath",
+                "multi_hypothesis": "feature",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": false
             },
             "eye-tracking_dundee": {
-                "dataset": "cognitive_sources/eye-tracking/dundee_scaled.txt",
+                "dataset": "cognitive_sources/word/eye-tracking/dundee_scaled.txt",
                 "modality": "eye-tracking",
                 "features": [
                     "First_fix_dur",
@@ -14774,10 +14894,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "eye-tracking_dundee"
+                "parent": "eye-tracking_dundee",
+                "multi_hypothesis": "feature",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": false
             },
             "eye-tracking_geco": {
-                "dataset": "cognitive_sources/eye-tracking/geco_scaled.txt",
+                "dataset": "cognitive_sources/word/eye-tracking/geco_scaled.txt",
                 "modality": "eye-tracking",
                 "features": [
                     "WORD_FIXATION_COUNT",
@@ -15256,10 +15380,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "eye-tracking_geco"
+                "parent": "eye-tracking_geco",
+                "multi_hypothesis": "feature",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": false
             },
             "eeg_n400": {
-                "dataset": "cognitive_sources/eeg/n400_scaled.txt",
+                "dataset": "cognitive_sources/word/eeg/n400_scaled.txt",
                 "modality": "eeg",
                 "features": [
                     "ALL_DIM"
@@ -15732,10 +15860,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "eeg_n400"
+                "parent": "eeg_n400",
+                "multi_hypothesis": false,
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": false
             },
             "eeg_naturalspeech": {
-                "dataset": "cognitive_sources/eeg/naturalspeech_scaled.txt",
+                "dataset": "cognitive_sources/word/eeg/naturalspeech_scaled.txt",
                 "modality": "eeg",
                 "features": [
                     "ALL_DIM"
@@ -16208,10 +16340,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "eeg_naturalspeech"
+                "parent": "eeg_naturalspeech",
+                "multi_hypothesis": false,
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": false
             },
             "eye-tracking_provo": {
-                "dataset": "cognitive_sources/eye-tracking/provo_scaled.txt",
+                "dataset": "cognitive_sources/word/eye-tracking/provo_scaled.txt",
                 "modality": "eye-tracking",
                 "features": [
                     "IA_FIRST_FIXATION_DURATION",
@@ -16693,10 +16829,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "eye-tracking_provo"
+                "parent": "eye-tracking_provo",
+                "multi_hypothesis": "feature",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": false
             },
             "eeg_ucl": {
-                "dataset": "cognitive_sources/eeg/ucl_scaled.txt",
+                "dataset": "cognitive_sources/word/eeg/ucl_scaled.txt",
                 "modality": "eeg",
                 "features": [
                     "ALL_DIM"
@@ -17169,10 +17309,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "eeg_ucl"
+                "parent": "eeg_ucl",
+                "multi_hypothesis": false,
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": false
             },
             "eye-tracking_ucl": {
-                "dataset": "cognitive_sources/eye-tracking/ucl_scaled.txt",
+                "dataset": "cognitive_sources/word/eye-tracking/ucl_scaled.txt",
                 "modality": "eye-tracking",
                 "features": [
                     "RTfirstfix",
@@ -17648,10 +17792,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "eye-tracking_ucl"
+                "parent": "eye-tracking_ucl",
+                "multi_hypothesis": "feature",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": false
             },
             "eeg_zuco": {
-                "dataset": "cognitive_sources/eeg/zuco_scaled.txt",
+                "dataset": "cognitive_sources/word/eeg/zuco_scaled.txt",
                 "modality": "eeg",
                 "features": [
                     "ALL_DIM"
@@ -18124,10 +18272,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "eeg_zuco"
+                "parent": "eeg_zuco",
+                "multi_hypothesis": false,
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": false
             },
             "eye-tracking_zuco": {
-                "dataset": "cognitive_sources/eye-tracking/zuco_scaled.txt",
+                "dataset": "cognitive_sources/word/eye-tracking/zuco_scaled.txt",
                 "modality": "eye-tracking",
                 "features": [
                     "nFixations",
@@ -18604,10 +18756,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "eye-tracking_zuco"
+                "parent": "eye-tracking_zuco",
+                "multi_hypothesis": "feature",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": false
             },
             "fmri_mitchell-0": {
-                "dataset": "cognitive_sources/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_1.txt",
+                "dataset": "cognitive_sources/word/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_1.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -19080,10 +19236,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_mitchell"
+                "parent": "fmri_mitchell",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_mitchell-1": {
-                "dataset": "cognitive_sources/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_2.txt",
+                "dataset": "cognitive_sources/word/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_2.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -19556,10 +19716,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_mitchell"
+                "parent": "fmri_mitchell",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_mitchell-2": {
-                "dataset": "cognitive_sources/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_3.txt",
+                "dataset": "cognitive_sources/word/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_3.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -20032,10 +20196,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_mitchell"
+                "parent": "fmri_mitchell",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_mitchell-3": {
-                "dataset": "cognitive_sources/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_4.txt",
+                "dataset": "cognitive_sources/word/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_4.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -20508,10 +20676,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_mitchell"
+                "parent": "fmri_mitchell",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_mitchell-4": {
-                "dataset": "cognitive_sources/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_5.txt",
+                "dataset": "cognitive_sources/word/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_5.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -20984,10 +21156,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_mitchell"
+                "parent": "fmri_mitchell",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_mitchell-5": {
-                "dataset": "cognitive_sources/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_6.txt",
+                "dataset": "cognitive_sources/word/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_6.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -21460,10 +21636,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_mitchell"
+                "parent": "fmri_mitchell",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_mitchell-6": {
-                "dataset": "cognitive_sources/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_7.txt",
+                "dataset": "cognitive_sources/word/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_7.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -21936,10 +22116,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_mitchell"
+                "parent": "fmri_mitchell",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_mitchell-7": {
-                "dataset": "cognitive_sources/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_8.txt",
+                "dataset": "cognitive_sources/word/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_8.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -22412,10 +22596,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_mitchell"
+                "parent": "fmri_mitchell",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_mitchell-8": {
-                "dataset": "cognitive_sources/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_9.txt",
+                "dataset": "cognitive_sources/word/fmri/nouns/1000-random-voxels/scaled_1000_mitchell_targets_9.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -22888,10 +23076,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_mitchell"
+                "parent": "fmri_mitchell",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_pereira-0": {
-                "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M01.txt",
+                "dataset": "cognitive_sources/word/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M01.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -23364,10 +23556,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_pereira"
+                "parent": "fmri_pereira",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_pereira-1": {
-                "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M02.txt",
+                "dataset": "cognitive_sources/word/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M02.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -23840,10 +24036,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_pereira"
+                "parent": "fmri_pereira",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_pereira-10": {
-                "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M13.txt",
+                "dataset": "cognitive_sources/word/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M13.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -24316,10 +24516,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_pereira"
+                "parent": "fmri_pereira",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_pereira-11": {
-                "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M14.txt",
+                "dataset": "cognitive_sources/word/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M14.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -24792,10 +24996,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_pereira"
+                "parent": "fmri_pereira",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_pereira-12": {
-                "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M15.txt",
+                "dataset": "cognitive_sources/word/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M15.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -25268,10 +25476,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_pereira"
+                "parent": "fmri_pereira",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_pereira-13": {
-                "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M16.txt",
+                "dataset": "cognitive_sources/word/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M16.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -25744,10 +25956,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_pereira"
+                "parent": "fmri_pereira",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_pereira-14": {
-                "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M17.txt",
+                "dataset": "cognitive_sources/word/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M17.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -26220,10 +26436,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_pereira"
+                "parent": "fmri_pereira",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_pereira-2": {
-                "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M03.txt",
+                "dataset": "cognitive_sources/word/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M03.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -26696,10 +26916,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_pereira"
+                "parent": "fmri_pereira",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_pereira-3": {
-                "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M04.txt",
+                "dataset": "cognitive_sources/word/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M04.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -27172,10 +27396,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_pereira"
+                "parent": "fmri_pereira",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_pereira-4": {
-                "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M05.txt",
+                "dataset": "cognitive_sources/word/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M05.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -27648,10 +27876,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_pereira"
+                "parent": "fmri_pereira",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_pereira-5": {
-                "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M06.txt",
+                "dataset": "cognitive_sources/word/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M06.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -28124,10 +28356,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_pereira"
+                "parent": "fmri_pereira",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_pereira-6": {
-                "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M07.txt",
+                "dataset": "cognitive_sources/word/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M07.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -28600,10 +28836,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_pereira"
+                "parent": "fmri_pereira",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_pereira-7": {
-                "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M08.txt",
+                "dataset": "cognitive_sources/word/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M08.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -29076,10 +29316,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_pereira"
+                "parent": "fmri_pereira",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_pereira-8": {
-                "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M09.txt",
+                "dataset": "cognitive_sources/word/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M09.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -29552,10 +29796,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_pereira"
+                "parent": "fmri_pereira",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_pereira-9": {
-                "dataset": "cognitive_sources/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M10.txt",
+                "dataset": "cognitive_sources/word/fmri/pereira/1000-random-voxels/scaled_1000_pereira_targets_M10.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -30028,10 +30276,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_pereira"
+                "parent": "fmri_pereira",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_wehbe-0": {
-                "dataset": "cognitive_sources/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_5.txt",
+                "dataset": "cognitive_sources/word/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_5.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -30504,10 +30756,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_wehbe"
+                "parent": "fmri_wehbe",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_wehbe-1": {
-                "dataset": "cognitive_sources/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_6.txt",
+                "dataset": "cognitive_sources/word/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_6.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -30980,10 +31236,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_wehbe"
+                "parent": "fmri_wehbe",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_wehbe-2": {
-                "dataset": "cognitive_sources/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_4.txt",
+                "dataset": "cognitive_sources/word/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_4.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -31456,10 +31716,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_wehbe"
+                "parent": "fmri_wehbe",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_wehbe-3": {
-                "dataset": "cognitive_sources/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_1.txt",
+                "dataset": "cognitive_sources/word/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_1.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -31932,10 +32196,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_wehbe"
+                "parent": "fmri_wehbe",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_wehbe-4": {
-                "dataset": "cognitive_sources/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_8.txt",
+                "dataset": "cognitive_sources/word/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_8.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -32408,10 +32676,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_wehbe"
+                "parent": "fmri_wehbe",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_wehbe-5": {
-                "dataset": "cognitive_sources/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_2.txt",
+                "dataset": "cognitive_sources/word/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_2.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -32884,10 +33156,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_wehbe"
+                "parent": "fmri_wehbe",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_wehbe-6": {
-                "dataset": "cognitive_sources/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_7.txt",
+                "dataset": "cognitive_sources/word/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_7.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -33360,10 +33636,14 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_wehbe"
+                "parent": "fmri_wehbe",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             },
             "fmri_wehbe-7": {
-                "dataset": "cognitive_sources/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_3.txt",
+                "dataset": "cognitive_sources/word/fmri/harry-potter/1000-random-voxels/scaled_1000_wehbe_targets_3.txt",
                 "modality": "fmri",
                 "features": [
                     "ALL_DIM"
@@ -33836,7 +34116,11 @@
                         "validation_split": 0.2
                     }
                 },
-                "parent": "fmri_wehbe"
+                "parent": "fmri_wehbe",
+                "multi_hypothesis": "subject",
+                "stratified_sampling": false,
+                "balance": null,
+                "multi_file": true
             }
         },
         "n_proc": null,

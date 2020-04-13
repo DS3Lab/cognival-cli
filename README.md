@@ -241,9 +241,14 @@ Following, the constraints are specified in detail for the cognitive sources. **
 ### word-level
 Word strings may not contain spaces. Compound words must be escaped with underscores, e.g. `New_York`.
 
-EEG and fMRI:
+EEG:
 
 ``word e1 e2 e3 e4 e5 ...``  
+``his 0.5394774791900334 0.4356708610374691 0.523294558226597 0.5059544824545096 0.466957449316214 ...``
+
+fMRI:
+
+``word v1 v2 v3 v4 v5 ...``  
 ``his 0.5394774791900334 0.4356708610374691 0.523294558226597 0.5059544824545096 0.466957449316214 ...``
 
 Eye-tracking:
@@ -260,11 +265,18 @@ The sentence-level format differs from the word-level in the following aspects:
 
 Due to the much smaller number of data points when aggregating on the sentence level, PCA is typically applied to EEG and fMRI to reduce the dimensionality. Thus, the dimensionality of the vectors corresponds to the number of principal components for these modalities, while it is determined by the longest sentence for Eye-Tacking.
 
-EEG and fMRI:
+EEG:
+
 ``"sentence" "e1" "e2" "e3" "e4" "e5"` ...`
 ``"Beekeeping encourages the conservation of local habitats." 0.5367426492864596 0.4926509188003651 ....``
 
+fMRI:
+
+``"sentence" "v1" "v2" "v3" "v4" v5"` ...`
+``"Beekeeping encourages the conservation of local habitats." 0.5367426492864596 0.4926509188003651 ....``
+
 Eye-tracking:
+
 ``"sentence" "e1" "e2" "e3" "e4" "e5" ... "e92" "e93"``
 ``"Are tourists enticed by these attractions threatening their very existence?" 0.29411764705882354 0.47276688453159044 ... 0.0 0.0``
 
@@ -325,6 +337,15 @@ The following table contains reference results for the modality EEG for some of 
     <td class="tg-0lax">0.01</td>
   </tr>
 </table>
+
+## Notes on bundled embeddings and data sources
+* For fasttext embeddings, only the more recent fasttext-cc-2018 embeddings are processed with the fastText library, allowing to generate embeddings from subwords for sentence embeddings. For word embeddings, subword information is currently not available, as the existing word vectors are taken and merged with the cognitive sources as-is. For fasttext-cc(-subword) and fasttext-wiki-(subowrd), subwords are unavailable for both word and sentence embeddings, as these pretrained word embeddings are incompatible with both gensim and the current version of the fasttext library.
+
+* Baseline sentence embeddings for word embeddings are available under the same name, except for ELMo. For BERT and ELMo, the CLS token and a flattened version of all layers are obtained respectively. In the case of ELMo, this leads to a higher dimensional vector, available under elmo-sentence.
+
+* ELMo relies on the embeddings provided by the allennlp library, thus custom ELMo embeddings for words and sentences must be generated externally and imported as custom embeddings.
+
+* BERT word embeddings rely on bert-as-service. This is due to the fact that at the time of writing, we found no way to obtain OOV words using the transformer libary. BERT sentence embeddings are generated using the transformers library.
 
 ## Testing and Development
 In order to run the tests, you need to download the [test_data](https://drive.google.com/open?id=1f0hFulGIwqf6FRbPCv14d6yiEXh6WI49) and extract the archive into the `tests` directory. Note that testing coverage is fairly minimal at present time.

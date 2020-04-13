@@ -1,9 +1,9 @@
 {
+    "type": "word",
     "PATH": "<Remove me and save>",
     "cogDataConfig": {
         "eeg_zuco": {
-            "dataset": "cognitive_sources/eeg/zuco_scaled.txt",
-	    "parent": "eeg_zuco",
+            "dataset": "cognitive_sources/word/eeg/zuco_scaled.txt",
             "modality": "eeg",
             "features": [
                 "ALL_DIM"
@@ -307,7 +307,12 @@
                     ],
                     "validation_split": 0.2
                 }
-            }
+            },
+            "parent": "eeg_zuco",
+            "multi_hypothesis": false,
+            "stratified_sampling": false,
+            "balance": null,
+            "multi_file": false
         }
     },
     "n_proc": 2,
@@ -317,7 +322,8 @@
     "run_id": 1,
     "wordEmbConfig": {
         "glove.6B.50": {
-            "path": "embeddings/glove.6B/glove.6B.50d.txt",
+            "dimensions": 50,
+            "path": "embeddings/glove.6B/word/glove.6B.50d.txt",
             "truncate_first_line": false,
             "chunked": false,
             "random_embedding": "random-50-10_for_glove.6B.50"
@@ -325,43 +331,53 @@
     },
     "randEmbConfig": {
         "random-50-10_1_1_for_glove.6B.50": {
-            "path": "embeddings/random_multiseed/50_dim/10_seeds/random-50-10_1_1.txt",
+            "dimensions": 50,
+            "path": "embeddings/random_multiseed/50_dim/10_seeds/word/random-50-10_1_1.txt",
             "chunked": false
         },
         "random-50-10_2_6_for_glove.6B.50": {
-            "path": "embeddings/random_multiseed/50_dim/10_seeds/random-50-10_2_6.txt",
+            "dimensions": 50,
+            "path": "embeddings/random_multiseed/50_dim/10_seeds/word/random-50-10_2_6.txt",
             "chunked": false
         },
         "random-50-10_3_19_for_glove.6B.50": {
-            "path": "embeddings/random_multiseed/50_dim/10_seeds/random-50-10_3_19.txt",
+            "dimensions": 50,
+            "path": "embeddings/random_multiseed/50_dim/10_seeds/word/random-50-10_3_19.txt",
             "chunked": false
         },
         "random-50-10_4_43_for_glove.6B.50": {
-            "path": "embeddings/random_multiseed/50_dim/10_seeds/random-50-10_4_43.txt",
+            "dimensions": 50,
+            "path": "embeddings/random_multiseed/50_dim/10_seeds/word/random-50-10_4_43.txt",
             "chunked": false
         },
         "random-50-10_5_79_for_glove.6B.50": {
-            "path": "embeddings/random_multiseed/50_dim/10_seeds/random-50-10_5_79.txt",
+            "dimensions": 50,
+            "path": "embeddings/random_multiseed/50_dim/10_seeds/word/random-50-10_5_79.txt",
             "chunked": false
         },
         "random-50-10_6_130_for_glove.6B.50": {
-            "path": "embeddings/random_multiseed/50_dim/10_seeds/random-50-10_6_130.txt",
+            "dimensions": 50,
+            "path": "embeddings/random_multiseed/50_dim/10_seeds/word/random-50-10_6_130.txt",
             "chunked": false
         },
         "random-50-10_7_198_for_glove.6B.50": {
-            "path": "embeddings/random_multiseed/50_dim/10_seeds/random-50-10_7_198.txt",
+            "dimensions": 50,
+            "path": "embeddings/random_multiseed/50_dim/10_seeds/word/random-50-10_7_198.txt",
             "chunked": false
         },
         "random-50-10_8_285_for_glove.6B.50": {
-            "path": "embeddings/random_multiseed/50_dim/10_seeds/random-50-10_8_285.txt",
+            "dimensions": 50,
+            "path": "embeddings/random_multiseed/50_dim/10_seeds/word/random-50-10_8_285.txt",
             "chunked": false
         },
         "random-50-10_9_392_for_glove.6B.50": {
-            "path": "embeddings/random_multiseed/50_dim/10_seeds/random-50-10_9_392.txt",
+            "dimensions": 50,
+            "path": "embeddings/random_multiseed/50_dim/10_seeds/word/random-50-10_9_392.txt",
             "chunked": false
         },
         "random-50-10_10_522_for_glove.6B.50": {
-            "path": "embeddings/random_multiseed/50_dim/10_seeds/random-50-10_10_522.txt",
+            "dimensions": 50,
+            "path": "embeddings/random_multiseed/50_dim/10_seeds/word/random-50-10_10_522.txt",
             "chunked": false
         }
     },
