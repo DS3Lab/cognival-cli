@@ -759,16 +759,16 @@ def significance(configuration,
         if not quiet:
             cprint('\n[{}]\n'.format(modality.upper()), attrs=['bold'], color='green')
         experiments_dir = out_dir / 'experiments'
-        sig_test_res_dir = out_dir / 'sig_test_results' / modality / str(run_id)
+        avg_errors_dir = out_dir / 'average_errors' / modality / str(run_id)
         report_dir = out_dir / 'reports' / modality / str(run_id)
         
         # Erase previously generated report files and significance test files
         if os.path.exists(report_dir / '{}.json'.format(test)):
             os.remove(report_dir / '{}.json'.format(test))
-        if os.path.exists(sig_test_res_dir):
-            shutil.rmtree(sig_test_res_dir)
+        if os.path.exists(avg_errors_dir):
+            shutil.rmtree(avg_errors_dir)
         
-        os.makedirs(sig_test_res_dir, exist_ok=True)
+        os.makedirs(avg_errors_dir, exist_ok=True)
         os.makedirs(report_dir, exist_ok=True)
 
         datasets = [k for (k, v) in config_dict["cogDataConfig"].items() if 'modality' in v and v['modality'] == modality]
@@ -783,7 +783,7 @@ def significance(configuration,
                 for embed in embeddings:
                     experiment = '{}_{}#-#{}'.format(ds, feat, embed)
                     try:
-                        extract_errors(run_id, modality, experiment, mapping_dict, experiments_dir, sig_test_res_dir)
+                        extract_errors(run_id, modality, experiment, mapping_dict, experiments_dir, avg_errors_dir)
                         hypothesis_counter[embed] += 1
                     except KeyError:
                         pass
@@ -805,7 +805,7 @@ def significance(configuration,
         report = report_dir / '{}.json'.format(test)
         results = collections.defaultdict(dict)
         # For each hypothesis (i.e. non-baseline)
-        for filename in sorted(os.listdir(sig_test_res_dir)):
+        for filename in sorted(os.listdir(avg_errors_dir)):
             if not 'baseline' in filename:
                 # Obtain feature and average MSE
                 experiment = re.sub(r'embeddings_avg_errors_(.*?).txt', r'\1', filename)
@@ -818,8 +818,8 @@ def significance(configuration,
                 bf_corr_alpha = embedding_to_bonferroni[embedding]
 
                 # Perform significance testing
-                model_file = sig_test_res_dir / filename
-                baseline_file = sig_test_res_dir / 'baseline_{}'.format(filename.partition('_')[2])
+                model_file = avg_errors_dir / filename
+                baseline_file = avg_errors_dir / 'baseline_{}'.format(filename.partition('_')[2])
                 significant, pval, name = test_significance(baseline_file, model_file, bf_corr_alpha, test)
                 name = re.sub(r'embeddings_avg_errors_(.*?)', r'\1', name)
                 

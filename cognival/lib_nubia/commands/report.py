@@ -1,3 +1,4 @@
+import csv
 import datetime
 import collections
 import json
@@ -177,8 +178,10 @@ def generate_report(configuration,
                     resources_path,
                     precision,
                     average_multi_hypothesis,
-                    include_training_history_plots,
-                    include_features,
+                    training_history_plots,
+                    features,
+                    heatmaps,
+                    heatmaps_sample_n,
                     html=True,
                     pdf=False,
                     open_html=False,
@@ -226,9 +229,11 @@ def generate_report(configuration,
     experiment_to_path = {}
     training_history_plots = {}
     random_to_proper = {}
+    avg_error_single_dfs = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(dict)))
+    avg_error_dfs = collections.defaultdict(lambda: collections.defaultdict(dict))
 
     experiments_dir = out_dir / 'experiments'
-    sig_test_res_dir = out_dir / 'sig_test_results'
+    avg_errors_dir = out_dir / 'average_errors'
     report_dir = out_dir / 'reports'
     sig_test_reports_dict = collections.defaultdict(dict)
     agg_reports_dict = collections.defaultdict(dict)
@@ -241,7 +246,7 @@ def generate_report(configuration,
         except KeyError:
             pass
         try:
-            if include_training_history_plots:
+            if training_history_plots:
                 with open(experiments_dir / value['proper'] / '{}.png'.format(value['embedding']), 'rb') as f:
                     figdata_b64 = base64.b64encode(f.read()).decode('utf8')
                     training_history_plots[key] = figdata_b64
@@ -249,6 +254,48 @@ def generate_report(configuration,
                 training_history_plots = None
         except FileNotFoundError:
             continue
+
+    if heatmaps:
+        # Collection avg error results and generating min-max scaled tables
+        for path, _, error_csvs in os.walk(avg_errors_dir):
+            if error_csvs:
+                for error_csv in error_csvs:
+                    if not 'baseline' in error_csv:
+                        modality, ver = path.split('/')[-2:]
+                        ver = int(ver)
+                        if ver != run_id:
+                            continue
+                        df = pd.read_csv(Path(path) / error_csv,
+                                 sep=" ",
+                                 encoding="utf-8",
+                                 quotechar='"',
+                                 quoting=csv.QUOTE_NONNUMERIC,
+                                 doublequote=True)
+                        experiment = error_csv.rsplit('.', maxsplit=1)[0].replace('embeddings_avg_errors_', '') 
+                        
+                        with open(experiment_to_path[experiment]) as f:
+                            result_dict = json.load(f)
+                        
+                        source, feature, emb = result_dict['cognitiveData'], result_dict['feature'], result_dict['wordEmbedding']
+                        
+                        feature = feature if feature != 'ALL_DIM' else '—'
+                        df.rename(columns={'error':emb}, inplace=True)
+                        df.set_index('string', inplace=True)
+                        assert not df.index.has_duplicates
+                        avg_error_single_dfs[modality][source][feature][emb] = df
+
+
+        for modality, modality_dict in avg_error_single_dfs.items():
+            for source, source_dict in modality_dict.items():
+                for feature, feature_dict in source_dict.items():
+                    embeddings, dfs = zip(*list(feature_dict.items()))
+                    df = pd.concat(dfs, axis='columns')
+                    df -= df.min().min()
+                    df /= df.max().max()
+                    df.reset_index(inplace=True)
+                    if heatmaps_sample_n:
+                        df = df.sample(n=heatmaps_sample_n)
+                    avg_error_dfs[modality.upper()][(source, feature)] = df
 
     # Collecting significance test results and aggregation results
     for path, _, reports in os.walk(report_dir):
@@ -399,7 +446,7 @@ def generate_report(configuration,
                                     'Ø MSE',
                                     'SD MSE',
                                     'Details']]
-    if not include_features:
+    if not features:
         try:
             df_details = df_details.drop(['Feature'], axis='columns')
         except KeyError:
@@ -475,7 +522,7 @@ def generate_report(configuration,
                                    'Ø MSE',
                                    'SD MSE',
                                    'Details']]
-        if not include_features:
+        if not features:
             try:
                 df_random = df_random.drop(['Feature'], axis='columns')
             except KeyError:
@@ -549,7 +596,6 @@ def generate_report(configuration,
     else:
         sig_stats_plots = None
         stats_over_time_plots = None
-
     html_str = template.render(float64=np.float64,
                                title='CogniVal Report (Configuration {})'.format(configuration),
                                average_multi_hypothesis=average_multi_hypothesis,
@@ -559,7 +605,8 @@ def generate_report(configuration,
                                stats_over_time_plots=stats_over_time_plots,
                                df_details=df_details,
                                df_agg_dict=df_agg_dict,
-                               df_random=df_random)
+                               df_random=df_random,
+                               avg_error_dfs=avg_error_dfs)
     
     timestamp = datetime.datetime.now().isoformat()
     f_path_html = report_dir / 'cognival_report_{}_{}.html'.format(run_id, timestamp)

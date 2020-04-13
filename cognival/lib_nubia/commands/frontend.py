@@ -693,8 +693,10 @@ def properties():
 @argument('test', type=str, description='Significance test')
 @argument('precision', type=int, description='Number of decimal points in report (except for bonferroni alpha)')
 @argument('average_multi_hypothesis', type=bool, description='Average multi-hypothesis (multi-feature or multi-subject) results.')
-@argument('include_history_plots', type=bool, description='Whether to include training history plots (note: significantly increases report size when number of experiments is large.')
-@argument('include_features', type=bool, description='Whether to include the feature column in detail tables.')
+@argument('history_plots', type=bool, description='Whether to include training history plots (note: significantly increases report size when number of experiments is large.')
+@argument('features', type=bool, description='Whether to include the feature column in detail tables.')
+@argument('heatmaps', type=bool, description='Whether to include word/sentence to embedding per-source error heatmaps')
+@argument('heatmaps_sample_n', type=int, description='If not None, randomly sample n words/sentences. Show all otherwise.')
 @argument('html', type=bool, description='Generate html report.')
 @argument('open_html', type=bool, description='Open generated html report.')
 @argument('pdf', type=bool, description='Generate pdf report.')
@@ -705,8 +707,10 @@ def report(run_id=0,
            test="Wilcoxon",
            precision=3,
            average_multi_hypothesis=True,
-           include_history_plots=False,
-           include_features=True,
+           history_plots=False,
+           features=True,
+           heatmaps=False,
+           heatmaps_sample_n=None,
            html=True,
            open_html=False,
            pdf=False,
@@ -731,8 +735,10 @@ def report(run_id=0,
                     resources_path,
                     precision,
                     average_multi_hypothesis,
-                    include_history_plots,
-                    include_features,
+                    history_plots,
+                    features,
+                    heatmaps,
+                    heatmaps_sample_n,
                     html,
                     pdf,
                     open_html,
