@@ -111,6 +111,8 @@ def run_single(mode,
     logging["multi_hypothesis"] = multi_hypothesis
     logging["multi_file"] = multi_file
     logging["modality"] = modality
+    logging["details"] = ", ".join(["{}={}".format(measure, value) \
+            for measure, value in [("stratified_sampling", stratified_sampling), ("balance", balance)] if value])
     logging["feature"] = feature
 
     ##############################################################################

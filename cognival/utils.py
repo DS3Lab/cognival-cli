@@ -1,8 +1,11 @@
+import errno
 import sys
 import time
 import warnings
 
 from gensim.models.keyedvectors import KeyedVectors
+import fasttext
+from tqdm import tqdm
 
 #
 # Misc
@@ -27,3 +30,21 @@ def word2vec_bin_to_txt(binPath, binName, outputName, limit=None):
         warnings.simplefilter('ignore', UserWarning)
         model = KeyedVectors.load_word2vec_format(binPath / binName, binary=True, limit=limit)
         model.save_word2vec_format(binPath / outputName,binary=False)
+
+
+def fasttext_bin_to_txt(binPath, binName, outputName, limit=None):
+    f = fasttext.load_model(str(binPath / binName))
+
+    # Copied from https://github.com/facebookresearch/fastText/blob/master/python/doc/examples/bin_to_vec.py 
+    words = f.get_words()
+    with open(binPath / outputName, 'w') as f_out:
+        for w in tqdm(words):
+            v = f.get_word_vector(w)
+            vstr = ""
+            for vi in v:
+                vstr += " " + str(vi)
+            try:
+                print(w + vstr, file=f_out)
+            except IOError as e:
+                if e.errno == errno.EPIPE:
+                    pass 

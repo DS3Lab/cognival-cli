@@ -366,7 +366,7 @@ def resolve_cog_emb(modalities,
                 if type_ in modalities:
                     for source, source_dict in type_dict.items():
                         if source_dict['multi_file']:
-                            for idx in range(len(source_dict['files'])):
+                            for idx in range(len(source_dict['hypothesis_to_file'])):
                                 cognitive_sources.append('{}_{}-{}'.format(type_, source, idx))
                         else:
                             cognitive_sources.append('{}_{}'.format(type_, source))
@@ -391,7 +391,7 @@ def resolve_cog_emb(modalities,
                 raise AbortException
 
             if emb in embedding_registry['proper'] and emb_type == 'word' \
-               and not embedding_registry['proper'][emb]['type'] == 'sentence':
+               and embedding_registry['proper'][emb]['type'] == 'sentence':
                 cprint('Embedding {} is a sentence embedding, but the configuration has been parametrized for word embeddings!'.format(emb), 'red')
                 raise AbortException
 

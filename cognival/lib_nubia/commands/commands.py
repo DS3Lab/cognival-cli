@@ -38,7 +38,6 @@ import tabulate
 import tableformatter as tform
 import spacy
 
-from gensim.models.fasttext import load_facebook_model
 from prompt_toolkit.shortcuts import input_dialog, button_dialog, yes_no_dialog, message_dialog, radiolist_dialog, ProgressBar
 from pygments import highlight
 from pygments.lexers import MarkdownLexer
@@ -51,7 +50,7 @@ from handlers.data_handler import chunk
 from handlers.binary_to_text_conversion import bert_to_text, elmo_to_text
 from handlers.sentence_emb_generation import generate_avg_sent_embeddings
 
-from utils import word2vec_bin_to_txt
+from utils import word2vec_bin_to_txt, fasttext_bin_to_txt
 
 #sys.path.insert(0, 'significance_testing/')
 from significance_testing.extract_errors import extract_errors
@@ -115,6 +114,7 @@ warnings.formatwarning = custom_formatwarning
 
 NUM_BERT_WORKERS = 1
 COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1S0Fa_gGOJMuPxUrkZHW0RXk7bSPc7ffR'
+COMPLEX_WORD_EMB_TYPES = ['bert', 'elmo']
 
 def run(configuration,
         config_dict,
@@ -1288,7 +1288,7 @@ def import_embeddings(x,
         associate_rand_emb = yes_no_dialog(title='Random baseline generation',
                                             text='Do you wish to compare the embeddings with random baselines of identical dimensionality? \n').run()
     local = False                                   
-    
+
     # Download all embeddings
     if x == 'all':
         for emb in embedding_registry['proper']:
@@ -1562,15 +1562,19 @@ def import_embeddings(x,
         except TypeError:
             bin_path = None
         emb_path = base_path / emb_file
-        emb_dim = embedding_registry['proper'][emb_name]['dimensions']
         
+        emb_dim = embedding_registry['proper'][emb_name]['dimensions']
         # Convert from binary to text
         try:
             if embedding_registry['proper'][emb_name]['binary']:
+                cprint('Converting binary to txt format ...', 'yellow')
                 if embedding_registry['proper'][emb_name]['binary_format'] == 'word2vec':
-                    cprint('Converting binary to txt format ...', 'yellow')
                     word2vec_bin_to_txt(base_path, bin_file, emb_file)
                     os.remove(bin_path)
+
+                elif embedding_registry['proper'][emb_name]['binary_format'] == 'fasttext':
+                    fasttext_bin_to_txt(base_path, bin_file, emb_file)
+                    # Don't remove binary as it is required for sentence embeddings!
 
                 elif embedding_registry['proper'][emb_name]['binary_format'] == 'elmo':
                     elmo_to_text(resources_path / 'standard_vocab.txt',
@@ -1598,16 +1602,19 @@ def import_embeddings(x,
                     embedding_registry['proper'][emb_name]['chunked_file'],
                     number_of_chunks=embedding_registry['proper'][emb_name]['chunk_number'],
                     truncate_first_line=embedding_registry['proper'][emb_name]["truncate_first_line"])
-            embedding_registry['proper'][emb_name]["truncate_first_line"] = False
 
-        # If word embedding, generate baseline sentence embedding by averaging word embeddings
-        if embedding_registry['proper'][emb_name]['type'] == 'word':
+        # If word embedding not context-sensitive or multi-layered (BERT, ELMo), generate baseline sentence embedding by averaging word embeddings
+        if embedding_registry['proper'][emb_name]['type'] == 'word' and \
+           not any(infix in emb_name.lower() for infix in COMPLEX_WORD_EMB_TYPES):
             cprint("Generating baseline sentence embeddings for {} ...".format(emb_name))
             generate_avg_sent_embeddings(emb_name,
                                          resources_path,
                                          embedding_registry['proper'][emb_name],
                                          base_path,
                                          emb_file)
+        else:
+            # Insert hub function
+            pass
 
         # Associate random baselines with embeddings if set by user
         if associate_rand_emb:                                                

@@ -329,6 +329,7 @@ def generate_report(configuration,
                         'Subject': result_dict['cognitiveData'] if result_dict['multi_hypothesis'] == 'subject' else '-',
                         'Cognitive source': result_dict['cognitiveParent'],
                         'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature'],
+                        'Details': result_dict['details'],
                         **sig_test_result}
                 results.append(result)
     # If no significance tests have been performed
@@ -342,7 +343,8 @@ def generate_report(configuration,
                         'Word embedding': result_dict['wordEmbedding'],
                         'Subject': result_dict['cognitiveData'] if result_dict['multi_hypothesis'] == 'subject' else '-',
                         'Cognitive source': result_dict['cognitiveParent'],
-                        'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature']}
+                        'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature'],
+                        'Details': result_dict['details']}
                 results.append(result)
 
     df_details = pd.DataFrame(results)
@@ -358,7 +360,7 @@ def generate_report(configuration,
     df_details = df_details.astype({k:float for k in numtypes})
     
     if average_multi_hypothesis:
-        group_by_keys = ['Modality', 'Word embedding', 'Cognitive source']
+        group_by_keys = ['Modality', 'Word embedding', 'Cognitive source', 'Details']
         df_details_atomic = df_details.copy()[(df_details['Subject'] == '-') & (df_details['Feature'] == '-')]
         df_details_feat_avg = df_details.copy()[(df_details['Subject'] == '-') & (df_details['Feature'] != '-')]
         df_details_multi_subj_avg = df_details.copy()[df_details['Subject'] != '-']
@@ -410,6 +412,7 @@ def generate_report(configuration,
                                     'α',
                                     'Bonferroni α',
                                     'p',
+                                    'Details',
                                     'significant']]
         else:
             df_details = df_details[['Modality',
@@ -422,6 +425,7 @@ def generate_report(configuration,
                                     'α',
                                     'Bonferroni α',
                                     'p',
+                                    'Details',
                                     'significant']]
     except KeyError:
         if average_multi_hypothesis:
@@ -431,7 +435,8 @@ def generate_report(configuration,
                                      'Features',
                                      'Hypotheses',
                                      'Ø MSE',
-                                     'SD MSE']]
+                                     'SD MSE',
+                                     'Details']]
         else:
             df_details = df_details[['Modality',
                                     'Word embedding',
@@ -439,7 +444,8 @@ def generate_report(configuration,
                                     'Subject',
                                     'Feature',
                                     'Ø MSE',
-                                    'SD MSE']]
+                                    'SD MSE',
+                                    'Details']]
     if not features:
         try:
             df_details = df_details.drop(['Feature'], axis='columns')
@@ -458,13 +464,14 @@ def generate_report(configuration,
                       'Word embedding': result_dict['wordEmbedding'],
                       'Subject': result_dict['cognitiveData'] if result_dict['multi_hypothesis'] == 'subject' else '-',
                       'Cognitive source': result_dict['cognitiveParent'],
-                      'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature']}
+                      'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature'],
+                      'Details': result_dict['details']}
             results.append(result)
 
     if results:
         df_random = pd.DataFrame(results)
         numtypes = ['Ø MSE', 'SD MSE']
-        group_by_keys = ['Modality', 'Word embedding', 'Cognitive source']
+        group_by_keys = ['Modality', 'Word embedding', 'Cognitive source', 'Details']
         
         df_random = df_random.astype({k:float for k in numtypes})
 
@@ -504,7 +511,8 @@ def generate_report(configuration,
                                 'Features',
                                 'Hypotheses',
                                 'Ø MSE',
-                                'SD MSE']]
+                                'SD MSE',
+                                'Details']]
         else:
             df_random = df_random[['Modality',
                                    'Word embedding',
@@ -512,8 +520,14 @@ def generate_report(configuration,
                                    'Subject',
                                    'Feature',
                                    'Ø MSE',
+<<<<<<< HEAD
                                    'SD MSE']]
         if not features:
+=======
+                                   'SD MSE',
+                                   'Details']]
+        if not include_features:
+>>>>>>> WIP: sentence embeddings, misc adjustments, resources
             try:
                 df_random = df_random.drop(['Feature'], axis='columns')
             except KeyError:
