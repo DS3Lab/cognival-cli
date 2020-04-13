@@ -520,14 +520,9 @@ def generate_report(configuration,
                                    'Subject',
                                    'Feature',
                                    'Ø MSE',
-<<<<<<< HEAD
-                                   'SD MSE']]
-        if not features:
-=======
                                    'SD MSE',
                                    'Details']]
-        if not include_features:
->>>>>>> WIP: sentence embeddings, misc adjustments, resources
+        if not features:
             try:
                 df_random = df_random.drop(['Feature'], axis='columns')
             except KeyError:

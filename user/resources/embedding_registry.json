@@ -1,6 +1,7 @@
 {
     "proper": {
         "glove.6B.50": {
+	    "type": "word",
             "url": "http://nlp.stanford.edu/data/glove.6B.zip",
             "dimensions": 50,
             "binary": false,
@@ -14,6 +15,7 @@
             "random_embedding": null
         },
         "glove.6B.100": {
+	    "type": "word",
             "url": "http://nlp.stanford.edu/data/glove.6B.zip",
             "dimensions": 100,
             "binary": false,
@@ -27,6 +29,7 @@
             "random_embedding": null
         },
         "glove.6B.200": {
+	    "type": "word",
             "url": "http://nlp.stanford.edu/data/glove.6B.zip",
             "dimensions": 200,
             "binary": false,
@@ -40,6 +43,7 @@
             "random_embedding": null
         },
         "glove.6B.300": {
+	    "type": "word",
             "url": "http://nlp.stanford.edu/data/glove.6B.zip",
             "dimensions": 300,
             "binary": false,
@@ -53,6 +57,7 @@
             "random_embedding": null
         },
         "word2vec": {
+            "type": "word",
             "url": "https://drive.google.com/uc?id=1axgz0weQ8nujW1OLzEA4USPK89g7PkoY",
             "dimensions": 300,
             "binary": false,
@@ -68,7 +73,8 @@
             "chunk_ending": ".txt",
             "random_embedding": null
         },
-	"wnet2vec": {
+        "wnet2vec": {
+	    "type": "word",
             "url": "http://lxcenter.di.fc.ul.pt/wn2vec.zip",
             "dimensions": 850,
             "binary": false,
@@ -82,6 +88,7 @@
             "random_embedding": null
         },
         "fasttext-wiki": {
+	    "type": "word",
             "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-english/wiki-news-300d-1M.vec.zip",
             "dimensions": 300,
             "binary": false,
@@ -98,6 +105,7 @@
             "random_embedding": null
         },
         "fasttext-wiki-subword": {
+	    "type": "word",
             "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-english/wiki-news-300d-1M-subword.vec.zip",
             "dimensions": 300,
             "binary": false,
@@ -114,6 +122,7 @@
             "random_embedding": null
         },
         "fasttext-cc": {
+	    "type": "word",
             "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip",
             "dimensions": 300,
             "binary": false,
@@ -130,6 +139,7 @@
             "random_embedding": null
         },
         "fasttext-cc-subword": {
+	    "type": "word",
             "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M-subword.zip",
             "dimensions": 300,
             "binary": false,
@@ -145,20 +155,53 @@
             "chunk_ending": ".txt",
             "random_embedding": null
         },
-        "elmo": {
+        "fasttext-cc-2018": {
+	    "type": "word",
+            "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz",
+            "dimensions": 300,
+            "binary": true,
+            "binary_file": "fasttext-cc-2018.bin",
+            "binary_format": "fasttext",
+            "path": "fasttext-cc-2018",
+            "embedding_file": "fasttext-cc-2018.txt",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": true,
+            "chunk_number": 8,
+            "chunked_file": "fasttext-cc-2018",
+            "chunk_ending": ".txt",
+            "random_embedding": null
+        },
+      "elmo": {
+	    "type": "word",
             "url": null,
             "dimensions": 1024,
             "binary": true,
-            "binary_file": "elmo_2x4096_512_2048cnn_2xhighway_5.5B_weights.hdf5",
+            "binary_file": null,
             "binary_format": "elmo",
-            "path": "elmo_2x4096_512_2048cnn",
+            "path": "elmo",
             "embedding_file": "elmo_as_wordembeddings_cognival.txt",
             "installed": false,
             "truncate_first_line": false,
             "chunked": false,
             "random_embedding": null
         },
+      "elmo-sentence": {
+	    "type": "sentence",
+            "url": null,
+            "dimensions": 3072,
+            "binary": true,
+            "binary_file": null,
+            "binary_format": "elmo",
+            "path": "elmo",
+            "embedding_file": "elmo_as_sentencembeddings_cognival.txt",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": null
+        },
         "bert-base": {
+	    "type": "word",
             "url": "https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-12_H-768_A-12.zip",
             "dimensions": 768,
             "binary": true,
@@ -171,7 +214,8 @@
             "chunked": false,
             "random_embedding": null
         },
-        "bert-large": {
+       "bert-large": {
+	    "type": "word",
             "url": "https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-24_H-1024_A-16.zip",
             "dimensions": 1024,
             "binary": true,
@@ -183,7 +227,97 @@
             "truncate_first_line": false,
             "chunked": false,
             "random_embedding": null
-        }
+        },
+        "power-mean": {
+	    "type": "sentence",
+	    "url": "https://public.ukp.informatik.tu-darmstadt.de/arxiv2018-xling-sentence-embeddings/tf-hub/monolingual/1",
+	    "dimensions": 3600,
+            "binary": true,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "",
+            "embedding_file": "",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": null
+
+	},
+	"skip-thought": {
+	    "type": "sentence",
+	    "urls": ["http://www.cs.toronto.edu/~rkiros/models/dictionary.txt",
+		     "http://www.cs.toronto.edu/~rkiros/models/utable.npy",
+		     "http://www.cs.toronto.edu/~rkiros/models/btable.npy",
+		     "http://www.cs.toronto.edu/~rkiros/models/bi_skip.npz",
+		     "http://www.cs.toronto.edu/~rkiros/models/bi_skip.npz.pkl"],
+	   "dimensions": 4800,
+            "binary": true,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "",
+            "embedding_file": "",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": null
+	},
+	"quick-thought":{
+	    "type": "sentence",
+	    "url": "https://drive.google.com/uc?id=190rRuHtOCGMvjcvYYtEY5DUDqriRIBql",
+	    "dimensions": 1200,
+            "binary": true,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "",
+            "embedding_file": "",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": null
+	},
+	"infersent":{
+	    "type": "sentence",
+	    "urls": ["https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip",
+		     "https://dl.fbaipublicfiles.com/infersent/infersent2.pkl"],
+	    "dimensions": 4096,
+            "binary": true,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "",
+            "embedding_file": "",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": null
+	},
+	"use":{
+	    "type": "sentence",
+	    "url": "https://tfhub.dev/google/universal-sentence-encoder/2",
+	    "dimensions": 512,
+            "binary": true,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "",
+            "embedding_file": "",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": null
+	},
+	"laser-static":{
+	    "type": "sentence",
+	    "url": "https://drive.google.com/uc?id=1mfSfE3o1KjwP5DNSmTeVgDNQSSbFiX6f",
+	    "dimensions": 1024,
+            "binary": false,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "",
+            "embedding_file": "",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": null
+	}
     },
     "random_static": {
         "random-50": {
