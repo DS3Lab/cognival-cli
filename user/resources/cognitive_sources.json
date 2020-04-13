@@ -332,7 +332,7 @@
                     }
                 },
                 "wehbe_concat": {
-                    "dimensionality": 243,
+                    "dimensionality": 256,
                     "features": "single",
                     "multi_file": false,
                     "multi_hypothesis": false,
@@ -377,7 +377,7 @@
                     }
                 },
                 "pereira_concat_subj": {
-                    "dimensionality": 243,
+                    "dimensionality": 384,
                     "features": "single",
                     "multi_file": true,
                     "multi_hypothesis": "subject",
@@ -393,7 +393,7 @@
                     }
                 },
                 "pereira_concat": {
-                    "dimensionality": 243,
+                    "dimensionality": 256,
                     "features": "single",
                     "file": "pereira_concat_scaled.txt",
                     "multi_file": false,
@@ -403,7 +403,7 @@
                     "installed": false
                 },
                 "all_concat": {
-                    "dimensionality": 243,
+                    "dimensionality": 256,
                     "features": "single",
                     "multi_file": false,
                     "multi_hypothesis": false,
