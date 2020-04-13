@@ -172,32 +172,38 @@ for all cognitive-sources. Each inner list must be specified as semicolon-separa
                  associated and evaluated during the run. Evaluates the results of the last run by default. Results are printed to the
                  shell and stored in the reports directory of the results path.
 
-    Call: `significance [run_id=0] [modalities=[eye-tracking, eeg, fmri]] [alpha=0.01 test=Wilcoxon]`
+    Call: `significance [run-id=0] [modalities=[eye-tracking, eeg, fmri]] [alpha=0.01 test=Wilcoxon]`
 
     Parameters:
-    - run_id: Either 0 for the last experimental run or any run_id before the current run_id of the configuration.
+    - run-id: Either 0 for the last experimental run or any run-id before the current run-id of the configuration.
     - modalities: Modalities for which significane is to be termined
     - alpha: Alpha for significance computation
     - test: Significance test. Currently, only the Wilcoxon rank-sum test is implemented (implementation of the Wilcoxon test for NLP provided by [Dror et al. (2018)](https://github.com/rtmdrr/testSignificanceNLP)).
 
 - aggregate: Aggregate the significance test results of an ecxperimental run. This will output how many of your hypotheses are accepted under the Bonferroni correction (see paper for detailed description).
      
-     Call: `aggregate [run_id=0] [modalities=[eye-tracking, eeg, fmri]] [test=Wilcoxon]`
+     Call: `aggregate [run-id=0] [modalities=[eye-tracking, eeg, fmri]] [test=Wilcoxon]`
      
      Parameters:
-    - run_id: Either 0 for the last experimental run or any run_id before the current run_id of the configuration.
+    - run-id: Either 0 for the last experimental run or any run-id before the current run-id of the configuration.
     - modalities: Modalities for which significane is to be termined
     - test: Significance test. Currently, only the Wilcoxon rank-sum test is implemented
 
 - report: Perform significance testing and result aggregation, and generate a HTML or PDF report tabulating and plotting statistics.
      
-     Call: `significance [run_id=0] [modalities=[eye-tracking, eeg, fmri]] [alpha=0.01] [test=Wilcoxon] [html=True] [open-html=False] [pdf=False] [open-pdf=False]`
+     Call: `significance [run-id=0] [modalities=[eye-tracking, eeg, fmri]] [alpha=0.01] [test=Wilcoxon] [html=True] [open-html=False] [pdf=False] [open-pdf=False]`
 
      Parameters:
-    - run_id: Either 0 for the last experimental run or any run_id before the current run_id of the configuration.
+    - run-id: Either 0 for the last experimental run or any run-id before the current run-id of the configuration.
     - modalities: Modalities for which significane is to be termined
     - alpha: Alpha for significance computation
     - test: Significance test. Currently, only the Wilcoxon rank-sum test is implemented
+    - precision: Number of decimal points in report (except for bonferroni alpha)
+    - average-multi-hypothesis: Average multi-hypothesis (multi-feature or multi-subject) results.
+    - history-plots: Whether to include training history plots (note: significantly increases report size when number of experiments is large.
+    - features: Whether to include the feature column in detail tables.
+    - heatmaps: Whether to include word/sentence to embedding per-source error heatmaps.
+    - heatmaps-sample-n: If not None, randomly sample n words/sentences. Show all otherwise
     - html: Whether to generate a HTML report (stored in the reports directory of the results path)
     - open-html: Whether to open the HTML report with the default browser. Note: In case of remote access, this requires a server-side installation of a browser and X11 forwarding.
     - pdf: Whether to generate a PDF version of the HTML report (stored in the reports directory of the results path)
