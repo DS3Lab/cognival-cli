@@ -44,13 +44,8 @@ class PostInstallCommand(install):
         install.run(self)
 
 setuptools.setup(
-<<<<<<< HEAD
-    name="cognival", # Replace with your own username
-    version="0.1.1",
-=======
     name="cognival",
     version="0.2.0",
->>>>>>> WIP: Extending with sentence embeddings
     author="Multiple authors",
     author_email="foo@bar.com",
     description="CogniVal cognitive embedding evaluation",
