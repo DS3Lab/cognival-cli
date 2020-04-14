@@ -91,7 +91,7 @@ def update(left_df, right_df, on_column, columns_to_omit, whole_row):
     return left_df
 
 
-def df_multi_join(df_cognitive_data, df_word_embedding, chunk_number=4):
+def df_multi_join(df_cognitive_data, df_word_embedding, emb_type, chunk_number=4):
     '''
     Join cognitive data and word embeddings DataFrames via chunks,
     to perform 'MemorySafe'-join.
@@ -108,11 +108,18 @@ def df_multi_join(df_cognitive_data, df_word_embedding, chunk_number=4):
         begin = chunk_size * i
         end = chunk_size * (i + 1)
         if i == 0:
-            df_join = pd.merge(df_join, df_word_embedding.iloc[begin:end, :], how='left', on=['word'])
+            df_join = pd.merge(df_join,
+                               df_word_embedding.iloc[begin:end, :],
+                               how='left',
+                               on=[emb_type])
         else:
             if i == chunk_number - 1:
                 end = end + rest
-            update(df_join, df_word_embedding.iloc[begin:end, :], on_column=['word'], columns_to_omit=df_cognitive_data.shape[1], whole_row=True)
+            update(df_join,
+                   df_word_embedding.iloc[begin:end, :],
+                   on_column=[emb_type],
+                   columns_to_omit=df_cognitive_data.shape[1],
+                   whole_row=True)
 
     return df_join
 
@@ -170,9 +177,16 @@ def multi_join(mode, config, emb_type, df_cognitive_data, word_embedding):
                              names=[emb_type] + ['x_{}'.format(idx + 1) for idx in range(dimensions)])
 
         if i == 0:
-            df_join = pd.merge(df_join, df, how='left', on=[emb_type])
+            df_join = pd.merge(df_join,
+                               df,
+                               how='left',
+                               on=[emb_type])
         else:
-            update(df_join, df, on_column=[emb_type], columns_to_omit=df_cognitive_data.shape[1], whole_row=True)
+            update(df_join,
+                   df,
+                   on_column=[emb_type],
+                   columns_to_omit=df_cognitive_data.shape[1],
+                   whole_row=True)
 
     return df_join
 
@@ -204,11 +218,9 @@ def split_folds(strings, X, y, folds, seed, balance, sub_sources):
         np.random.shuffle(sub_sources)
 
         selector = StratifiedKFold(n_splits=folds, shuffle=False, random_state=None)
-        #print(selector.get_n_splits(X, sub_sources))
         selector_splits = selector.split(X, sub_sources)
     else:
         selector = KFold(n_splits=folds, shuffle=False, random_state=None)
-        #print(selector.get_n_splits(X))
         selector_splits = selector.split(X)
 
     X_train = []
@@ -294,8 +306,10 @@ def data_handler(mode, config, stratified_sampling, balance, word_embedding, cog
         df_cognitive_data = df_cognitive_data[[emb_type, feature]]
     df_cognitive_data.dropna(inplace=True)
 
+    # If externally chunked, use word embedding chunk files
     if (config[emb_key][word_embedding]["chunked"]):
         df_join = multi_join(mode, config, emb_type, df_cognitive_data, word_embedding)
+    # Chunk on the fly otherwise, with a fixed number of chunks of 8
     else:
         if truncate_first_line:
             skip_rows = 1
@@ -321,7 +335,10 @@ def data_handler(mode, config, stratified_sampling, balance, word_embedding, cog
                                             names=[emb_type] + ['x_{}'.format(idx + 1) for idx in range(dimensions)])
 
         # Left (outer) Join to get wordembedding vectors for all strings in cognitive dataset
-        df_join = pd.merge(df_cognitive_data, df_word_embedding, how='left', on=[emb_type])
+        df_join = df_multi_join(df_cognitive_data,
+                                df_word_embedding,
+                                emb_type,
+                                chunk_number=8)
 
     df_join.dropna(inplace=True)
     
