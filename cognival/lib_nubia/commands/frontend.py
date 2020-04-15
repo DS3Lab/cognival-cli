@@ -126,6 +126,7 @@ def run(embeddings=['all'],
     configuration = ctx.open_config
     embedding_registry = ctx.embedding_registry
     max_gpus = ctx.max_gpus
+    visible_gpu_ids = ctx.visible_gpus
 
     if not configuration:
         cprint('No configuration open, aborting ...', 'red')
@@ -144,6 +145,7 @@ def run(embeddings=['all'],
                                processes,
                                n_gpus,
                                max_gpus,
+                               visible_gpu_ids,
                                baselines)
     if config_dict:
         _save_config(config_dict, configuration, resources_path)
