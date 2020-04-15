@@ -246,7 +246,11 @@ def page_list(pager_list):
         # let less handle this, -K will exit cleanly
 
 
-def configure_tf_devices(gpu_ids=None):
+def configure_tf_devices(visible_ids=None):
+    # Do nothing if no visible GPU IDs
+    if not visible_ids or visible_ids[0] == -1:
+        return
+
     try:
         deviceIDs = GPUtil.getAvailable(order='load',
                                         limit=100,
@@ -258,6 +262,9 @@ def configure_tf_devices(gpu_ids=None):
     except ValueError:
         cprint(NO_NVIDIA_GPUS, 'yellow')
         return
+
+
+    deviceIDs = [id_ for id_ in deviceIDs if id_ in visible_ids]
 
     if not deviceIDs:
         cprint(NO_NVIDIA_GPUS, 'yellow')

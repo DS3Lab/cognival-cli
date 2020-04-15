@@ -123,6 +123,7 @@ def run(configuration,
         processes,
         n_gpus,
         max_gpus,
+        visible_gpu_ids,
         baselines):
 
     cog_sources_conf = _open_cog_config(resources_path)
@@ -135,7 +136,7 @@ def run(configuration,
     # max_gpus overrides n_gpus if smaller
     max_gpus = max_gpus if (max_gpus and (not n_gpus or (n_gpus and (max_gpus < n_gpus)))) else n_gpus if n_gpus else None
 
-    _gpu_ids_all = configure_tf_devices()
+    _gpu_ids_all = configure_tf_devices(visible_gpu_ids)
     
     if _gpu_ids_all:
         if max_gpus:
