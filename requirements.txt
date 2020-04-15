@@ -1,4 +1,4 @@
-requests==2.19.1
+requests==2.20.0
 prompt_toolkit==3.0.2
 tableformatter==0.1.4
 Keras==2.3.1
