@@ -59,12 +59,13 @@ class NubiaCognivalContext(context.Context):
             sys.exit(1)
 
     def _set_gpu_ids(self, args):
-        self.visible_gpus = args.visible_gpus
+        self.visible_gpus = args.visible_gpus.replace(' ', '')
         self.max_gpus = args.max_gpus
         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         if self.visible_gpus:
-            gpu_ids = self.visible_gpus.replace(' ', '')
-            os.environ['CUDA_VISIBLE_DEVICES'] = gpu_ids  # for several GPUs
+            gpu_ids_str = self.visible_gpus
+            os.environ['CUDA_VISIBLE_DEVICES'] = gpu_ids_str  # for several GPUs
+        self.visible_gpus = list(map(int, self.visible_gpus.split(',')))
 
     def on_connected(self, *args, **kwargs):
         pass
