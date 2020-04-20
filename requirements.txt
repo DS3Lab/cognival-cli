@@ -1,6 +1,7 @@
 allennlp==0.9.0
 bert_serving==0.0.1
 bert_serving_client==1.10.0
+dask[dataframe]==2.10.1
 gdown==3.8.3
 gensim==3.7.3
 GPUtil==1.4.0

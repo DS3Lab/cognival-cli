@@ -129,6 +129,7 @@ def test_dfMultiJoin():
     df_cognitive_data = pd.read_csv('tests/cognitive-data/eeg/zuco/zuco_scaled.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE)
     df_join = df_multi_join(df_cognitive_data,
                             df_word_embedding,
+                            'word',
                             4)
     assert len(df_join[df_join['x1'].notnull()]) == 4162
 
@@ -139,6 +140,8 @@ def test_multiJoin(config):
                          config,
                          'word',
                          df_cognitive_data,
+                         'eeg_zuco',
+                         'ALL_DIM',
                          'glove-50')
     assert len(df_join[df_join['x_1'].notnull()]) == 4162
 
@@ -163,7 +166,13 @@ def test_dataHandler(config):
 
 def test_split_folds(config):
     df_cognitive_data = pd.read_csv('tests/cognitive-data/eeg/zuco/zuco_scaled.txt', sep=" ", encoding="utf-8", quoting=csv.QUOTE_NONE)
-    df_join = multi_join('proper', config, 'word', df_cognitive_data, 'glove-50')
+    df_join = multi_join('proper',
+                         config,
+                         'word',
+                         df_cognitive_data,
+                         'eeg_zuco',
+                         'ALL_DIM',
+                         'glove-50')
     df_join.dropna(inplace=True)
     words = df_join['word']
     words = np.array(words, dtype='str').reshape(-1,1)

@@ -8,6 +8,8 @@ from sklearn.model_selection import KFold, StratifiedKFold
 from imblearn.over_sampling import RandomOverSampler
 from tqdm import tqdm
 
+from termcolor import cprint
+
 def chunk(input_path_name,
           output_path_name,
           input_file_name,
@@ -107,24 +109,27 @@ def df_multi_join(df_cognitive_data, df_word_embedding, emb_type, chunk_number=4
     for i in range(0, chunk_number):
         begin = chunk_size * i
         end = chunk_size * (i + 1)
-        if i == 0:
-            df_join = pd.merge(df_join,
-                               df_word_embedding.iloc[begin:end, :],
-                               how='left',
-                               on=[emb_type])
-        else:
-            if i == chunk_number - 1:
-                end = end + rest
-            update(df_join,
-                   df_word_embedding.iloc[begin:end, :],
-                   on_column=[emb_type],
-                   columns_to_omit=df_cognitive_data.shape[1],
-                   whole_row=True)
+        try:
+            if i == 0:
+                df_join = pd.merge(df_join,
+                                   df_word_embedding.iloc[begin:end, :],
+                                   how='left',
+                                   on=[emb_type])
+            else:
+                if i == chunk_number - 1:
+                    end = end + rest
+                update(df_join,
+                       df_word_embedding.iloc[begin:end, :],
+                       on_column=[emb_type],
+                       columns_to_omit=df_cognitive_data.shape[1],
+                       whole_row=True)
+        except:
+            breakpoint()
 
     return df_join
 
 
-def multi_join(mode, config, emb_type, df_cognitive_data, word_embedding):
+def multi_join(mode, config, emb_type, df_cognitive_data, cognitive_data, feature, word_embedding):
     '''
     Joins a cognitive data DataFrame with chunked embeddings. Embeddings
     are expected to be provided as space-separated CSVs. Path of the CSVs 
@@ -155,7 +160,8 @@ def multi_join(mode, config, emb_type, df_cognitive_data, word_embedding):
     path = base_path / embedding_path
     chunked_file = word_emb_prop["chunked_file"]
     ending = word_emb_prop["chunk_ending"]
-
+    
+    cprint('{} / {} / {}'.format(cognitive_data, feature, word_embedding), color='yellow') 
     for i in range(0, chunk_number):
         with open(path  / '{}_{}{}'.format(chunked_file, str(i), ending)) as f:
             first_line = next(f)
@@ -175,7 +181,18 @@ def multi_join(mode, config, emb_type, df_cognitive_data, word_embedding):
                              quoting=csv.QUOTE_NONNUMERIC,
                              doublequote=True,
                              names=[emb_type] + ['x_{}'.format(idx + 1) for idx in range(dimensions)])
+        df_size_before = df.shape[0]
+        df = df[df[emb_type].isin(df_cognitive_data[emb_type].values)]
+        df_size_after = df.shape[0]
 
+        print('{} / {} / {} - Chunk #{}/{}: size before merging: {} | after merging: {} | size reduction: {:.2f}%'.format(cognitive_data,
+                                                                                                                          feature,
+                                                                                                                          word_embedding,
+                                                                                                                          i + 1,
+                                                                                                                          chunk_number,
+                                                                                                                          df_size_before,
+                                                                                                                          df_size_after,
+                                                                                                                          (1 - df_size_after/df_size_before) * 100))
         if i == 0:
             df_join = pd.merge(df_join,
                                df,
@@ -306,9 +323,10 @@ def data_handler(mode, config, stratified_sampling, balance, word_embedding, cog
         df_cognitive_data = df_cognitive_data[[emb_type, feature]]
     df_cognitive_data.dropna(inplace=True)
 
+
     # If externally chunked, use word embedding chunk files
     if (config[emb_key][word_embedding]["chunked"]):
-        df_join = multi_join(mode, config, emb_type, df_cognitive_data, word_embedding)
+        df_join = multi_join(mode, config, emb_type, df_cognitive_data, cognitive_data, feature, word_embedding)
     # Chunk on the fly otherwise, with a fixed number of chunks of 8
     else:
         if truncate_first_line:
@@ -333,6 +351,17 @@ def data_handler(mode, config, stratified_sampling, balance, word_embedding, cog
                                             quoting=csv.QUOTE_NONNUMERIC,
                                             doublequote=True,
                                             names=[emb_type] + ['x_{}'.format(idx + 1) for idx in range(dimensions)])
+
+        df_size_before = df_word_embedding.shape[0]
+        df_word_embedding = df_word_embedding[df_word_embedding[emb_type].isin(df_cognitive_data[emb_type].values)]
+        df_size_after = df_word_embedding.shape[0]
+        cprint('{} / {} / {}'.format(cognitive_data, feature, word_embedding), color='yellow') 
+        print('{} / {} / {} - Size before merging: {} | after merging: {} | size reduction: {:.2f}%'.format(cognitive_data,
+                                                                                                            feature,
+                                                                                                            word_embedding,
+                                                                                                            df_size_before,
+                                                                                                            df_size_after,
+                                                                                                            (1 - df_size_after/df_size_before) * 100))
 
         # Left (outer) Join to get wordembedding vectors for all strings in cognitive dataset
         df_join = df_multi_join(df_cognitive_data,

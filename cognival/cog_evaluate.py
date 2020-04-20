@@ -6,6 +6,8 @@ from handlers.data_handler import data_handler
 from handlers.model_handler import model_handler
 from handlers.file_handler import *
 
+from termcolor import cprint
+
 def handler(mode,
             config,
             stratified_sampling,
@@ -37,7 +39,10 @@ def handler(mode,
                                                                 feature,
                                                                 truncate_first_line)
 
-    word_error, grids_result, mserrors = model_handler(config["cogDataConfig"][cognitive_data]["wordEmbSpecifics"][word_embedding],
+    word_error, grids_result, mserrors = model_handler(word_embedding,
+                                                       cognitive_data,
+                                                       feature,
+                                                       config["cogDataConfig"][cognitive_data]["wordEmbSpecifics"][word_embedding],
                                                        config['type'],
                                                        words_test,
                                                        X_train,
@@ -74,7 +79,6 @@ def run_single(mode,
     :param truncate_first_line: If the first line of the embedding file should be truncated (when containing meta data)
     :param gpu_ids: IDs of available GPUs
     '''
-
     # Tensorflow configuration
     import tensorflow as tf
     from tensorflow.compat.v1.keras.backend import set_session, clear_session
@@ -181,4 +185,3 @@ def run_single(mode,
     clear_session()
 
     return word_embedding, logging, word_error, history
-
