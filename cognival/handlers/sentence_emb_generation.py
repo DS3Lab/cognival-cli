@@ -258,7 +258,6 @@ def generate_sent_embeddings(name,
                              emb_params,
                              base_path,
                              emb_file):
-    breakpoint()
     if 'bert' in name:
         generate_bert_sentence_embs(resources_path, emb_params, base_path, emb_file)
     elif name == 'elmo-sentence':
