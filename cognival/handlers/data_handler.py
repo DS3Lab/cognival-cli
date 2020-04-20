@@ -109,22 +109,19 @@ def df_multi_join(df_cognitive_data, df_word_embedding, emb_type, chunk_number=4
     for i in range(0, chunk_number):
         begin = chunk_size * i
         end = chunk_size * (i + 1)
-        try:
-            if i == 0:
-                df_join = pd.merge(df_join,
-                                   df_word_embedding.iloc[begin:end, :],
-                                   how='left',
-                                   on=[emb_type])
-            else:
-                if i == chunk_number - 1:
-                    end = end + rest
-                update(df_join,
-                       df_word_embedding.iloc[begin:end, :],
-                       on_column=[emb_type],
-                       columns_to_omit=df_cognitive_data.shape[1],
-                       whole_row=True)
-        except:
-            breakpoint()
+        if i == 0:
+            df_join = pd.merge(df_join,
+                               df_word_embedding.iloc[begin:end, :],
+                               how='left',
+                               on=[emb_type])
+        else:
+            if i == chunk_number - 1:
+                end = end + rest
+            update(df_join,
+                   df_word_embedding.iloc[begin:end, :],
+                   on_column=[emb_type],
+                   columns_to_omit=df_cognitive_data.shape[1],
+                   whole_row=True)
 
     return df_join
 

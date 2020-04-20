@@ -179,6 +179,8 @@ def run(configuration,
         # Process and write results (required for significance testing) and option files (required for aggregation) per modality
         run_stats = collections.defaultdict(dict)
         for id_, (modality, result_proper, result_random, rand_emb, options) in enumerate(results):
+            # Confirm that embedding results are paired with corresponding random baseline
+            # results
             assert result_proper[0] in result_random[0][0]
             process_and_write_results(result_proper,
                                       result_random,
@@ -1506,7 +1508,6 @@ def import_embeddings(x,
             cprint('Embedding {} already imported. Use "force" to override'.format(emb_name), 'yellow')
         return
 
-    breakpoint()
     if url and download:
         # Get file name and paths
         fname = url.split('/')[-1]
@@ -1526,7 +1527,6 @@ def import_embeddings(x,
         
         # Google Drive downloads
         if 'drive.google.com' in url:
-            breakpoint()
             gdown.download(url, str(embeddings_path / 'gdrive_embeddings.dat'), quiet=False)
             try:
                 with zipfile.ZipFile(embeddings_path / 'gdrive_embeddings.dat', 'r') as zip_ref:
@@ -1568,6 +1568,7 @@ def import_embeddings(x,
     for emb_name in path2embeddings[folder]:
         emb_type = embedding_registry['proper'][emb_name]['type'] 
 
+        # Insert emb_type into path if multi-part path
         try:
             path_pref, path_suff = embedding_registry['proper'][x]['path'].rsplit('/', maxsplit=1)
             base_path = embeddings_path / path_pref / emb_type / path_suff
