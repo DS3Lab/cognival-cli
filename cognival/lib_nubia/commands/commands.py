@@ -315,6 +315,8 @@ def config_open(configuration, cognival_path, resources_path, edit, overwrite):
         if config_dict:
             _backup_config(configuration, resources_path)
             _save_config(config_dict, configuration, resources_path)
+        else:
+            return
     else:
         config_dict = _open_config(configuration, resources_path)
         if not config_dict:
@@ -371,7 +373,7 @@ def config_show(configuration, config_dict, details, cognitive_source, hide_base
         cognitive_sources = []
 
     if cognitive_sources:
-        table_strs.append(colored(fill("Note: Use 'edit-config experiment configuration={} cognitive-sources=[{}] single-edit=True' to edit the properties "
+        table_strs.append(colored(fill("Note: Use 'config experiment cognitive-sources=[{}] single-edit=True' to edit the properties "
             "of the specified cognitive source(s) and associated embedding specifics.".format(configuration, ', '.join(cognitive_sources)), 160)))
         table_strs.append('\n')
 
@@ -1400,7 +1402,7 @@ def import_embeddings(x,
             cprint('No name specified, using "my_custom_embeddings" ...', 'yellow')
 
         main_emb_file = input_dialog(title='Embedding registration',
-                    text='Specify the main embedding file. This information is usually available from the supplier.\n'
+                    text='Specify the main embedding file (file name only, without path). This information is usually available from the supplier.\n'
                             'If not available, you can leave this information empty and manually edit {}/embeddings2url.json\n'
                             'after the import.'.format(str(resources_path))).run()
 
@@ -1448,8 +1450,7 @@ def import_embeddings(x,
         if emb_binary:
             emb_binary_format = radiolist_dialog(title='Embedding registration',
                                             text='Choose the binary format (switch to buttons using <Tab>). Note that unlisted formats (e.g. ELMo) cannot be processed automatically.',
-                                            values=[('word2vec', 'word2vec-compliant (e.g. fasttext. Requires gensim)'),
-                                                    ('bert', 'BERT-compliant (requires bert-as-service)')]).run()
+                                            values=[('word2vec', 'word2vec-compliant (e.g. fasttext. Requires gensim)')]).run()
 
             if not emb_binary_format:
                 cprint('Aborted.', 'red')

@@ -119,9 +119,9 @@ def agg_stats_over_time_plots(agg_reports_dict, run_id):
     Generates line plots with aggregate stats over time (run_ids)
     Ø MSE Baseline, Ø MSE Proper, Significance
     '''
-    df_list = []
     modality_to_plots = {}
     for modality, run_ids in agg_reports_dict.items():
+        df_list = []
         for agg_run_id, agg_params in run_ids.items():
             df = pd.DataFrame.from_dict(agg_params)
             df.reset_index(inplace=True)
@@ -132,7 +132,12 @@ def agg_stats_over_time_plots(agg_reports_dict, run_id):
         df = pd.concat(df_list)
         df = df[df['run_id'] <= run_id]
 
+        # Skip if modality is not evaluated in current run or only one run_id
+        if not run_id in df['run_id'].values or len(df['run_id'].values) == 1:
+            continue
+
         plots_b64 = []
+
         for measure in ["Ø MSE Baseline", "Ø MSE Proper", "Significance"]:
             plt.clf()
             plt.cla()
@@ -151,6 +156,7 @@ def agg_stats_over_time_plots(agg_reports_dict, run_id):
                 df_sub_list.append(pd.melt(df_subsub, ['run_id']))
             df_sub = pd.concat(df_sub_list, axis=0)
             df_sub.reset_index(inplace=True, drop=True)
+
             plot = sns.lineplot(x='run_id', y='value', hue='variable', data=df_sub)
             plot.set_title(measure)
 
@@ -580,7 +586,8 @@ def generate_report(configuration,
 
             sig_stats_plots = []
             for df_agg_for_plot in df_list:
-                sig_stats_plots.append((df_agg_for_plot['Modality'].values[0], sig_bar_plot(df_agg_for_plot, max_y=max_y)))
+                sig_stats_plots.append((df_agg_for_plot['Modality'].values[0],
+                                        sig_bar_plot(df_agg_for_plot, max_y=max_y)))
         
             # Generate stats over time plots if run_id > 1
             if run_id > 1:

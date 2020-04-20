@@ -249,6 +249,7 @@ class Config:
             return
 
         if configuration:
+            cprint('Configuration {} is now active.'.format(configuration), 'yellow')
             ctx.open_config = configuration
     
     @command
