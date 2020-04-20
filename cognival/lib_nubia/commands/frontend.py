@@ -560,7 +560,7 @@ class Import:
     @command()
     @argument('x', type=str, description='Force removal and download', positional=True) #choices=list(CTX.embedding_registry['proper']))
     @argument('force', type=bool, description='Force removal and download')
-    def embeddings(self, x, force=False, log_only_success=False, are_set=False, associate_rand_emb=None):
+    def embeddings(self, x, force=False, which='both', log_only_success=False, are_set=False, associate_rand_emb=None):
         """
         Download and import a default embedding (by name) or custom embedding (from URL)
         """
@@ -572,6 +572,7 @@ class Import:
         debug = ctx.debug
 
         embedding_registry = commands.import_embeddings(x,
+                                         which,
                                          embedding_registry,
                                          path2embeddings,
                                          resources_path,

@@ -104,8 +104,8 @@ def test_informal_bonferroni_correction_5():
 
 
 def test_informal_significance_test_eeg(refdir):
-    baseline_file = refdir / 'sig_test_results' / 'eeg' / '1' /  'baseline_avg_errors_eeg_zuco_ALL_DIM#-#glove.6B.50.txt'
-    model_file = refdir / 'sig_test_results' / 'eeg' / '1' / 'embeddings_avg_errors_eeg_zuco_ALL_DIM#-#glove.6B.50.txt'
+    baseline_file = refdir / 'average_errors' / 'eeg' / '1' /  'baseline_avg_errors_eeg_zuco_ALL_DIM#-#glove.6B.50.txt'
+    model_file = refdir / 'average_errors' / 'eeg' / '1' / 'embeddings_avg_errors_eeg_zuco_ALL_DIM#-#glove.6B.50.txt'
     significant, pval, name = significance_test(str(baseline_file), str(model_file), 0.01, 'Wilcoxon')
     assert significant == True
     assert pval == pytest.approx(5.3231470579107915e-06 , rel=10e-50, abs=10e-50)
@@ -113,8 +113,8 @@ def test_informal_significance_test_eeg(refdir):
 
 
 def test_informal_significance_test_fmri(refdir):
-    baseline_file = refdir / 'sig_test_results' / 'fmri' / '1' /  'baseline_avg_errors_fmri_pereira-1_ALL_DIM#-#glove.6B.50.txt'
-    model_file = refdir / 'sig_test_results' / 'fmri' / '1' / 'embeddings_avg_errors_fmri_pereira-1_ALL_DIM#-#glove.6B.50.txt'
+    baseline_file = refdir / 'average_errors' / 'fmri' / '1' /  'baseline_avg_errors_fmri_pereira-1_ALL_DIM#-#glove.6B.50.txt'
+    model_file = refdir / 'average_errors' / 'fmri' / '1' / 'embeddings_avg_errors_fmri_pereira-1_ALL_DIM#-#glove.6B.50.txt'
     significant, pval, name = significance_test(str(baseline_file), str(model_file), 0.01, 'Wilcoxon')
     assert significant == False
     assert pval == pytest.approx(0.85824021397514, rel=10e-3, abs=10e-3)
@@ -122,8 +122,8 @@ def test_informal_significance_test_fmri(refdir):
 
 
 def test_informal_significance_test_eye_tracking(refdir):
-    baseline_file = refdir / 'sig_test_results' / 'eye-tracking' / '1'  / 'baseline_avg_errors_eye-tracking_zuco_nFixations#-#glove.6B.50.txt'
-    model_file = refdir / 'sig_test_results' / 'eye-tracking' / '1' / 'embeddings_avg_errors_eye-tracking_zuco_nFixations#-#glove.6B.50.txt'
+    baseline_file = refdir / 'average_errors' / 'eye-tracking' / '1'  / 'baseline_avg_errors_eye-tracking_zuco_nFixations#-#glove.6B.50.txt'
+    model_file = refdir / 'average_errors' / 'eye-tracking' / '1' / 'embeddings_avg_errors_eye-tracking_zuco_nFixations#-#glove.6B.50.txt'
     significant, pval, name = significance_test(str(baseline_file), str(model_file), 0.01, 'Wilcoxon')
     assert significant == True
     assert pval == pytest.approx(3.6664582563418876e-06, rel=10e-10, abs=10e-10)

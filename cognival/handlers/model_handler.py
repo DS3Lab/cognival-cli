@@ -11,6 +11,8 @@ sys.stderr = stderr
 from sklearn.model_selection import GridSearchCV
 import numpy as np
 
+from termcolor import cprint
+
 def create_model(layers, activation, input_dim, output_dim):
     '''
     Builds and compiles a Keras Sequential model based on the given
@@ -77,7 +79,16 @@ def model_predict(grid, words, X_test, y_test):
     return mse, word_error
 
 
-def model_handler(config, emb_type, words_test, X_train, y_train, X_test, y_test):
+def model_handler(word_embedding,
+                  cognitive_data,
+                  feature,
+                  config,
+                  emb_type,
+                  words_test,
+                  X_train,
+                  y_train,
+                  X_test,
+                  y_test):
     '''
     Performs cross-validation on chunks of training data to determine best parametrization
     based on parameter grid given in config. Predicts with best-performing model on chunks
@@ -105,6 +116,11 @@ def model_handler(config, emb_type, words_test, X_train, y_train, X_test, y_test
                                      config,
                                      X_train[i],
                                      y_train[i])
+        
+        cprint("{} / {} / {} - Fold #{} GridsearchCV best params: {}".format(cognitive_data, feature, word_embedding, i + 1, \
+                " | ".join(["{}: {}".format(k, v) for k, v in grid_result.best_params_.items()])),
+                'magenta')
+
         grids.append(grid)
         grids_result.append(grid_result)
         mse, w_e = model_predict(grid,

@@ -5,7 +5,8 @@ os.environ['TF_CPP_MIN_LOG_LEVEL']='3'  #disable tensorflow debugging
 import signal
 import sys
 from multiprocessing import Pool
-from datetime import  datetime
+from datetime import datetime
+from pathlib import Path
 import cog_evaluate
 
 from contextlib import redirect_stdout
@@ -103,7 +104,7 @@ def run_parallel(config_dict,
         for option in options:
             random_embeddings = option["random_embedding"]
             rand_embeddings.append(random_embeddings)
-            result_proper = pool.apply_async(cog_evaluate.run_single, args=('proper',
+            proper_params = [('proper',
                                                                             config_dict,
                                                                             option["type"],
                                                                             option["wordEmbedding"],
@@ -116,12 +117,11 @@ def run_parallel(config_dict,
                                                                             option["modality"],
                                                                             option["feature"],
                                                                             option["truncate_first_line"],
-                                                                            ','.join(map(str, gpu_ids_list))))
-            
-            result_random = []
+                                                                            ','.join(map(str, gpu_ids_list)))]
+            random_params = [] 
             if random_embeddings:
                 for random_embedding in config_dict["randEmbSetToParts"][random_embeddings]:
-                    result_random.append(pool.apply_async(cog_evaluate.run_single, args=('random',
+                    random_params.append(('random',
                                                                                         config_dict,
                                                                                         option["type"],
                                                                                         random_embedding,
@@ -134,35 +134,74 @@ def run_parallel(config_dict,
                                                                                         option["modality"],
                                                                                         option["feature"],
                                                                                         option["truncate_first_line"],
-                                                                                        ','.join(map(str, gpu_ids_list)))))
+                                                                                        ','.join(map(str, gpu_ids_list))))
                 
+            result_proper = pool.starmap_async(cog_evaluate.run_single, proper_params)
+            if random_params:
+                result_random = pool.starmap_async(cog_evaluate.run_single, random_params)
+            else:
+                result_random = None
             async_results_proper.append(result_proper)
             async_results_random.append(result_random)
+        
+        async_results_proper = [(idx, ar) for idx, ar in enumerate(async_results_proper)]
+        async_results_random = [(idx, ar) for idx, ar in enumerate(async_results_random)]
 
-        ar_monitoring = async_results_proper + [p for rand_list in async_results_random for p in rand_list]
-
+        prev_completed = None
+    
         # Main loop
+
+        num_jobs = len(async_results_proper)
+        completed = 0
+
+        collector = collections.defaultdict(lambda: collections.defaultdict(dict))
+        next_yield = 0
         while True:
             try:
+                async_results_proper_remaining = []
+                async_results_random_remaining = []
                 all_ready = True
-                completed = 0
-                for ar in ar_monitoring:
-                    if not ar.ready():
-                        all_ready = False
-                    else:
-                        # Terminate pool if a process fails
-                        if not ar.successful():
-                            print(ar.get())
-                            pool.terminate()
-                            raise StopException
-                        else:
-                            completed += 1
+                for type_, ar_list, ar_list_remaining in [('proper', async_results_proper, async_results_proper_remaining),
+                                                          ('random', async_results_random, async_results_random_remaining)]:
+                    for idx, ar in ar_list:
+                        if ar is not None:
+                            # Process not yet terminated
+                            if not ar.ready():
+                                all_ready = False
+                                ar_list_remaining.append((idx, ar))
+                            # Processed finished or failed
+                            else:
+                                # Terminate pool if a process fails
+                                if not ar.successful():
+                                    print(ar.get())
+                                    pool.terminate()
+                                    raise StopException
+                                else:
+                                    if type_ == 'proper':
+                                        collector[idx]['proper'] = ar.get()[0]
+                                    elif type_ == 'random':
+                                        collector[idx]['random'] = ar.get()
+
+                    for idx in sorted(collector.keys()):
+                        # As soon as results for both proper and random embeddings available: Yield results and delete
+                        if idx == next_yield and (collector[idx]['proper'] and collector[idx]['random']):
+                            
+                            yield options[idx]['modality'], \
+                                  collector[idx]['proper'], \
+                                  collector[idx]['random'], \
+                                  rand_embeddings[idx], \
+                                  options[idx]
+
+                            del collector[idx]
+                            completed += 1                           
+                            next_yield += 1
 
                 if all_ready:
-                    break
+                    raise StopException
 
                 f = io.StringIO()
                 line_count = 0
+
                 try:
                     # Show GPU utilization if any GPUs assigned
                     if gpu_ids_list:
@@ -174,36 +213,29 @@ def run_parallel(config_dict,
                         sys.stdout.write("\n")
                 except ValueError:
                     pass
-                animated_loading(completed, len(ar_monitoring))
-                sys.stdout.write("\033[F"*(line_count))
-                sys.stdout.flush()
+
+                if completed != prev_completed:
+                    cprint('Progress: #{}/{} ({:.2f}%)'.format(completed,
+                                                              num_jobs,
+                                                              (completed/num_jobs)*100),
+                                                              attrs=['bold'])
+                    prev_completed = completed
+
+                async_results_proper = async_results_proper_remaining
+                async_results_random = async_results_random_remaining
+
             except StopException:
                 break   
 
     except KeyboardInterrupt:
         pool.terminate()
-        return
+        raise
     else:
         pool.close()
 
     pool.join()
 
-    async_results_proper = [p.get() for p in async_results_proper]
-    async_results_random = [[p.get() for p in p_list] for p_list in async_results_random]
-    
     print("\nExecution complete. Time taken:")
 
     timeTaken = datetime.now() - startTime
     print('\n' + str(timeTaken))
-
-    
-    results_dict = collections.defaultdict(lambda: collections.defaultdict(list))
-    
-    for idx, option in enumerate(options):
-        cog_source = option["modality"]
-        results_dict[cog_source]["proper"].append(async_results_proper[idx])
-        results_dict[cog_source]["random"].append(async_results_random[idx])
-        results_dict[cog_source]["rand_embeddings"].append(rand_embeddings[idx])
-        results_dict[cog_source]["options"].append(option)
-
-    return results_dict

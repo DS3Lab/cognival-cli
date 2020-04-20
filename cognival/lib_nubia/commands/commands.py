@@ -48,7 +48,7 @@ from cog_evaluate_parallel import run_parallel
 from handlers.file_handler import write_options
 from handlers.data_handler import chunk
 from handlers.binary_to_text_conversion import bert_to_text, elmo_to_text
-from handlers.sentence_emb_generation import generate_avg_sent_embeddings
+from handlers.sentence_emb_generation import generate_sent_embeddings, generate_avg_sent_embeddings
 
 from utils import word2vec_bin_to_txt, fasttext_bin_to_txt
 
@@ -114,7 +114,7 @@ warnings.formatwarning = custom_formatwarning
 
 NUM_BERT_WORKERS = 1
 COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1S0Fa_gGOJMuPxUrkZHW0RXk7bSPc7ffR'
-COMPLEX_WORD_EMB_TYPES = ['bert', 'elmo']
+DUAL_EMB_TYPES = ['bert']
 
 def run(configuration,
         config_dict,
@@ -167,7 +167,7 @@ def run(configuration,
     config_dict, embeddings_list, emb_to_random_dict, cog_sources_list, cog_source_to_feature = parametrization
 
     # Run parallelized evaluation and obtain results dictionary.
-    results_dict = run_parallel(config_dict,
+    results = run_parallel(config_dict,
                                 emb_to_random_dict,
                                 embeddings_list,
                                 cog_sources_list,
@@ -175,22 +175,28 @@ def run(configuration,
                                 n_jobs=processes,
                                 gpu_ids=gpu_ids)
 
-    if not results_dict:
+    try:
+        # Process and write results (required for significance testing) and option files (required for aggregation) per modality
+        run_stats = collections.defaultdict(dict)
+        for id_, (modality, result_proper, result_random, rand_emb, options) in enumerate(results):
+            assert result_proper[0] in result_random[0][0]
+            process_and_write_results(result_proper,
+                                      result_random,
+                                      rand_emb,
+                                      config_dict,
+                                      options,
+                                      id_,
+                                      run_stats[modality])
+    except KeyboardInterrupt:
         cprint('\nAborted run ...', 'red')
         return
-    
-    # Process and write results (required for significance testing) and option files (required for aggregation) per modality
-    for modality, results in results_dict.items():
-        run_stats = {}
-        for id_, (result_proper, result_random, rand_emb, options) in enumerate(zip(results["proper"],
-                                                                                results["random"],
-                                                                                results["rand_embeddings"],
-                                                                                results["options"])):
-            process_and_write_results(result_proper, result_random, rand_emb, config_dict, options, id_, run_stats)
-        write_options(config_dict, modality, run_stats)
+
+    for modality in run_stats:
+        write_options(config_dict, modality, run_stats[modality])
 
     # Increment run_id
     config_dict['run_id'] += 1
+
     return config_dict
 
 
@@ -1271,6 +1277,7 @@ def import_cognitive_sources(cognival_path,
 
 
 def import_embeddings(x,
+                      which, 
                       embedding_registry,
                       path2embeddings,
                       resources_path,
@@ -1294,6 +1301,7 @@ def import_embeddings(x,
     if x == 'all':
         for emb in embedding_registry['proper']:
             import_embeddings(emb,
+                              which,
                               embedding_registry,
                               path2embeddings,
                               resources_path,
@@ -1305,6 +1313,7 @@ def import_embeddings(x,
         if debug:
             for rand_emb in embedding_registry['random_static']:
                 import_embeddings(rand_emb,
+                                  which,
                                   embedding_registry,
                                   path2embeddings,
                                   resources_path,
@@ -1318,6 +1327,7 @@ def import_embeddings(x,
         if debug:
             for rand_emb in embedding_registry['random_static']:
                 import_embeddings(rand_emb,
+                                  which,
                                   embedding_registry,
                                   path2embeddings,
                                   resources_path,
@@ -1347,7 +1357,9 @@ def import_embeddings(x,
             print(' ', end='')
             cprint('BERT conversion is extremely memory-intensive. 16GB of RAM or more (depending on the embedding size) highly recommended. Press Ctrl-C to abort.', attrs=['reverse'], color='yellow')
         emb_name = x
+        emb_type = embedding_registry['proper'][x]['type']
         url = embedding_registry['proper'][x]['url']
+        download = embedding_registry['proper'][x]['download']
         # Always assume subdirectories to be part of the archive!
         path = embedding_registry['proper'][x]['path'].split('/')[0]
         folder = embedding_registry['proper'][emb_name]['path']
@@ -1493,11 +1505,12 @@ def import_embeddings(x,
             cprint('Embedding {} already imported. Use "force" to override'.format(emb_name), 'yellow')
         return
 
-    if url:
+    breakpoint()
+    if url and download:
         # Get file name and paths
         fname = url.split('/')[-1]
         fpath = embeddings_path / fname
-        fpath_extracted = embeddings_path / path / 'word'
+        fpath_extracted = embeddings_path / path / emb_type
 
         try:
             shutil.rmtree(fpath_extracted)
@@ -1512,6 +1525,7 @@ def import_embeddings(x,
         
         # Google Drive downloads
         if 'drive.google.com' in url:
+            breakpoint()
             gdown.download(url, str(embeddings_path / 'gdrive_embeddings.dat'), quiet=False)
             try:
                 with zipfile.ZipFile(embeddings_path / 'gdrive_embeddings.dat', 'r') as zip_ref:
@@ -1552,7 +1566,13 @@ def import_embeddings(x,
     # Iterate over all embedding files (e.g. GloVe has multiple files requiring processing)
     for emb_name in path2embeddings[folder]:
         emb_type = embedding_registry['proper'][emb_name]['type'] 
-        base_path = embeddings_path / embedding_registry['proper'][emb_name]['path'] / emb_type
+
+        try:
+            path_pref, path_suff = embedding_registry['proper'][x]['path'].rsplit('/', maxsplit=1)
+            base_path = embeddings_path / path_pref / emb_type / path_suff
+        except ValueError:
+            base_path = embeddings_path / embedding_registry['proper'][x]['path'] / emb_type
+
         try:
             bin_file = Path(embedding_registry['proper'][emb_name]['binary_file'])
         except TypeError:
@@ -1567,29 +1587,40 @@ def import_embeddings(x,
         emb_dim = embedding_registry['proper'][emb_name]['dimensions']
         # Convert from binary to text
         try:
-            if embedding_registry['proper'][emb_name]['binary']:
-                cprint('Converting binary to txt format ...', 'yellow')
-                if embedding_registry['proper'][emb_name]['binary_format'] == 'word2vec':
-                    word2vec_bin_to_txt(base_path, bin_file, emb_file)
-                    os.remove(bin_path)
+            # Word embeddings
+            if which in ('word', 'both') and embedding_registry['proper'][emb_name]['type'] == 'word':
+                if embedding_registry['proper'][emb_name]['binary']:
+                    cprint('Converting binary to txt format ...', 'yellow')
+                    if embedding_registry['proper'][emb_name]['binary_format'] == 'word2vec':
+                        word2vec_bin_to_txt(base_path, bin_file, emb_file)
+                        os.remove(bin_path)
 
-                elif embedding_registry['proper'][emb_name]['binary_format'] == 'fasttext':
-                    fasttext_bin_to_txt(base_path, bin_file, emb_file)
-                    # Don't remove binary as it is required for sentence embeddings!
+                    elif embedding_registry['proper'][emb_name]['binary_format'] == 'fasttext':
+                        fasttext_bin_to_txt(base_path, bin_file, emb_file)
+                        # Don't remove binary as it is required for sentence embeddings!
 
-                elif embedding_registry['proper'][emb_name]['binary_format'] == 'elmo':
-                    elmo_to_text(resources_path / 'standard_vocab.txt',
-                                emb_path,
-                                layer='nocontext')
+                    elif embedding_registry['proper'][emb_name]['binary_format'] == 'elmo':
+                        elmo_to_text(resources_path / 'standard_vocab.txt',
+                                    emb_path,
+                                    layer='nocontext')
 
-                elif embedding_registry['proper'][emb_name]['binary_format'] == 'bert':
-                    bert_to_text(resources_path / 'standard_vocab.txt',
-                                base_path,
-                                emb_path,
-                                NUM_BERT_WORKERS)
-                else:
-                    cprint("Unknown binary format, aborting ...", "red")
-                    return
+                    elif embedding_registry['proper'][emb_name]['binary_format'] == 'bert':
+                        bert_to_text(resources_path / 'standard_vocab.txt',
+                                    base_path,
+                                    emb_path,
+                                    NUM_BERT_WORKERS)
+                    else:
+                        cprint("Unknown binary format, aborting ...", "red")
+                        return
+            # Sentence / dual embeddings
+            if which in ('sentence', 'both') and any(infix in emb_name.lower() for infix in DUAL_EMB_TYPES) or \
+                embedding_registry['proper'][emb_name]['type'] == 'sentence':
+                generate_sent_embeddings(emb_name,
+                                         resources_path,
+                                         embedding_registry['proper'][emb_name],
+                                         base_path,
+                                         emb_file)
+
         except FileNotFoundError as e:
             cprint("Error: {}".format(str(e)), "red")
             return
@@ -1604,9 +1635,9 @@ def import_embeddings(x,
                     number_of_chunks=embedding_registry['proper'][emb_name]['chunk_number'],
                     truncate_first_line=embedding_registry['proper'][emb_name]["truncate_first_line"])
 
-        # If word embedding not context-sensitive or multi-layered (BERT, ELMo), generate baseline sentence embedding by averaging word embeddings
+        # If word embedding not context-sensitive or multi-layered (BERT, ELMo) doubling as sentene embedding, generate baseline sentence embedding by averaging word embeddings
         if embedding_registry['proper'][emb_name]['type'] == 'word' and \
-           not any(infix in emb_name.lower() for infix in COMPLEX_WORD_EMB_TYPES):
+           not any(infix in emb_name.lower() for infix in DUAL_EMB_TYPES):
             cprint("Generating baseline sentence embeddings for {} ...".format(emb_name))
             generate_avg_sent_embeddings(emb_name,
                                          resources_path,
@@ -1655,7 +1686,7 @@ def import_random_baselines(embedding_registry,
     available_dims = set()
     if embedding_registry['random_multiseed']:
         for _, parameters in embedding_registry['random_multiseed'].items():
-            if parameters[emb_type]['installed']:
+            if emb_type in parameters and parameters[emb_type]['installed']:
                 available_dims.add(parameters[emb_type]['dimensions'])
 
     # Obtain seed values from non-linear function
@@ -1692,9 +1723,10 @@ def import_random_baselines(embedding_registry,
             except FileExistsError:
                 pass
 
-            dfs = Parallel((os.cpu_count() - 1))(delayed(generate_random_df)(emb_type, seed, listing, emb_dim) for seed in tqdm(seeds))
+            dfs = Parallel(n_jobs=-2)(delayed(generate_random_df)(emb_type, seed, listing, emb_dim) for seed in tqdm(seeds))
 
-            for df, emb_file in zip(dfs, rand_emb_keys):
+            print("Exporting CSVs ...")
+            for df, emb_file in tqdm(list(zip(dfs, rand_emb_keys))):
                 if unit_type == 'word':
                     df.to_csv(fullpath / '{}.txt'.format(emb_file),
                               sep=" ",

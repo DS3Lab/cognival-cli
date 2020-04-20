@@ -66,8 +66,11 @@ def filter_config(embedding_registry,
                 if embedding_params['installed']:
                     installed_embeddings.append(emb)
             except KeyError:
-                if embedding_params[emb_type]['installed']:
-                    installed_embeddings.append(emb)
+                try:
+                    if embedding_params[emb_type]['installed']:
+                        installed_embeddings.append(emb)
+                except KeyError:
+                    continue
     
     # Collect embeddings
     if embeddings[0] == 'all':
