@@ -41,8 +41,8 @@ def extract_errors(run_id, modality, experiment, mapping_dict, input_dir, result
         random_df.drop(random_df.columns.difference([emb_type, 'error']), axis='columns', inplace=True)
 
     elif modality == 'eye-tracking':
-        embeddings_df.rename(columns={embeddings_df.columns[0]:'error'}, inplace=True)
-        random_df.rename(columns={random_df.columns[0]:'error'}, inplace=True)
+        embeddings_df.rename(columns={embeddings_df.columns[1]:'error'}, inplace=True)
+        random_df.rename(columns={random_df.columns[1]:'error'}, inplace=True)
 
     embeddings_df.set_index(emb_type, inplace=True)
     random_df.set_index(emb_type, inplace=True)
