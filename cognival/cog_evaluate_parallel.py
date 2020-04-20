@@ -161,6 +161,8 @@ def run_parallel(config_dict,
                 async_results_proper_remaining = []
                 async_results_random_remaining = []
                 all_ready = True
+
+                # Iterate over MapResult objects for proper and random embeddings
                 for type_, ar_list, ar_list_remaining in [('proper', async_results_proper, async_results_proper_remaining),
                                                           ('random', async_results_random, async_results_random_remaining)]:
                     for idx, ar in ar_list:
@@ -182,19 +184,20 @@ def run_parallel(config_dict,
                                     elif type_ == 'random':
                                         collector[idx]['random'] = ar.get()
 
-                    for idx in sorted(collector.keys()):
-                        # As soon as results for both proper and random embeddings available: Yield results and delete
-                        if idx == next_yield and (collector[idx]['proper'] and collector[idx]['random']):
-                            
-                            yield options[idx]['modality'], \
-                                  collector[idx]['proper'], \
-                                  collector[idx]['random'], \
-                                  rand_embeddings[idx], \
-                                  options[idx]
+                # Iterate over collector
+                for idx in sorted(collector.keys()):
+                    # As soon as results for both proper and random embeddings available: Yield results and delete
+                    if idx == next_yield and (collector[idx]['proper'] and collector[idx]['random']):
+                        
+                        yield options[idx]['modality'], \
+                              collector[idx]['proper'], \
+                              collector[idx]['random'], \
+                              rand_embeddings[idx], \
+                              options[idx]
 
-                            del collector[idx]
-                            completed += 1                           
-                            next_yield += 1
+                        del collector[idx]
+                        completed += 1                           
+                        next_yield += 1
 
                 if all_ready:
                     raise StopException
