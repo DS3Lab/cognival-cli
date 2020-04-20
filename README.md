@@ -17,7 +17,24 @@ For practical purposes, this tool should be used. It is based on the original co
 
  Feel free to report issues and bugs you encounter.
 
-## Requirements
+ ## A framework for cognitive word embedding evaluation
+ The CogniVal tool generates and fits a neural network regression to predict cognitive data such as fMRI, eye-tracking and EEG (corpora mapping words to cognitive signals) from word embedding inputs.
+ Thus, it allows determining the predictive power of sets of of word embeddings with respect to cognitive sources. Currently supported modalities are **eye-tracking**, **electroencephalography (EEG)** and **functional magnetic resonance imaging (fMRI)**. Furthermore, the significance of the prediction can be estimated by comparing a set of embeddings with n-fold random baselines of identical dimensionality and computing statistic significance using the Wilcoxon signed-rank test with conservative Bonferroni correction, counteracting the multiple hypotheses problem.
+
+## Installation
+
+### Installing latest release with pip
+1. Download the `.tar.gz` file of the latest release from [https://github.com/DS3Lab/cognival-cli/releases/](https://github.com/DS3Lab/cognival-cli/releases/)  
+2. Install with pip (this will automatically install all requirements):  
+`pip install ./cognival-0.1.1.tar.gz`
+
+### Installing from source
+1. Clone or download this repository as a ZIP.  
+2. Manually install all Python requirements specified in `requirements.txt`.  
+3. In the main `cognival-cli` directory, run:  
+`python setup.py install`
+
+### Requirements
 - Python 3.7.4 or newer
 - For PDF generation of reports: wkhtmltopdf version 0.12.5 or newer (available from https://wkhtmltopdf.org/. Note: At the time of writing this README, the version available from Ubuntu repositories is outdated.)
 - For manual browsing and viewing of user files: vim (any recent version)
@@ -28,11 +45,25 @@ For practical purposes, this tool should be used. It is based on the original co
     - CuDNN >= 7.6.5
     - NVIDIA drivers >= 418.39 (can be determined with nvidia-smi)
     - NVIDIA SMI (for scheduling and monitoring)
-- Python requirements are specified in requirements.txt (must be manually installed through pip when installing via `python setup.py install`). When installing a tar.gz release via pip, requirements are installed automatically.
+- Python requirements are specified in `requirements.txt`.
 
-## A framework for cognitive word embedding evaluation
-The tool generates and fits a neural network regression to predict cognitive data such as fMRI, eye-tracking and EEG (corpora mapping words to cognitive signals) from word embedding inputs.
-Thus, it allows determining the predictive power of sets of of word embeddings with respect to cognitive sources. Currently supported modalities are **eye-tracking**, **electroencephalography (EEG)** and **functional magnetic resonance imaging (fMRI)**. Furthermore, the significance of the prediction can be estimated by comparing a set of embeddings with n-fold random baselines of identical dimensionality and computing statistic significance using the Wilcoxon signed-rank test with conservative Bonferroni correction, counteracting the multiple hypotheses problem.
+### Uninstalling
+If you need to uninstall CogniVal, run:  
+` pip uninstall cognival`
+
+## Getting started
+
+After successful installation, the tool is globally available and can be started as interactive shell, by executing the command:  
+`cognival`
+
+Instructions and a demo configuration will appear when starting the tool.
+
+### Execution and file paths
+
+After installation, the tool is globally available and can be started as interactive shell, by executing `cognival`. Alternatively, commands not relying on a state (i.e. requiring an active configuration, which is stored in the session) can be run as command-line parameters, e.g. `cognival list configs`.
+
+User files are stored in `$HOME/.cognival` by default. This can be reconfigured (e.g. when there are space limitations for the home directory on a shared server).  The path of the user files is specified in a global configuration file, which is stored in the site-packages directory of the virtual environment. The command history is stored in `$HOME/.cognival_history`.
+
 
 ## Terminology
 - Embeddings: Word embeddings in textual format, with a single vector per word. Context-sensitive embedding types like BERT and ELMo thus require preprocessing
@@ -56,29 +87,26 @@ The CogniVal interactive shell allows:
 - Generating an interactive HTML or static PDF report, showing both aggregate and detail statistics in tabular and plot form,
   as well as plots visualizing the training history and history of key statistics over different experimental runs.
 
-## Execution and file paths
-
-After installation, the tool is globally available and can be started as interactive shell, by executing `cognival`. Alternatively, commands not relying on a state (i.e. requiring an active configuration, which is stored in the session) can be run as command-line parameters, e.g. `cognival list configs`.
-
-User files are stored in `$HOME/.cognival` by default. This can be reconfigured (e.g. when there are space limitations for the home directory on a shared server).  The path of the user files is specified in a global configuration file, which is stored in the site-packages directory of the virtual environment. The command history is stored in `$HOME/.cognival_history`.
 
 ## Overview of commands
 `<Tab>` shows all available commands, subcommands and parameters at the given position, as well as argument types and default values where applicable.
-By pressing `<Left>`, previously executed commands can be auto-completed. When a command is executed with only one argument, it can be
-provided in a positional manner: `command argument`. Otherwise, each parameter must be named: `command parameter1=argument2 parameter2=argument2`.
+By pressing `<Left>`, previously executed commands can be auto-completed. When a command is executed with only one argument, it can be provided in a positional manner:  
+`command argument`  
+Otherwise, each parameter must be named:  
+`command parameter1=argument2 parameter2=argument2`
 
 Note that the syntax is a simplified version of Python's, as strings and ints can be provided without quotes (except for URLs in the context of custom embedding import), however lists must be enclosed in brackets: `list-param=[value1, value2]`. List parameters require lists even for single values (`list-param=[value]`) and the special value `all`, indicating all possbile values (`list-param=[all]`).
 
 ### Basic commands
-- clear: Clears the shell
-- history: Shows the history of executed commands in descending order. The history is stored in $HOME/.cognival_history
-- readme: Shows this README file in less
-- welcome: Shows the welcome message in less
-- help / ?: Shows a brief overview over all commands
-- quit / exit: Terminates the shell session.
-- example-calls: Lists example calls for a single or all commands.
-- browse: Browses the user directory and view files using vim, per default in read-only mode. (requires that vim is installed).
-- properties: Edit general CogniVal properties (user directory, etc.). Currently only used to set the directory for user
+- `clear`: Clears the shell
+- `history`: Shows the history of executed commands in descending order. The history is stored in $HOME/.cognival_history
+- `readme`: Shows this README file in less
+- `welcome`: Shows the welcome message in less (including the demo instructions)
+- `help` or `?`: Shows a brief overview over all commands
+- `quit` or `exit`: Terminates the shell session.
+- `example-calls`: Lists example calls for a single or all commands.
+- `browse`: Browses the user directory and view files using vim, per default in read-only mode. (requires that vim is installed).
+- `properties`: Edit general CogniVal properties (user directory, etc.). Currently only used to set the directory for user
                   data (embeddings, cognitive sources, configurations and results), in case this data should not reside
                   in $HOME (e.g. due to quota restrictions).
 
@@ -96,7 +124,7 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
             
         Experiment details can either be viewed for a single cognitive source or for the entire configuration (this can be quite verbose!):
 
-        `config show details=True`
+        `config show details=True`  
         `config show details=True cognitive-source=eeg_zuco`
             
       Call: `config show [details=False] [cognitive-source=None] [hide-random=True]`
@@ -125,7 +153,7 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
       `config delete cognitive-sources=[eeg_zuco] embeddings=[glove.6B.50]`
 
       Deleting cognitive sources:
-      `config delete cognitive-sources=[eeg_zuco]`
+      `config delete cognitive-sources=[eeg_zuco]`  
       `config delete modalities=[eeg_zuco]`
 
       Deleting configurations:
@@ -142,13 +170,11 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
     
     - embeddings: Import and preprocess default embeddings (see CogniVal paper) as well as custom embeddings (word2vec compliant text/binary or BERT compliant). Allows to directly associate random baselines with the embeddings.
 
-      Default embeddings: `import embeddings glove.6B.50`
+      Default embeddings: `import embeddings glove.6B.50`  
       Custom embeddings: `import embeddings http://example.org/example.zip`
     
-    - random-baselines: Associate or re-associate (`force` parameter) embeddings with a set of random baselines. random baselines of a set are generated with different seeds and results are averaged during evaluation to increase robustness of significance testing.
-
-                         The parameter `no-embeddings` specifies the number of "folds" to generate (default: 10). Generation is parallelized greedily across available CPU cores - 1.
-      
+    - random-baselines: Associate or re-associate (`force` parameter) embeddings with a set of random baselines. random baselines of a set are generated with different seeds and results are averaged during evaluation to increase robustness of significance testing.  
+    The parameter `no-embeddings` specifies the number of "folds" to generate (default: 10). Generation is parallelized greedily across available CPU cores - 1.  
       Call: `import random-baselines embeddings=glove.6B.50 [num-baselines=10] [seed-func=exp_e_floored] [force=False]`
     
 -  list
@@ -158,7 +184,7 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
     - cognitive-sources: Lists imported cognitive sources along with their features (where applicable).
     
 - run: Run all or a subset of experiments specified in a configuration. The parameters `embeddings`, `modalities` and `cognitive-sources` correspond to `config experiment`. Note that `cognitive-features` is a nested list that must specify features
-for all cognitive-sources. Each inner list must be specified as semicolon-separated string within quotes.
+for all cognitive-sources. Each inner list must be specified as semicolon-separated string within quotes.  
     Call: `run [embeddings=[all]] [modalities=None] [cognitive-sources=[all]] [cognitive-features=None] [baselines=True]`
 
 - update
