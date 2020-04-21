@@ -132,7 +132,7 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
 
     - experiment: Edits one or multiple experiments (arbitrary combinations of cognitive sources and embeddings). Allows to set grid search parameters for activations, batch size, epochs and layers (both number of layers and sizes per layer) as well as the cross-validation folds and validation split during training.
                   
-        Call: `config experiment [baselines=False] [modalities=None] [cognitive-sources=[all]] [embeddings= [all] [single-edit=False] [edit-cog-source-params=False]`
+        Call: `config experiment [baselines=False] [modalities=None] [cognitive-sources=[all]] [embeddings=[all]] [single-edit=False] [edit-cog-source-params=False]`
         
         Parameter details:
         
