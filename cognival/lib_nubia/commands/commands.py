@@ -235,7 +235,7 @@ def list_embeddings(debug, embedding_registry):
     for emb_type in emb_types:
         title = colored(titles[emb_type], attrs=['bold'])
         param_dicts = []
-        for key, value in embedding_registry[emb_type].items():
+        for key, value in copy.deepcopy(list(embedding_registry[emb_type].items())):
             value['embeddings'] = key
             param_dicts.append(value)
         
