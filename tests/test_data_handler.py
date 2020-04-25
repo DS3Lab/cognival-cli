@@ -183,7 +183,10 @@ def test_split_folds(config):
     X = df_join.drop(features, axis=1)
     X = np.array(X, dtype='float')
 
-    words_test, X_train, y_train, X_test, y_test = split_folds(words,
+    words_test, X_train, y_train, X_test, y_test = split_folds('dummy',
+                                                               'dummy',
+                                                               'dummy',
+                                                               words,
                                                                X,
                                                                y,
                                                                config['folds'],

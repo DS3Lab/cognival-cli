@@ -417,7 +417,7 @@
                 "naturalspeech": {
                     "dimensionality": 32,
                     "features": "single",
-                    "file": "naturalspeech_scaled.txt",
+                    "file": "natural_scaled.txt",
                     "multi_file": false,
                     "multi_hypothesis": false,
                     "stratified_sampling": false,
@@ -660,6 +660,7 @@
         "sentence_fmri_wehbe_scaled_6",
         "sentence_fmri_wehbe_scaled_7",
         "sentence_fmri_wehbe_scaled_8",
+	"sentence_fmri_wehbe_concat",
         "sentence_fmri_pereira_scaled_243_M02",
         "sentence_fmri_pereira_scaled_243_M04",
         "sentence_fmri_pereira_scaled_243_M07",
@@ -677,7 +678,9 @@
         "sentence_fmri_pereira_concat_M04_scaled",
         "sentence_fmri_pereira_concat_M07_scaled",
         "sentence_fmri_pereira_concat_M15_scaled",
-        "sentence_fmri_pereira_concat_P01_scaled"
+        "sentence_fmri_pereira_concat_P01_scaled",
+	"sentence_fmri_pereira_concat",
+	"sentence_fmri_all_concat"
     ],
     "source_to_file_index": {
         "word": {
@@ -751,11 +754,11 @@
         },
         "sentence": {
             "eye-tracking_zuco": [
-                "eye-tracking-zuco_scaled_nFixations",
-                "eye-tracking-zuco_scaled_FFD",
-                "eye-tracking-zuco_scaled_GD",
-                "eye-tracking-zuco_scaled_GPT",
-                "eye-tracking-zuco_scaled_TRT"
+                "eye-tracking_zuco_scaled_nFixations",
+                "eye-tracking_zuco_scaled_FFD",
+                "eye-tracking_zuco_scaled_GD",
+                "eye-tracking_zuco_scaled_GPT",
+                "eye-tracking_zuco_scaled_TRT"
             ],
             "eye-tracking_geco": [
                 "eye-tracking_geco_scaled_WORD_FIXATION_COUNT",
@@ -881,11 +884,11 @@
             "fmri_pereira-14": "fmri_pereira"
         },
         "sentence": {
-            "eye-tracking-zuco_scaled_nFixations": "eye-tracking_zuco",
-            "eye-tracking-zuco_scaled_FFD": "eye-tracking_zuco",
-            "eye-tracking-zuco_scaled_GD": "eye-tracking_zuco",
-            "eye-tracking-zuco_scaled_GPT": "eye-tracking_zuco",
-            "eye-tracking-zuco_scaled_TRT": "eye-tracking_zuco",
+            "eye-tracking_zuco_scaled_nFixations": "eye-tracking_zuco",
+            "eye-tracking_zuco_scaled_FFD": "eye-tracking_zuco",
+            "eye-tracking_zuco_scaled_GD": "eye-tracking_zuco",
+            "eye-tracking_zuco_scaled_GPT": "eye-tracking_zuco",
+            "eye-tracking_zuco_scaled_TRT": "eye-tracking_zuco",
             "eye-tracking_geco_scaled_WORD_FIXATION_COUNT": "eye-tracking_geco",
             "eye-tracking_geco_scaled_WORD_GAZE_DURATION": "eye-tracking_geco",
             "eye-tracking_geco_scaled_WORD_FIRST_FIXATION_DURATION": "eye-tracking_geco",

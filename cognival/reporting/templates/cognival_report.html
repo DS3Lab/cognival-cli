@@ -125,11 +125,11 @@ th.rotate > div {
     translate(25px, 51px)
     /* 45 is really 360 - 45 */
     rotate(315deg);
-  width: 30px;
+  width: 1px;
 }
 th.rotate > div > span {
   border-bottom: 1px solid #ccc;
-  padding: 5px 10px;
+  padding: 5px 5px;
 }
 
 /*
@@ -137,7 +137,7 @@ th.rotate > div > span {
  */
 
 table.dataTable {
-  width: 100%;
+  width: 1px;
   margin: 0 auto;
   clear: both;
   border-collapse: separate;
@@ -430,7 +430,7 @@ table.dataTable td {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 100%;
+    width: 1px;
     height: 40px;
     margin-left: -50%;
     margin-top: -25px;
@@ -492,12 +492,15 @@ table.dataTable td {
     margin-top: 0.5em; } }
 }
 
+div.container {
+        width: 1px;
+    }  
 </style>
 <title>{{ title }}</title>
 </head>
 
 <body>
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+<!-- <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css"> -->
 <script src="https://code.jquery.com/jquery-3.4.1.min.js"
 integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
 crossorigin="anonymous"></script>
@@ -562,7 +565,7 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
   </ul></li>
   {% endif %}
   {% if avg_error_dfs  %}
-  <li><a href="#avg_error_heatmaps" style='font-weight: bold;'> Average error heatmaps </a>
+  <li><a href="#avg_error_heatmaps" style='font-weight: bold;'> Average error tables </a>
   <ul class="toc_list">
     {% for modality in avg_error_dfs %}
     <li><a href="#avg_error_heatmaps_{{modality}}">{{ modality }}</a></li>    
@@ -693,7 +696,7 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
 
 
 {% if avg_error_dfs  %}
-<h2 id="avg_error_heatmaps"> Average error heatmaps </h2>
+<h2 id="avg_error_heatmaps"> Average error tables </h2>
 {# Source: https://schier.co/blog/html-templating-output-a-grid-in-a-single-loop #}
 <div class="greybox">
   <p>
@@ -707,11 +710,16 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
 <h3 id="avg_error_heatmaps_{{ modality }}">{{ modality }}</h3>
   {% for (source, feature), avg_error_df in modality_dict.items() %}
   <h4 id="avg_error_heatmap_{{ source }}">{{ '{} / {}'.format(source, feature) }}</h3>
-<table class="display table table-striped table-bordered" id="avg_error_heatmap_{{ source }}_table"> <!-- style="margin-left: auto;margin-right: auto;"> -->
+<div style="display:inline-block;">
+<table class="display table table-striped table-bordered" id="avg_error_heatmap_{{ source }}_table" style="margin-left:0;"> <!-- style="margin-left: auto;margin-right: auto;"> -->
   <thead>
   <tr>
       {% for column in avg_error_df.columns %}
+      {% if column in ['word', 'sentence'] %}
+       <th class="reset_table" style="vertical-align:bottom"><div><span>{{ column }}</span></div></th> 
+      {% else %}
        <th class="reset_table rotate"><div><span>{{ column }}</span></div></th> 
+      {% endif %}
       {% endfor %}
   </tr> 
   </thead>
@@ -721,43 +729,43 @@ In contrast, each <span style="font-style: italic;">fMRI</span> study participan
                   {% for key, value in row.to_dict().items() %}
                      {% if value is number %}
                         {% if 1.0 >= value > 0.9 %}
-                          <td style="width=50px;" class="heat_10_9"> {{ '{:.2f}'.format(value) }} </td>
+                          <td style="white-space:nowrap; width:1%" class="heat_10_9"> {{ '{:.2f}'.format(value) }} </td>
 	                {% elif 0.9 > value > 0.8 %}
-                          <td style="width=50px;" class="heat_9_8"> {{ '{:.2f}'.format(value) }} </td>
+                          <td style="white-space:nowrap; width:1%" class="heat_9_8"> {{ '{:.2f}'.format(value) }} </td>
 	                {% elif 0.8 > value > 0.7 %}
-                          <td style="width=50px;" class="heat_8_7"> {{ '{:.2f}'.format(value) }} </td>
+                          <td style="white-space:nowrap; width:1%" class="heat_8_7"> {{ '{:.2f}'.format(value) }} </td>
 	                {% elif 0.7 > value > 0.6 %}
-                          <td style="width=50px;" class="heat_7_6"> {{ '{:.2f}'.format(value) }} </td>
+                          <td style="white-space:nowrap; width:1%" class="heat_7_6"> {{ '{:.2f}'.format(value) }} </td>
 	                {% elif 0.6 > value > 0.5 %}
-                          <td style="width=50px;" class="heat_6_5"> {{ '{:.2f}'.format(value) }} </td>
+                          <td style="white-space:nowrap; width:1%" class="heat_6_5"> {{ '{:.2f}'.format(value) }} </td>
 	                {% elif 0.5 > value > 0.4 %}
-                          <td style="width=50px;" class="heat_5_4"> {{ '{:.2f}'.format(value) }} </td>
+                          <td style="white-space:nowrap; width:1%" class="heat_5_4"> {{ '{:.2f}'.format(value) }} </td>
 	                {% elif 0.4 > value > 0.3 %}
-                          <td style="width=50px;" class="heat_4_3"> {{ '{:.2f}'.format(value) }} </td>
+                          <td style="white-space:nowrap; width:1%" class="heat_4_3"> {{ '{:.2f}'.format(value) }} </td>
 	                {% elif 0.3 > value > 0.2 %}
-                          <td style="width=50px;" class="heat_3_2"> {{ '{:.2f}'.format(value) }} </td>
+                          <td style="white-space:nowrap; width:1%" class="heat_3_2"> {{ '{:.2f}'.format(value) }} </td>
 	                {% elif 0.2 > value > 0.1 %}
-                          <td style="width=50px;" class="heat_2_1"> {{ '{:.2f}'.format(value) }} </td>
+                          <td style="white-space:nowrap; width:1%" class="heat_2_1"> {{ '{:.2f}'.format(value) }} </td>
 	                {% else %}
-                          <td style="width=50px;" class="heat_1_0"> {{ '{:.2f}'.format(value) }} </td>
+                          <td style="white-space:nowrap; width:1%" class="heat_1_0"> {{ '{:.2f}'.format(value) }} </td>
 	 		{% endif %}
 		  {% else %}
-		       <td style="width:20%; font-size:10pt"> {{ value }} </td>
+		       <td style="min-width:150px; font-size:10pt"> {{ value }} </td>
 		  {% endif %}
                   {% endfor %}
              </tr>
          {% endfor %}
  </tbody>
 </table>
+</div>
 
 <script>
 $(document).ready( function () {
-	$('table.display').DataTable({"orderClasses": false});
+	$('#avg_error_heatmap_{{ source }}_table').DataTable({"orderClasses": false});
 } );
 </script>
 
   {% endfor %}
-</div>
 {% endfor %}
 {% endif %}
 

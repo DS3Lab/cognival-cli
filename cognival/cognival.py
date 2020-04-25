@@ -8,7 +8,6 @@
 #
 import os
 import json
-import warnings
 import sys
 
 from pathlib import Path
@@ -21,9 +20,6 @@ os.environ['HDF5_USE_FILE_LOCKING'] = 'FALSE'
 from lib_nubia.nubia_plugin import NubiaCognivalPlugin
 from lib_nubia import commands
 from lib_nubia.commands import messages
-
-warnings.filterwarnings('ignore', category=DeprecationWarning)
-warnings.filterwarnings('ignore', category=FutureWarning)
 
 from tensorflow.python.util import deprecation
 deprecation._PRINT_DEPRECATION_WARNINGS = False

@@ -369,8 +369,8 @@ def resolve_cog_emb(modalities,
                 if type_ in modalities:
                     for source, source_dict in type_dict.items():
                         if source_dict['multi_file']:
-                            for idx in range(len(source_dict['hypothesis_to_file'])):
-                                cognitive_sources.append('{}_{}-{}'.format(type_, source, idx))
+                            for value in source_dict['hypothesis_to_file']:
+                                cognitive_sources.append('{}_{}'.format(type_, value))
                         else:
                             cognitive_sources.append('{}_{}'.format(type_, source))
         elif scope == 'config':

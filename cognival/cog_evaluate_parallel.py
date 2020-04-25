@@ -76,7 +76,7 @@ def run_parallel(config_dict,
     ##############################################################################
 
     print()
-    cprint("Prediction", attrs=['bold', 'reverse'], color='green')
+    cprint("Prediction | Run ID {}".format(config_dict['run_id']), attrs=['bold', 'reverse'], color='green')
     print()
 
     if n_jobs:
@@ -183,11 +183,14 @@ def run_parallel(config_dict,
                                         collector[idx]['proper'] = ar.get()[0]
                                     elif type_ == 'random':
                                         collector[idx]['random'] = ar.get()
+                        else:
+                            collector[idx][type_] = ar
 
                 # Iterate over collector
                 for idx in sorted(collector.keys()):
                     # As soon as results for both proper and random embeddings available: Yield results and delete
-                    if idx == next_yield and (collector[idx]['proper'] and collector[idx]['random']):
+                    if idx == next_yield and collector[idx]['proper'] and \
+                       (collector[idx]['random'] or collector[idx]['random'] is None):
                         
                         yield options[idx]['modality'], \
                               collector[idx]['proper'], \
@@ -238,7 +241,7 @@ def run_parallel(config_dict,
 
     pool.join()
 
-    print("\nExecution complete. Time taken:")
+    print("\nRun {} completed. Type `report` to generate a HTML report of the results. Elapsed time:".format(config_dict['run_id']))
 
     timeTaken = datetime.now() - startTime
     print('\n' + str(timeTaken))

@@ -205,7 +205,7 @@ def multi_join(mode, config, emb_type, df_cognitive_data, cognitive_data, featur
     return df_join
 
 
-def split_folds(strings, X, y, folds, seed, balance, sub_sources):
+def split_folds(word_embedding, cognitive_data, feature, strings, X, y, folds, seed, balance, sub_sources):
     '''
     Splits the given data (strings, vecotrs and labels) into the given number of
     folds. Splitting is deterministic, as per the given random seed.
@@ -262,7 +262,13 @@ def split_folds(strings, X, y, folds, seed, balance, sub_sources):
 
         for idx, (sub_sources_fold, X_train_fold, y_train_fold) in enumerate(zip(sub_sources_train, X_train, y_train)):
             
-            print("Fold {} length prior to resampling: {} / Distribution of sources: {}".format(idx + 1, len(X_train), collections.Counter(sub_sources_fold)))
+            cprint("{} / {} / {} - Fold #{} length prior to resampling: {} / Distribution of sources: {}".format(cognitive_data,
+                                                                                                                 feature,
+                                                                                                                 word_embedding,
+                                                                                                                 idx + 1,
+                                                                                                                 len(X_train),
+                                                                                                                 ' | '.join('{}: {}'.format(k, v) for k, v in collections.Counter(sub_sources_fold).items()) 
+                                                                                                                 ), 'cyan')
             
             X_y_train_fold = list(zip(X_train_fold, y_train_fold))
             ros = RandomOverSampler()
@@ -270,7 +276,13 @@ def split_folds(strings, X, y, folds, seed, balance, sub_sources):
             X_y_train_fold_resampled = [tuple(x_y) for x_y in X_y_train_fold_resampled]
             X_train_fold, y_train_fold = list(zip(*X_y_train_fold_resampled))
             
-            print("Fold {} length after resampling: {} / Distribution of sources: {}".format(idx + 1, len(X_train), collections.Counter(sub_sources_resampled)))
+            cprint("{} / {} / {} - Fold #{} length after resampling: {} / Distribution of sources: {}".format(cognitive_data,
+                                                                                                             feature,
+                                                                                                             word_embedding,
+                                                                                                             idx + 1,
+                                                                                                             len(X_train),
+                                                                                                             ' | '.join('{}: {}'.format(k, v) for k, v in collections.Counter(sub_sources_resampled).items()) 
+                                                                                                             ), 'cyan')
 
             X_train_resampled.append(np.vstack(X_train_fold))
             y_train_resampled.append(np.vstack(y_train_fold))
@@ -321,8 +333,8 @@ def data_handler(mode, config, stratified_sampling, balance, word_embedding, cog
     df_cognitive_data.dropna(inplace=True)
 
 
-    # If externally chunked, use word embedding chunk files
-    if (config[emb_key][word_embedding]["chunked"]):
+    # If externally chunked, use word embedding chunk files (only word embeddings!)
+    if emb_type == 'word' and config[emb_key][word_embedding]["chunked"]:
         df_join = multi_join(mode, config, emb_type, df_cognitive_data, cognitive_data, feature, word_embedding)
     # Chunk on the fly otherwise, with a fixed number of chunks of 8
     else:
@@ -401,4 +413,4 @@ def data_handler(mode, config, stratified_sampling, balance, word_embedding, cog
         X = df_join.drop(features, axis=1)
         X = np.array(X, dtype='float')
 
-    return split_folds(strings, X, y, config["folds"], config["seed"], balance, sub_sources)
+    return split_folds(word_embedding, cognitive_data, feature, strings, X, y, config["folds"], config["seed"], balance, sub_sources)

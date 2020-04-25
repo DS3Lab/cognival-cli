@@ -1303,7 +1303,16 @@ def test_model_handler(config_embedding, data, handler_result, grid_search_refer
     words_test, X_train, y_train, X_test, y_test = [words_test[0]], [X_train[0]], [y_train[0]], [X_test[0]], [y_test[0]]
     mse_reference, w_e_reference = handler_result
     grid_reduced, best_params = grid_search_reference
-    word_error, grids_result, mse_errors = model_handler(config_embedding, 'word', words_test, X_train, y_train, X_test, y_test)
+    word_error, grids_result, mse_errors = model_handler('dummy_embedding',
+                                                         'dummy_source',
+                                                         'dummy_feature',
+                                                         config_embedding,
+                                                         'word',
+                                                         words_test,
+                                                         X_train,
+                                                         y_train,
+                                                         X_test,
+                                                         y_test)
     mse = mse_errors[0]
     grid_result = grids_result[0]
     w_e = word_error
