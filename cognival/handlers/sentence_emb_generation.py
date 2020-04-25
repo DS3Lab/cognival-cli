@@ -22,12 +22,15 @@ import tensorflow as tf
 import tensorflow_hub as hub
 import time
 
+tf.compat.v1.logging.set_verbosity(0)
+
 from handlers.sentence_embeddings.infersent.models import InferSent
-from handlers.sentence_embeddings.quickthought import encoder_manager
 from handlers.sentence_embeddings.quickthought import configuration as quickthought_config
+from handlers.sentence_embeddings.quickthought import encoder_manager as quickthought_enc_manager
 
+from handlers.sentence_embeddings.skip_thoughts import configuration as skipthought_config
+from handlers.sentence_embeddings.skip_thoughts import encoder_manager as skipthought_enc_manager
 
-tf.logging.set_verbosity(0)
 def get_resources(base_path, resources_path):
     nlp = get_nlp()
     emb_path = create_sent_path(base_path)
@@ -133,51 +136,32 @@ def generate_powermean_sentence_embs(resources_path, emb_params, base_path, emb_
     export_df(emb_path, emb_file, sentences, embeddings, emb_params["dimensions"])
 
 
-def generate_skipthought_sentence_embs(resources_path, emb_params, base_path, emb_file):
+def generate_skipthought_sentence_embs(variant, resources_path, emb_params, base_path, emb_file):
     nlp, emb_path, sent_vocab, sentences = get_resources(base_path, resources_path)
-    dir_st = base_path / 'skipthoughts_torch_data'
-    nlp = get_nlp()
-    sentences = get_sentences(resources_path)
-    
-    global_word_count= 0 
-    def word_incrementer():
-        nonlocal global_word_count
-        global_word_count += 1
-        return global_word_count
-    word_incr_dict = collections.defaultdict(word_incrementer)
+        
+    encoder = skipthought_enc_manager.EncoderManager()
+    encoder.load_model(skipthought_config.model_config(),
+                       vocabulary_file=str(base_path.parent / "skip_thoughts_uni_2017_02_02" / "vocab.txt"),
+                       embedding_matrix_file=str(base_path.parent / "skip_thoughts_uni_2017_02_02" / "embeddings.npy"),
+                       checkpoint_path=str(base_path.parent / "skip_thoughts_uni_2017_02_02" / "model.ckpt-501424"))
+    if variant == 'bi':
+        try:
+            encoder.load_model(skipthought_config.model_config(bidirectional_encoder=True),
+                               vocabulary_file=str(base_path.parent / "skip_thoughts_bi_2017_02_16" / "vocab.txt"),
+                               embedding_matrix_file=str(base_path.parent / "skip_thoughts_bi_2017_02_16" / "embeddings.npy"),
+                               checkpoint_path=str(base_path.parent / "skip_thoughts_bi_2017_02_16" / "model.ckpt-500008"))
+        except FileNotFoundError:
+            raise RuntimeError("Install skip-thoughts-uni first!")
+    # Internally uses NLTK punct tokenizer for tokenization
+    print("Tokenizing and embedding ...")
+    encodings = encoder.encode(sentences)
 
-    sentence_tokens = []
-    sentence_token_ids = []
-
-    print("Tokenizing ...")
-    for sentence in tqdm(sentences):
-        tokens, voc_ids = zip(*[(token.text, word_incr_dict[token.text]) for token in nlp(sentence)])
-        sentence_tokens.append(tokens)
-        sentence_token_ids.append(voc_ids)
-
-    max_len = max([len(x) for x in sentence_token_ids])
-    zero_arr = np.zeros(max_len, dtype=int)
-    
-    sentence_token_ids_padded = []
-    for st_id, st_tokens in zip(sentence_token_ids, sentence_tokens):
-        st_id_padded = np.concatenate((np.array(st_id, dtype=int), zero_arr[len(st_id):]))
-        sentence_token_ids_padded.append(st_id_padded)
-    
-    vocab = [x[0] for x in sorted(word_incr_dict.items(), key = lambda x: x[1])]
-
-    biskip = BiSkip(str(dir_st), vocab)
-
-    print("Embedding ...")
-    input_ = Variable(torch.LongTensor(sentence_token_ids_padded)) # <eos> token is optional
-    print(input_.size()) # batch_size x seq_len
-
-    output_seq2vec = biskip(input_, lengths=[len(x) for x in sentence_tokens]).detach().numpy()
-    export_df(emb_path, emb_file, sentences, output_seq2vec, emb_params["dimensions"])
+    export_df(emb_path, emb_file, sentences, encodings, emb_params["dimensions"])
 
 
 def generate_quickthought_sentence_embs(resources_path, emb_params, base_path, emb_file):
     nlp, emb_path, sent_vocab, sentences = get_resources(base_path, resources_path)
-    encoder = encoder_manager.EncoderManager()
+    encoder = quickthought_enc_manager.EncoderManager()
     
     # TF flags required by QuickThought
     FLAGS = tf.flags.FLAGS
@@ -228,6 +212,7 @@ def generate_use_sentence_embs(resources_path, emb_params, base_path, emb_file):
 
     # Start TF session and load Google Universal Sentence Encoder
     encoder = make_embed_fn(emb_params['url'])
+    print("Tokenizing and embedding ...")
     embeddings = encoder(list(sentences))
     export_df(emb_path, emb_file, sentences, embeddings, emb_params["dimensions"])
 
@@ -264,9 +249,13 @@ def generate_sent_embeddings(name,
         generate_elmo_sentence_embs(resources_path, emb_params, base_path, emb_file)
     elif name == 'power-mean':
         generate_powermean_sentence_embs(resources_path, emb_params, base_path, emb_file)
-    elif name == 'skip-thought':
-        generate_skipthought_sentence_embs(resources_path, emb_params, base_path, emb_file)
-    elif name == 'quick-thought':
+    elif 'skip-thoughts' in name:
+        if 'uni' in name:
+            variant = 'uni'
+        elif 'bi' in name:
+            variant = 'bi'
+        generate_skipthought_sentence_embs(variant, resources_path, emb_params, base_path, emb_file)
+    elif name == 'quick-thoughts':
         generate_quickthought_sentence_embs(resources_path, emb_params, base_path, emb_file)
     elif name == 'use':
         generate_use_sentence_embs(resources_path, emb_params, base_path, emb_file)

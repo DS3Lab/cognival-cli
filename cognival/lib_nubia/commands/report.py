@@ -12,6 +12,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from termcolor import colored
+from tqdm import tqdm
 from jinja2 import Environment, PackageLoader, select_autoescape
 import pdfkit
 from operator import truediv as div
@@ -188,6 +190,8 @@ def generate_report(configuration,
                     features,
                     heatmaps,
                     heatmaps_sample_n,
+                    heatmaps_discard_na,
+                    export_err_tables=False,
                     html=True,
                     pdf=False,
                     open_html=False,
@@ -290,24 +294,46 @@ def generate_report(configuration,
                         assert not df.index.has_duplicates
                         avg_error_single_dfs[modality][source][feature][emb] = df
 
+        print("Creating heatmap (error) tables ...")
+        
+        with tqdm() as pbar:
+            for modality, modality_dict in avg_error_single_dfs.items():
+                for source, source_dict in modality_dict.items():
+                    for feature, feature_dict in source_dict.items():
+                        pbar.update()
+                        embeddings, dfs = zip(*list(feature_dict.items()))
+                        df = pd.concat(dfs, axis='columns')
+                        df -= df.min().min()
+                        df /= df.max().max()
+                        df.reset_index(inplace=True)
+                        df.rename(columns={'index': config_dict['type']}, inplace=True)
 
-        for modality, modality_dict in avg_error_single_dfs.items():
-            for source, source_dict in modality_dict.items():
-                for feature, feature_dict in source_dict.items():
-                    embeddings, dfs = zip(*list(feature_dict.items()))
-                    df = pd.concat(dfs, axis='columns')
-                    df -= df.min().min()
-                    df /= df.max().max()
-                    df.reset_index(inplace=True)
-                    if heatmaps_sample_n:
-                        df = df.sample(n=heatmaps_sample_n)
-                    avg_error_dfs[modality.upper()][(source, feature)] = df
+                        if export_err_tables:
+                            err_t_path = report_dir / modality / str(run_id) / 'error_tables'
+                            if feature == '—':
+                                err_t_file = '{}_error_table.parquet.gz'.format(source)
+                            else:
+                                err_t_file = '{}_{}_error_table.parquet.gz'.format(source,
+                                                                                   feature)
+                            
+                            os.makedirs(err_t_path, exist_ok=True)
+                            df.to_parquet(err_t_path / err_t_file,
+                                          engine='auto',
+                                          compression='gzip')
+
+                        if heatmaps_discard_na:
+                            df.dropna(inplace=True)
+
+                        if heatmaps_sample_n:
+                            df = df.sample(n=heatmaps_sample_n)
+
+                        avg_error_dfs[modality.upper()][(source, feature)] = df
 
     # Collecting significance test results and aggregation results
     for path, _, reports in os.walk(report_dir):
         if reports:
             for report in reports:
-                if not any(report.endswith(suffix) for suffix in ('html, pdf')):
+                if report.endswith('json'):
                     modality, ver = path.split('/')[-2:]
                     with open(Path(path) / report) as f_sig:
                         report_dict = json.loads(f_sig.read())

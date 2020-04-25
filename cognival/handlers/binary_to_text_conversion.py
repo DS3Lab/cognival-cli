@@ -8,6 +8,7 @@
 #
 
 import warnings
+warnings.simplefilter(action='ignore', category=DeprecationWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 import os
@@ -33,7 +34,7 @@ from termcolor import cprint
 
 from lib_nubia.prompt_toolkit_table import *
 
-def bert_to_text(vocabulary_file, model_dir, output_path, num_worker):
+def bert_to_text(vocabulary_file, base_dir, model_dir, output_path, num_worker):
     # Source: https://github.com/hanxiao/bert-as-service
     # Start Bert Model: bert-serving-start -model_dir /tmp/uncased_L-12_H-768_A-12/ -num_worker=4
     # model: 'base' (768 dimensions) or 'large' (1024 dimensions)
@@ -44,14 +45,20 @@ def bert_to_text(vocabulary_file, model_dir, output_path, num_worker):
                         'Note that bert-as-service creates temporary files in the working directory the command is executed in, which\n'
                         'must be removed manually after termination. The number of workers may be increased depending on available resources \n'
                         'and ulimit restrictions.\n\n'
-                        'bert-serving-start -model_dir={} -num_worker=1'.format(str(model_dir))).run()
+                        'bert-serving-start -model_dir={} -num_worker=1'.format(str(base_dir))).run()
 
 
     with open(vocabulary_file, 'r') as f:
         words = f.readlines()
 
-    # Create directory
+    # Create directory if non-existent
     os.makedirs(output_path.parent, exist_ok=True)
+
+    # Remove file if existent
+    try:
+        os.remove(output_path)
+    except FileNotFoundError:
+        pass
 
     with open(output_path, 'w') as embedding_file:
         # Load pre-trained model (weights)
@@ -93,8 +100,14 @@ def elmo_to_text(vocabulary_file, output_path, layer='nocontext'):
     with open(vocabulary_file, 'r') as f:
         words = f.readlines()
 
-    # Create directory
+    # Create directory if non-existent
     os.makedirs(output_path.parent, exist_ok=True)
+
+    # Remove file if existent
+    try:
+        os.remove(output_path)
+    except FileNotFoundError:
+        pass
 
     with open(output_path, 'w') as embedding_file:
         with ProgressBar() as pb:

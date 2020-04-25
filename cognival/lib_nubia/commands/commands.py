@@ -15,13 +15,11 @@ import copy
 import csv
 import itertools
 import json
-import gzip
 import os
 import sys
 import re
 import shutil
 import subprocess
-import zipfile
 
 from pathlib import Path
 from pprint import pprint
@@ -114,7 +112,7 @@ warnings.formatwarning = custom_formatwarning
 
 NUM_BERT_WORKERS = 1
 COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1S0Fa_gGOJMuPxUrkZHW0RXk7bSPc7ffR'
-DUAL_EMB_TYPES = ['bert']
+DUAL_EMB_TYPES = ['bert', 'elmo']
 
 def run(configuration,
         config_dict,
@@ -179,9 +177,12 @@ def run(configuration,
         # Process and write results (required for significance testing) and option files (required for aggregation) per modality
         run_stats = collections.defaultdict(dict)
         for id_, (modality, result_proper, result_random, rand_emb, options) in enumerate(results):
-            # Confirm that embedding results are paired with corresponding random baseline
-            # results
-            assert result_proper[0] in result_random[0][0]
+            # Confirm that embedding results are paired with corresponding random baseline results
+            if result_random is None:
+                result_random = []
+            else:
+                assert result_proper[0] in result_random[0][0]
+
             process_and_write_results(result_proper,
                                       result_random,
                                       rand_emb,
@@ -1123,20 +1124,30 @@ def update_embeddings(resources_path,
                 base_path = embeddings_path / embedding_registry['proper'][emb_name]['path'] / emb_type
                 emb_file = Path(embedding_registry['proper'][emb_name]['embedding_file'])
                 emb_path = base_path / emb_file
+                
+                if emb_type == 'word': 
+                    if embedding_registry['proper'][emb_name]['binary_format'] == 'elmo':
+                        elmo_to_text(resources_path / 'standard_vocab.txt',
+                                    emb_path,
+                                    layer='nocontext')
 
-                if embedding_registry['proper'][emb_name]['binary_format'] == 'elmo':
-                    elmo_to_text(resources_path / 'standard_vocab.txt',
-                                emb_path,
-                                layer='nocontext')
+                    elif embedding_registry['proper'][emb_name]['binary_format'] == 'bert':
+                        bert_to_text(resources_path / 'standard_vocab.txt',
+                                    embeddings_path / embedding_registry['proper'][emb_name]['path'], 
+                                    base_path,
+                                    emb_path,
+                                    NUM_BERT_WORKERS)
 
-                elif embedding_registry['proper'][emb_name]['binary_format'] == 'bert':
-                    bert_to_text(resources_path / 'standard_vocab.txt',
-                                base_path,
-                                emb_path,
-                                NUM_BERT_WORKERS)
+                if emb_type == 'sentence' or any(infix in emb_name.lower() for infix in DUAL_EMB_TYPES):
+                    generate_sent_embeddings(emb_name,
+                                             resources_path,
+                                             embedding_registry['proper'][emb_name],
+                                             base_path,
+                                             emb_file)
 
-                # If word embedding, generate baseline sentence embedding by averaging word embeddings
-                if embedding_registry['proper'][emb_name]['type'] == 'word':
+                # If word embedding not context-sensitive or multi-layered (BERT, ELMo) doubling as sentene embedding,
+                # generate baseline sentence embedding by averaging word embeddings
+                elif emb_type == 'word' and not any(infix in emb_name.lower() for infix in DUAL_EMB_TYPES):
                     cprint("Generating baseline sentence embeddings for {} ...".format(emb_name))
                     generate_avg_sent_embeddings(emb_name,
                                                  resources_path,
@@ -1366,8 +1377,9 @@ def import_embeddings(x,
         download = embedding_registry['proper'][x]['download']
         # Always assume subdirectories to be part of the archive!
         path = embedding_registry['proper'][x]['path'].split('/')[0]
-        folder = embedding_registry['proper'][emb_name]['path']
-        emb_dim = embedding_registry['proper'][emb_name]['dimensions']
+        folder = embedding_registry['proper'][x]['path']
+        emb_dim = embedding_registry['proper'][x]['dimensions']
+        binary = embedding_registry['proper'][x]['binary']
 
     # Download custom embedding via URL
     else:
@@ -1512,10 +1524,18 @@ def import_embeddings(x,
         # Get file name and paths
         fname = url.split('/')[-1]
         fpath = embeddings_path / fname
-        fpath_extracted = embeddings_path / path / emb_type
-
+        if binary:
+            fpath_extracted = embeddings_path / path
+        else:
+            fpath_extracted = embeddings_path / path / emb_type
+        
         try:
-            shutil.rmtree(fpath_extracted)
+            if emb_name == 'skip-thoughts-uni':
+                shutil.rmtree(fpath_extracted / 'skip_thoughts_uni_2017_02_02')
+            elif emb_name == 'skip-thoughts-bi':
+                shutil.rmtree(fpath_extracted / 'skip_thoughts_bi_2017_02_16')
+            else:
+                shutil.rmtree(fpath_extracted)
         except FileNotFoundError:
             pass
 
@@ -1528,36 +1548,28 @@ def import_embeddings(x,
         # Google Drive downloads
         if 'drive.google.com' in url:
             gdown.download(url, str(embeddings_path / 'gdrive_embeddings.dat'), quiet=False)
-            try:
-                with zipfile.ZipFile(embeddings_path / 'gdrive_embeddings.dat', 'r') as zip_ref:
-                    zip_ref.extractall(fpath_extracted) 
-            except zipfile.BadZipFile:
-                # Assume gzipped txt (requires manually creating path and setting filename)
-                os.makedirs(fpath_extracted)
-                with gzip.open(embeddings_path / 'gdrive_embeddings.dat', 'rb') as f_in:
-                    with open(fpath_extracted / '{}.txt'.format(path), 'wb') as f_out:
-                        shutil.copyfileobj(f_in, f_out)
+            os.makedirs(fpath_extracted, exist_ok=True)
+            # Need to guess format; supported: zip, tar.gz and tar
+            for archive_format in ["zip", "gztar", "tar"]:
+                try:
+                    shutil.unpack_archive(embeddings_path / 'gdrive_embeddings.dat', fpath_extracted, format='gztar')
+                except ReadError:
+                    continue
             os.remove(embeddings_path / 'gdrive_embeddings.dat')
         
         # Normal HTTP downloads and local file moves
         else:
-            os.makedirs(fpath_extracted)
+            os.makedirs(fpath_extracted, exist_ok=True)
             if local:
                 shutil.copy(url, fpath)
             else:
                 download_file(url, fpath)
-            if fname.endswith('zip'):
-                with zipfile.ZipFile(fpath, 'r') as zip_ref:
-                    zip_ref.extractall(fpath_extracted)
+            # All formats supported by shutil.unpack_archive
+            try:
+                shutil.unpack_archive(fpath, fpath_extracted)
                 os.remove(fpath)
-            elif fname.endswith('gz'):
-                # Assume gzipped bin (requires manually setting filename)
-                with gzip.open(fpath, 'rb') as f_in:
-                    with open(fpath_extracted / '{}.bin'.format(path), 'wb') as f_out:
-                        shutil.copyfileobj(f_in, f_out)
-                os.remove(fpath)
-            else:
-                # Local file move
+            except ValueError:
+                # If not a known archive format, only move file
                 shutil.move(fpath, fpath_extracted / fname)
     
     # Do nothing in case download and provision is handled by external library (e.g. allennlp/elmo)
@@ -1566,14 +1578,12 @@ def import_embeddings(x,
 
     # Iterate over all embedding files (e.g. GloVe has multiple files requiring processing)
     for emb_name in path2embeddings[folder]:
-        emb_type = embedding_registry['proper'][emb_name]['type'] 
+        # Exempt skipt-thought (special case)
+        if 'skip-thoughts' in emb_name and not emb_name == x:
+            continue
 
-        # Insert emb_type into path if multi-part path
-        try:
-            path_pref, path_suff = embedding_registry['proper'][x]['path'].rsplit('/', maxsplit=1)
-            base_path = embeddings_path / path_pref / emb_type / path_suff
-        except ValueError:
-            base_path = embeddings_path / embedding_registry['proper'][x]['path'] / emb_type
+        emb_type = embedding_registry['proper'][emb_name]['type'] 
+        base_path = embeddings_path / embedding_registry['proper'][x]['path'] / emb_type
 
         try:
             bin_file = Path(embedding_registry['proper'][emb_name]['binary_file'])
@@ -1608,6 +1618,7 @@ def import_embeddings(x,
 
                     elif embedding_registry['proper'][emb_name]['binary_format'] == 'bert':
                         bert_to_text(resources_path / 'standard_vocab.txt',
+                                    embeddings_path / embedding_registry['proper'][x]['path'],
                                     base_path,
                                     emb_path,
                                     NUM_BERT_WORKERS)
@@ -1720,12 +1731,15 @@ def import_random_baselines(embedding_registry,
             rand_emb_path = Path('random_multiseed') / '{}_dim'.format(emb_dim) / '{}_seeds'.format(len(seeds))
             fullpath = embeddings_path / rand_emb_path / unit_type
 
-            try:
-                os.makedirs(fullpath)
-            except FileExistsError:
-                pass
+            os.makedirs(fullpath, exist_ok=True)
 
-            dfs = Parallel(n_jobs=-2)(delayed(generate_random_df)(emb_type, seed, listing, emb_dim) for seed in tqdm(seeds))
+            # Only use at most a quater of the cores for embeddings with dimensionality greater than 3000
+            # to reduce risk of OOM errors
+            if emb_dim < 3000:
+                n_jobs = -2
+            else:
+                n_jobs = int(os.cpu_count() / 4)
+            dfs = Parallel(n_jobs=n_jobs)(delayed(generate_random_df)(emb_type, seed, listing, emb_dim) for seed in tqdm(seeds))
 
             print("Exporting CSVs ...")
             for df, emb_file in tqdm(list(zip(dfs, rand_emb_keys))):
