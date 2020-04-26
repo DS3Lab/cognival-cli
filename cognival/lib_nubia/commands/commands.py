@@ -13,6 +13,7 @@ warnings.simplefilter(action="ignore", category=DeprecationWarning)
 import collections
 import copy
 import csv
+import gzip
 import itertools
 import json
 import os
@@ -1373,6 +1374,7 @@ def import_embeddings(x,
             cprint('BERT conversion is extremely memory-intensive. 16GB of RAM or more (depending on the embedding size) highly recommended. Press Ctrl-C to abort.', attrs=['reverse'], color='yellow')
         emb_name = x
         emb_type = embedding_registry['proper'][x]['type']
+        emb_file = embedding_registry['proper'][x]['embedding_file']
         url = embedding_registry['proper'][x]['url']
         download = embedding_registry['proper'][x]['download']
         # Always assume subdirectories to be part of the archive!
@@ -1553,8 +1555,14 @@ def import_embeddings(x,
             for archive_format in ["zip", "gztar", "tar"]:
                 try:
                     shutil.unpack_archive(embeddings_path / 'gdrive_embeddings.dat', fpath_extracted, format='gztar')
-                except ReadError:
+                except shutil.ReadError:
                     continue
+            else:
+                # assume gzip
+                with gzip.open(embeddings_path / 'gdrive_embeddings.dat', 'rb') as f_in:
+                    with open(fpath_extracted / emb_file, 'wb') as f_out:
+                        shutil.copyfileobj(f_in, f_out)
+
             os.remove(embeddings_path / 'gdrive_embeddings.dat')
         
         # Normal HTTP downloads and local file moves
@@ -1566,7 +1574,13 @@ def import_embeddings(x,
                 download_file(url, fpath)
             # All formats supported by shutil.unpack_archive
             try:
-                shutil.unpack_archive(fpath, fpath_extracted)
+                try:
+                    shutil.unpack_archive(fpath, fpath_extracted)
+                except shutil.ReadError:
+                    # assume gzip
+                    with gzip.open(fpath, 'rb') as f_in:
+                        with open(fpath_extracted / fname.rstrip('.gz') , 'wb') as f_out:
+                            shutil.copyfileobj(f_in, f_out)
                 os.remove(fpath)
             except ValueError:
                 # If not a known archive format, only move file
@@ -1642,7 +1656,7 @@ def import_embeddings(x,
         if embedding_registry['proper'][emb_name]['chunked']:
             cprint('Chunking {} ...'.format(emb_name), 'yellow')
             chunk(base_path,
-                    base_path,
+                    base_path.parent,
                     emb_file,
                     embedding_registry['proper'][emb_name]['chunked_file'],
                     number_of_chunks=embedding_registry['proper'][emb_name]['chunk_number'],

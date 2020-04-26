@@ -266,7 +266,7 @@ def split_folds(word_embedding, cognitive_data, feature, strings, X, y, folds, s
                                                                                                                  feature,
                                                                                                                  word_embedding,
                                                                                                                  idx + 1,
-                                                                                                                 len(X_train),
+                                                                                                                 len(X_train_fold),
                                                                                                                  ' | '.join('{}: {}'.format(k, v) for k, v in collections.Counter(sub_sources_fold).items()) 
                                                                                                                  ), 'cyan')
             
@@ -280,7 +280,7 @@ def split_folds(word_embedding, cognitive_data, feature, strings, X, y, folds, s
                                                                                                              feature,
                                                                                                              word_embedding,
                                                                                                              idx + 1,
-                                                                                                             len(X_train),
+                                                                                                             len(X_train_fold),
                                                                                                              ' | '.join('{}: {}'.format(k, v) for k, v in collections.Counter(sub_sources_resampled).items()) 
                                                                                                              ), 'cyan')
 

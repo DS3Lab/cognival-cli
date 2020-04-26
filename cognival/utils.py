@@ -1,4 +1,5 @@
 import errno
+import os
 import sys
 import time
 import warnings
@@ -28,13 +29,14 @@ def word2vec_bin_to_txt(binPath, binName, outputName, limit=None):
     with warnings.catch_warnings():
         # Silence smart_open deprecation warnings (erroneously raised as UserWarnings)
         warnings.simplefilter('ignore', UserWarning)
-        model = KeyedVectors.load_word2vec_format(binPath / binName, binary=True, limit=limit)
+        model = KeyedVectors.load_word2vec_format(binPath.parent / binName, binary=True, limit=limit)
+        os.makedirs(binPath, exist_ok=True)
         model.save_word2vec_format(binPath / outputName,binary=False)
 
 
 def fasttext_bin_to_txt(binPath, binName, outputName, limit=None):
-    f = fasttext.load_model(str(binPath / binName))
-
+    f = fasttext.load_model(str(binPath.parent / binName))
+    os.makedirs(binPath, exist_ok=True)
     # Copied from https://github.com/facebookresearch/fastText/blob/master/python/doc/examples/bin_to_vec.py 
     words = f.get_words()
     with open(binPath / outputName, 'w') as f_out:

@@ -279,7 +279,7 @@ def generate_avg_sent_embeddings(name,
     print("Getting word embeddings ...")
     # Handle fasttext subwords 
     if 'fasttext-cc-2018' in name:
-        embeddings = fasttext.load_model(str(base_path / emb_params["binary_file"]))
+        embeddings = fasttext.load_model(str(base_path.parent / emb_params["binary_file"]))
         for word in tqdm(sent_vocab):
             emb_dict[word] = embeddings[word]
     else:
