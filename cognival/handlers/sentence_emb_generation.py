@@ -152,7 +152,7 @@ def generate_skipthought_sentence_embs(variant, resources_path, emb_params, base
                                checkpoint_path=str(base_path.parent / "skip_thoughts_bi_2017_02_16" / "model.ckpt-500008"))
         except FileNotFoundError:
             raise RuntimeError("Install skip-thoughts-uni first!")
-    # Internally uses NLTK punct tokenizer for tokenization
+    # Skip-thought internally uses NLTK tokenization
     print("Tokenizing and embedding ...")
     encodings = encoder.encode(sentences)
 
@@ -212,6 +212,8 @@ def generate_use_sentence_embs(resources_path, emb_params, base_path, emb_file):
 
     # Start TF session and load Google Universal Sentence Encoder
     encoder = make_embed_fn(emb_params['url'])
+
+    # USE performs tokenization internally
     print("Tokenizing and embedding ...")
     embeddings = encoder(list(sentences))
     export_df(emb_path, emb_file, sentences, embeddings, emb_params["dimensions"])
