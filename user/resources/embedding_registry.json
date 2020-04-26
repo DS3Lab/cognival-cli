@@ -171,7 +171,7 @@
 	    "download": true,
             "dimensions": 300,
             "binary": true,
-            "binary_file": "fasttext-cc-2018.bin",
+            "binary_file": "cc.en.300.bin",
             "binary_format": "fasttext",
             "path": "fasttext-cc-2018",
             "embedding_file": "fasttext-cc-2018.txt",
