@@ -41,7 +41,7 @@ def get_resources(base_path, resources_path):
 
 
 def get_nlp():
-    return spacy.load('en_core_web_sm', disable=['ner', 'parser'])
+    return spacy.load('en_core_web_lg', disable=['ner', 'parser'])
 
 
 def create_sent_path(base_path):
@@ -325,10 +325,11 @@ def generate_avg_sent_embeddings(name,
     for sent in tqdm(sentences):
         sent_word_emb = []
         for token in nlp(sent):
-            if token.text in emb_dict:
-                sent_word_emb.append(emb_dict[token.text])
-            elif token.text.lower() in emb_dict:
-                sent_word_emb.append(emb_dict[token.text.lower()])
+            if any(token.tag_.startswith(x) for x in ('N', 'V', 'J', 'RB')):
+                if token.text in emb_dict:
+                    sent_word_emb.append(emb_dict[token.text])
+                elif token.text.lower() in emb_dict:
+                    sent_word_emb.append(emb_dict[token.text.lower()])
         if sent_word_emb:
             sent_embs.append(np.mean(sent_word_emb, axis=0))
         else:
