@@ -289,7 +289,7 @@ class Config:
     @argument('modalities', type=list, description="Modalities of cognitive sources sources to include.")
     @argument('cognitive_sources', type=list, description="Either list of cognitive sources or ['all'] (default).")
     @argument('embeddings', type=list, description="Either list of embeddings or ['all'] (default)")
-    @argument('baselines', type=bool, description='Include random baselines. Note that if random baselines were included previously, changes are applied to them in any case.')
+    @argument('baselines', type=bool, description='Whether to include random baselines (default: True). Only considered on initial population and fixed afterwards. Note that if random baselines were included previously, changes are applied to them in any case.')
     @argument('single_edit', type=bool, description='Whether to edit embedding specifics one by one or all at once.')
     @argument('edit_cog_source_params', type=bool, description='Whether to edit parameters of the specified cognitive sources.')
     @argument('scope', type=str, description="Specifies the scope for meta-parameters and -arguments ('all', modalities). "
