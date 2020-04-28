@@ -165,15 +165,15 @@ def generate_quickthought_sentence_embs(resources_path, emb_params, base_path, e
     
     # TF flags required by QuickThought
     FLAGS = tf.flags.FLAGS
-    tf.flags.DEFINE_string("results_path", str(base_path), "Model results path")
-    tf.flags.DEFINE_string("Glove_path", str(base_path / 'dictionaries' / 'GloVe'), "GloVe dictionary")
+    tf.flags.DEFINE_string("results_path", str(base_path.parent), "Model results path")
+    tf.flags.DEFINE_string("Glove_path", str(base_path.parent / 'dictionaries' / 'GloVe'), "GloVe dictionary")
     tf.flags.DEFINE_float("uniform_init_scale", 0.1, "Random init scale")
 
     model_config = { "encoder": "gru",
                      "encoder_dim": 1200,
                      "bidir": True,
                      "case_sensitive": True,
-                     "checkpoint_path": base_path / "BS400-W300-S1200-Glove-BC-bidir/train",
+                     "checkpoint_path": base_path.parent / "BS400-W300-S1200-Glove-BC-bidir/train",
                      "vocab_configs": [
                      {
                      "mode": "fixed",
@@ -233,8 +233,8 @@ def generate_infersent_sentence_embs(resources_path, emb_params, base_path, emb_
     # InferSent relies on NLTK punkt for tokenization (tokenize=False performs white-space splitting)
     model = InferSent(params_model)
     #model = model.cuda()
-    model.load_state_dict(torch.load(base_path / 'infersent2.pkl'))
-    model.set_w2v_path(base_path / 'crawl-300d-2M.vec')
+    model.load_state_dict(torch.load(base_path.parent / 'infersent2.pkl'))
+    model.set_w2v_path(base_path.parent / 'crawl-300d-2M.vec')
     model.build_vocab(sentences, tokenize=True)
     embeddings = model.encode(tqdm(sentences), tokenize=True)
     export_df(emb_path, emb_file, sentences, embeddings, emb_params["dimensions"])
