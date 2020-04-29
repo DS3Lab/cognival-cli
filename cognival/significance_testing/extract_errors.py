@@ -8,7 +8,10 @@ from .testing_helpers import save_errors
 
 def extract_errors(run_id, modality, experiment, mapping_dict, input_dir, results_dir):
     embedding_path = Path(input_dir) / mapping_dict[experiment]['proper']
-    random_path = Path(input_dir) / mapping_dict[experiment]['random']
+    try:
+        random_path = Path(input_dir) / mapping_dict[experiment]['random']
+    except KeyError:
+        random_path = ''
     emb_type = mapping_dict[experiment]['type']
     
     embeddings_df = pd.read_csv(embedding_path / '{}.txt'.format(mapping_dict[experiment]['embedding']),
@@ -26,10 +29,10 @@ def extract_errors(run_id, modality, experiment, mapping_dict, input_dir, result
                                     quotechar='"',
                                     quoting=csv.QUOTE_NONNUMERIC,
                                     doublequote=True)
-       
-    except FileNotFoundError:
-        cprint('No results found for random embedding associated with {}, skipping ...'.format(experiment), 'red')
-        return
+        rand_embs_available = True
+    except (KeyError, FileNotFoundError):
+        rand_embs_available = False
+        #cprint('No results found for random embedding associated with {}, skipping ...'.format(experiment), 'red')
 
     embeddings_scores = {}
     baseline_scores = {}
@@ -37,18 +40,23 @@ def extract_errors(run_id, modality, experiment, mapping_dict, input_dir, result
     if modality in ('fmri', 'eeg'):
         embeddings_df.insert(1, 'error', embeddings_df[embeddings_df.columns.difference([emb_type])].mean(axis='columns'))
         embeddings_df.drop(embeddings_df.columns.difference([emb_type, 'error']), axis='columns', inplace=True)
-        random_df.insert(1, 'error', random_df[random_df.columns.difference([emb_type, 'error'])].mean(axis='columns'))
-        random_df.drop(random_df.columns.difference([emb_type, 'error']), axis='columns', inplace=True)
+        if rand_embs_available:
+            random_df.insert(1, 'error', random_df[random_df.columns.difference([emb_type, 'error'])].mean(axis='columns'))
+            random_df.drop(random_df.columns.difference([emb_type, 'error']), axis='columns', inplace=True)
 
     elif modality == 'eye-tracking':
         embeddings_df.rename(columns={embeddings_df.columns[1]:'error'}, inplace=True)
-        random_df.rename(columns={random_df.columns[1]:'error'}, inplace=True)
+        if rand_embs_available:
+            random_df.rename(columns={random_df.columns[1]:'error'}, inplace=True)
 
     embeddings_df.set_index(emb_type, inplace=True)
-    random_df.set_index(emb_type, inplace=True)
-
     assert not embeddings_df.index.has_duplicates
-    assert not random_df.index.has_duplicates
+
+    if rand_embs_available:
+        random_df.set_index(emb_type, inplace=True)
+        assert not random_df.index.has_duplicates
+    else:
+        random_df = None
 
     save_errors(embeddings_df,
                 'embeddings_avg_errors_' + '{}.txt'.format(experiment),

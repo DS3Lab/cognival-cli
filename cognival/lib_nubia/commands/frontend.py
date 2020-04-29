@@ -508,7 +508,8 @@ class Update:
 
     @command
     @argument('embeddings', type=list, description="Either list of embeddings or None (all embeddings, default).")
-    def embeddings(self, embeddings=None):
+    @argument('which', type=list, description="Whether to update 'word', 'sentence' or 'both' (default) embeddings.")
+    def embeddings(self, embeddings=None, which='both'):
         """
         Update embeddings that are generated in CogniVal (BERT, ELMo), average sentence embeddings and random embeddings.
         """
@@ -517,7 +518,7 @@ class Update:
         resources_path = ctx.resources_path
         embedding_registry = ctx.embedding_registry
 
-        embedding_registry = commands.update_embeddings(resources_path, embeddings_path, embedding_registry, embeddings=embeddings)
+        embedding_registry = commands.update_embeddings(resources_path, embeddings_path, embedding_registry, embeddings=embeddings, which=which)
 
         if embedding_registry:
             ctx.save_configuration()

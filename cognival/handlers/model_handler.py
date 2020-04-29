@@ -3,7 +3,7 @@ import sys
 os.environ['TF_CPP_MIN_LOG_LEVEL']='3'  #disable tensorflow debugging
 
 from tensorflow.compat.v1.keras.models import Sequential
-from tensorflow.compat.v1.keras.layers import Dense
+from tensorflow.compat.v1.keras.layers import Dense, Dropout, BatchNormalization
 stderr = sys.stderr
 sys.stderr = open(os.devnull, 'w')
 from tensorflow.compat.v1.keras.wrappers.scikit_learn import KerasRegressor
@@ -29,6 +29,9 @@ def create_model(layers, activation, input_dim, output_dim):
             model.add(Dense(nodes,input_dim=input_dim, activation=activation))
         else:
             model.add(Dense(nodes, activation=activation))
+        if (i + 1) < len(layers):
+            model.add(Dropout(rate=0.5))
+            model.add(BatchNormalization())
     model.add(Dense(output_dim, activation='linear'))
     model.compile(loss='mse',optimizer='adam')
 
