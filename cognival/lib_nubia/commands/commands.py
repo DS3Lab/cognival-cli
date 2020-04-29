@@ -249,7 +249,7 @@ def list_embeddings(debug, embedding_registry):
     for emb_type in emb_types:
         title = colored(titles[emb_type], attrs=['bold'])
         param_dicts = []
-        for key, value in copy.deepcopy(list(embedding_registry[emb_type].items())):
+        for key, value in copy.deepcopy(sorted(list(embedding_registry[emb_type].items()), key=lambda x: x[0])):
             value['embeddings'] = key
             param_dicts.append(value)
         
@@ -279,7 +279,7 @@ def list_cognitive_sources(cog_config):
             formatted_list.append('\n')
             formatted_list.append(colored('Resource                           Features'))
             formatted_list.append('\n')
-            for key, value in cog_config['sources'][emb_type][modality].items():
+            for key, value in sorted(list(cog_config['sources'][emb_type][modality].items()), key=lambda x: x[0]):
                 label = '{}_{}'.format(modality, key)
                 formatted_list.append(colored(label, 'cyan')  + ' '*(35-len(label)))
                 if isinstance(value["features"], str):
@@ -381,7 +381,7 @@ def config_show(configuration, config_dict, details, cognitive_source, hide_base
             "of the specified cognitive source(s) and associated embedding specifics.".format(configuration, ', '.join(cognitive_sources)), 160)))
         table_strs.append('\n')
 
-    for cognitive_source in cognitive_sources:
+    for cognitive_source in sorted(cognitive_sources):
         table_strs.append(colored('{}\n'.format(cognitive_source), attrs=['bold', 'reverse'], color='yellow'))
         table_strs.append('\n')
         try:
@@ -414,6 +414,7 @@ def config_show(configuration, config_dict, details, cognitive_source, hide_base
                                 "layers": "layers (nested l.)",
                                 "validation_split": "validation_split (l.)"})
         df = df.applymap(field_concat)
+        df.sort_values('word_embedding', inplace=True)
         formatted_table = tform.generate_table(df,
                                             grid_style=fgrid,
                                             transpose=False) 
@@ -787,16 +788,18 @@ def significance(configuration,
         datasets = [k for (k, v) in config_dict["cogDataConfig"].items() if 'modality' in v and v['modality'] == modality]
         
         embeddings = list(config_dict["wordEmbConfig"])
-
         
         hypothesis_counter = collections.Counter()
+        print("Extracting averaged errors ...")
         # Extract results for significance testing
         for ds in datasets:
             for feat in config_dict["cogDataConfig"][ds]["features"]:
                 for embed in embeddings:
                     experiment = '{}_{}#-#{}'.format(ds, feat, embed)
                     try:
-                        extract_errors(run_id, modality, experiment, mapping_dict, experiments_dir, avg_errors_dir)
+                        has_rand_emb = extract_errors(run_id, modality, experiment, mapping_dict, experiments_dir, avg_errors_dir)
+                        if not has_rand_emb:
+                            continue
                         hypothesis_counter[embed] += 1
                     except KeyError:
                         pass
@@ -1116,49 +1119,56 @@ def update_sentences(resources_path,
 def update_embeddings(resources_path,
                       embeddings_path,
                       embedding_registry,
-                      embeddings=[]):
-    for emb_name in embedding_registry['proper']:
-        if not embeddings or (embeddings and emb_name in embeddings):
-            cprint("Updating {} ...".format(emb_name), attrs=['bold'], color='yellow')
-            if embedding_registry['proper'][emb_name]['installed']:
-                emb_type = embedding_registry['proper'][emb_name]['type'] 
-                base_path = embeddings_path / embedding_registry['proper'][emb_name]['path'] / emb_type
-                emb_file = Path(embedding_registry['proper'][emb_name]['embedding_file'])
-                emb_path = base_path / emb_file
-                
-                if emb_type == 'word': 
-                    if embedding_registry['proper'][emb_name]['binary_format'] == 'elmo':
-                        elmo_to_text(resources_path / 'standard_vocab.txt',
-                                    emb_path,
-                                    layer='nocontext')
+                      embeddings=None,
+                      which='both'):
+    if not embeddings:
+        embeddings = embedding_registry['proper'].keys()
 
-                    elif embedding_registry['proper'][emb_name]['binary_format'] == 'bert':
-                        bert_to_text(resources_path / 'standard_vocab.txt',
-                                    embeddings_path / embedding_registry['proper'][emb_name]['path'], 
-                                    base_path,
-                                    emb_path,
-                                    NUM_BERT_WORKERS)
+    
+    for emb_name in embeddings:
+        cprint("Updating {} ...".format(emb_name), attrs=['bold'], color='yellow')
+        if emb_name in embedding_registr['proper'] and embedding_registry['proper'][emb_name]['installed']:
+            emb_type = embedding_registry['proper'][emb_name]['type'] 
+            base_path = embeddings_path / embedding_registry['proper'][emb_name]['path'] / emb_type
+            emb_file = Path(embedding_registry['proper'][emb_name]['embedding_file'])
+            emb_path = base_path / emb_file
+            
+            if emb_type == 'word' and which in ('word', 'both'): 
+                if embedding_registry['proper'][emb_name]['binary_format'] == 'elmo':
+                    elmo_to_text(resources_path / 'standard_vocab.txt',
+                                emb_path,
+                                layer='nocontext')
 
-                if emb_type == 'sentence' or any(infix in emb_name.lower() for infix in DUAL_EMB_TYPES):
-                    generate_sent_embeddings(emb_name,
+                elif embedding_registry['proper'][emb_name]['binary_format'] == 'bert':
+                    bert_to_text(resources_path / 'standard_vocab.txt',
+                                embeddings_path / embedding_registry['proper'][emb_name]['path'], 
+                                base_path,
+                                emb_path,
+                                NUM_BERT_WORKERS)
+
+            if (emb_type == 'sentence' or any(infix in emb_name.lower() for infix in DUAL_EMB_TYPES)) and which in ('sentence', 'both'):
+                generate_sent_embeddings(emb_name,
+                                         resources_path,
+                                         embedding_registry['proper'][emb_name],
+                                         base_path,
+                                         emb_file)
+
+            # If word embedding not context-sensitive or multi-layered (BERT, ELMo) doubling as sentene embedding,
+            # generate baseline sentence embedding by averaging word embeddings
+            elif emb_type == 'word' and not any(infix in emb_name.lower() for infix in DUAL_EMB_TYPES) and which in ('sentence', 'both'):
+                cprint("Generating baseline sentence embeddings for {} ...".format(emb_name))
+                generate_avg_sent_embeddings(emb_name,
                                              resources_path,
                                              embedding_registry['proper'][emb_name],
                                              base_path,
                                              emb_file)
 
-                # If word embedding not context-sensitive or multi-layered (BERT, ELMo) doubling as sentene embedding,
-                # generate baseline sentence embedding by averaging word embeddings
-                elif emb_type == 'word' and not any(infix in emb_name.lower() for infix in DUAL_EMB_TYPES):
-                    cprint("Generating baseline sentence embeddings for {} ...".format(emb_name))
-                    generate_avg_sent_embeddings(emb_name,
-                                                 resources_path,
-                                                 embedding_registry['proper'][emb_name],
-                                                 base_path,
-                                                 emb_file)
-
-                # Associate random baselines with embeddings if set by user
-                if embedding_registry['proper'][emb_name]['random_embedding']:
-                    import_random_baselines(embedding_registry, resources_path, embeddings_path, emb_name, force=True)
+            # Associate random baselines with embeddings if set by user
+            if embedding_registry['proper'][emb_name]['random_embedding']:
+                import_random_baselines(embedding_registry, resources_path, embeddings_path, emb_name, force=True)
+        else:
+            cprint('Error: Embeddings {} unknown or not installed, aborting and saving progress so far ...', 'yellow')
+            break
 
     return embedding_registry
 
@@ -1554,7 +1564,8 @@ def import_embeddings(x,
             # Need to guess format; supported: zip, tar.gz and tar
             for archive_format in ["zip", "gztar", "tar"]:
                 try:
-                    shutil.unpack_archive(embeddings_path / 'gdrive_embeddings.dat', fpath_extracted, format='gztar')
+                    shutil.unpack_archive(embeddings_path / 'gdrive_embeddings.dat', fpath_extracted, format=archive_format)
+                    break
                 except shutil.ReadError:
                     continue
             else:

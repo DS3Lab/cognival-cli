@@ -186,7 +186,7 @@ def generate_report(configuration,
                     resources_path,
                     precision,
                     average_multi_hypothesis,
-                    training_history_plots,
+                    train_history_plots,
                     features,
                     heatmaps,
                     heatmaps_sample_n,
@@ -255,8 +255,9 @@ def generate_report(configuration,
             random_to_proper[value['random_name']] = key
         except KeyError:
             pass
+
         try:
-            if training_history_plots:
+            if train_history_plots:
                 with open(experiments_dir / value['proper'] / '{}.png'.format(value['embedding']), 'rb') as f:
                     figdata_b64 = base64.b64encode(f.read()).decode('utf8')
                     training_history_plots[key] = figdata_b64
