@@ -291,7 +291,7 @@ def generate_report(configuration,
                         
                         feature = feature if feature != 'ALL_DIM' else '—'
                         df.rename(columns={'error':emb}, inplace=True)
-                        df.set_index('string', inplace=True)
+                        df.set_index(config_dict['type'], inplace=True)
                         assert not df.index.has_duplicates
                         avg_error_single_dfs[modality][source][feature][emb] = df
 

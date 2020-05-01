@@ -1,9 +1,10 @@
 import os
 import sys
+from functools import partial
 os.environ['TF_CPP_MIN_LOG_LEVEL']='3'  #disable tensorflow debugging
 
 from tensorflow.compat.v1.keras.models import Sequential
-from tensorflow.compat.v1.keras.layers import Dense, Dropout, BatchNormalization
+from tensorflow.compat.v1.keras.layers import Dense, Dropout, Conv1D, MaxPooling1D, BatchNormalization
 stderr = sys.stderr
 sys.stderr = open(os.devnull, 'w')
 from tensorflow.compat.v1.keras.wrappers.scikit_learn import KerasRegressor
@@ -13,29 +14,53 @@ import numpy as np
 
 from termcolor import cprint
 
-def create_model(layers, activation, input_dim, output_dim):
-    '''
-    Builds and compiles a Keras Sequential model based on the given
-    parameters.
 
-    :param layers: [hiddenlayer1_nodes,hiddenlayer2_nodes,...]
-    :param activation: e.g. relu
-    :param input_dim: number of input nodes
-    :return: Keras model
-    '''
-    model = Sequential()
-    for i, nodes in enumerate(layers):
-        if i==0:
-            model.add(Dense(nodes,input_dim=input_dim, activation=activation))
-        else:
-            model.add(Dense(nodes, activation=activation))
-        if (i + 1) < len(layers):
-            model.add(Dropout(rate=0.5))
+def create_model_template(network):
+    def create_model(layers, activation, input_dim, output_dim):
+        '''
+        Builds and compiles a Keras Sequential model based on the given
+        parameters.
+
+        :param layers: [hiddenlayer1_nodes,hiddenlayer2_nodes,...]
+        :param activation: e.g. relu
+        :param input_dim: number of input nodes
+        :return: Keras model
+        '''
+        model = Sequential()
+        if network == 'mlp':
+            for i, nodes in enumerate(layers):
+                if i==0:
+                    model.add(Dense(nodes,input_dim=input_dim, activation=activation))
+                else:
+                    model.add(Dense(nodes, activation=activation))
+                # Only add Dropout if there are two or more layers (reproducibility of original results)
+                if (i + 1) < len(layers):
+                    model.add(Dropout(rate=0.5))
+                
+            # Only add BatchNormalization if there are two or more layers (reproducibility of original results)
+            if len(layers) > 1:
+                model.add(BatchNormalization())
+
+        elif network == 'cnn':
+            if len(layers) < 2:
+                raise RuntimeError("CNN must have at least 2 layers (1 Conv1D layer and 1 dense layer)")
+            for i, nodes in enumerate(layers[:-1]):
+                model.add(Conv1D(nodes,
+                                 kernel_size=3,
+                                 padding='valid',
+                                 activation=activation,
+                                 strides=1))
+                model.add(MaxPooling()) 
             model.add(BatchNormalization())
-    model.add(Dense(output_dim, activation='linear'))
-    model.compile(loss='mse',optimizer='adam')
+            # Last hidden layer is normal dense layer
+            model.add(Dense(layers[-1], activation=activation))
+        else:
+            raise ValueError("Network must either be 'mlp' or 'cnn'")
+        model.add(Dense(output_dim, activation='linear'))
+        model.compile(loss='mse',optimizer='adam')
 
-    return model
+        return model
+    return create_model
 
 
 def model_cv(model_constr, config, X_train, y_train):
@@ -91,7 +116,8 @@ def model_handler(word_embedding,
                   X_train,
                   y_train,
                   X_test,
-                  y_test):
+                  y_test,
+                  network):
     '''
     Performs cross-validation on chunks of training data to determine best parametrization
     based on parameter grid given in config. Predicts with best-performing model on chunks
@@ -115,7 +141,7 @@ def model_handler(word_embedding,
         word_error = np.array([emb_type] + ['e' + str(i) for i in range(1, y_test[0].shape[1]+1)], dtype='str')
 
     for i in range(len(X_train)):
-        grid, grid_result = model_cv(create_model,
+        grid, grid_result = model_cv(create_model_template(network),
                                      config,
                                      X_train[i],
                                      y_train[i])

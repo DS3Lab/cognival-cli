@@ -15,7 +15,8 @@ def handler(mode,
             word_embedding,
             cognitive_data,
             feature,
-            truncate_first_line):
+            truncate_first_line,
+            network):
     '''
     Takes a configuration dictionary and keys for a word embedding and cognitive
     data source, applies a model (as per configuration) and returns
@@ -48,7 +49,8 @@ def handler(mode,
                                                        X_train,
                                                        y_train,
                                                        X_test,
-                                                       y_test)
+                                                       y_test,
+                                                       network)
 
     return word_error, grids_result, mserrors
 
@@ -66,7 +68,8 @@ def run_single(mode,
                modality,
                feature,
                truncate_first_line,
-               gpu_id):
+               gpu_id,
+               network):
     '''
     Takes a configuration dictionary and keys for a word embedding and cognitive
     data source, runs model, logs results and prepares output for plotting.
@@ -132,7 +135,8 @@ def run_single(mode,
                                                  word_embedding,
                                                  cognitive_data,
                                                  feature,
-                                                 truncate_first_line)
+                                                 truncate_first_line,
+                                                 network)
 
     history = {'loss':[],'val_loss':[]}
     loss_list =[]
