@@ -111,13 +111,19 @@ COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1ouonaByYn2cnDAWihnQ3cGmM
 @argument("cognitive_sources", type=list, description="List of cognitive sources")
 @argument("cognitive_features", type=list, description="List of cognitive features")
 @argument("baselines", type=bool, description="Compute random baseline(s) corresponding to specified embedding")
+@argument("cache_random", type=bool, description="If True, random embeddings with identical parametrization are cached. Defaults to False.")
+@argument("network", type=str, description="Use a multi-layer perceptron with Dropout and BatchNormalization ('mlp', default) or \
+                                            a 1D CNN ('cnn') with MaxPooling after each layer and BatchNormalization (Keras default parameters otherwise). \
+                                            If CNN, at least two hidden layers must be specified and the last hidden layer is considered a Dense layer.")
 def run(embeddings=['all'],
         modalities=None,
         cognitive_sources=['all'],
         cognitive_features=None,
         processes=None,
         n_gpus=None,
-        baselines=True):
+        baselines=True,
+        cache_random=False,
+        network='mlp'):
     '''
     Run parallelized evaluation of single, selected or all combinations of embeddings and cognitive sources.
     '''
@@ -146,7 +152,9 @@ def run(embeddings=['all'],
                                n_gpus,
                                max_gpus,
                                visible_gpu_ids,
-                               baselines)
+                               baselines,
+                               cache_random,
+                               network)
     if config_dict:
         _save_config(config_dict, configuration, resources_path)
 

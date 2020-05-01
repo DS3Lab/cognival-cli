@@ -45,10 +45,10 @@ def test_significance(baseline, model, alpha, test, debug=False):
     return significant, pvalue, name
 
 
-def save_errors(emb_scores, emb_filename, base_scores, base_filename, output_dir):
+def save_errors(emb_type, emb_scores, emb_filename, base_scores, base_filename, output_dir):
     emb_scores['error'] = emb_scores['error'].abs()
 
-    if base_scores:
+    if base_scores is not None:
         base_scores['error'] = base_scores['error'].abs()
 
     strings = []
@@ -59,16 +59,17 @@ def save_errors(emb_scores, emb_filename, base_scores, base_filename, output_dir
         try:
             emb_score = emb_scores.loc[string]['error']
             emb_scores_col.append(emb_score)
-            if base_scores:
+            if base_scores is not None:
                 base_score = base_scores.loc[string]['error']
                 base_scores_col.append(base_score)
             strings.append(string)
         except KeyError:
             continue
     
-    df_emb = pd.DataFrame({'string': strings, 'error': emb_scores_col})
-    if base_scores:
-        df_base = pd.DataFrame({'string': strings, 'error': base_scores_col})
+    df_emb = pd.DataFrame({emb_type: strings, 'error': emb_scores_col})
+    
+    if base_scores is not None:
+        df_base = pd.DataFrame({emb_type: strings, 'error': base_scores_col})
         df_list = [(df_emb, Path(output_dir) / emb_filename),
                    (df_base, Path(output_dir) / base_filename)]
     else:

@@ -127,7 +127,9 @@ def run(configuration,
         n_gpus,
         max_gpus,
         visible_gpu_ids,
-        baselines):
+        baselines,
+        cache_random,
+        network):
 
     cog_sources_conf = _open_cog_config(resources_path)
     if not _check_cog_installed(resources_path):
@@ -172,17 +174,36 @@ def run(configuration,
                                 cog_sources_list,
                                 cog_source_to_feature,
                                 n_jobs=processes,
-                                gpu_ids=gpu_ids)
+                                gpu_ids=gpu_ids,
+                                cache_random=cache_random,
+                                network=network)
 
     try:
         # Process and write results (required for significance testing) and option files (required for aggregation) per modality
         run_stats = collections.defaultdict(dict)
         for id_, (modality, result_proper, result_random, rand_emb, options) in enumerate(results):
-            # Confirm that embedding results are paired with corresponding random baseline results
+            # Confirm that embedding results are paired with corresponding random baseline resultsi
+            if result_random is not None:
+                rand_emb_label, result_random = result_random
+
+                if cache_random:
+                    # Rename random embeddings if reused for other embeddings (cache_random=True)
+                    # TODO: Replace this with a better version at some point
+                    rand_emb_suffix = rand_emb_label.split('_for_')[1]
+                    result_random_renamed = []
+                    for fold in result_random:
+                        rand_emb_fold_label = fold[0]
+                        if rand_emb_fold_label.endswith(rand_emb_suffix):
+                            break
+                        else:
+                            rand_emb_fold_prefix = rand_emb_fold_label.split('_for_')[0]
+                            result_random_renamed.append(tuple(['{}_for_{}'.format(rand_emb_fold_prefix, rand_emb_suffix)] + list(fold[1:])))
+                    result_random = result_random_renamed if result_random_renamed else result_random
+
             if result_random is None:
                 result_random = []
             else:
-                assert result_proper[0] in result_random[0][0]
+                assert result_proper[0] in rand_emb_label
 
             process_and_write_results(result_proper,
                                       result_random,
@@ -790,7 +811,6 @@ def significance(configuration,
         embeddings = list(config_dict["wordEmbConfig"])
         
         hypothesis_counter = collections.Counter()
-        print("Extracting averaged errors ...")
         # Extract results for significance testing
         for ds in datasets:
             for feat in config_dict["cogDataConfig"][ds]["features"]:
@@ -1667,7 +1687,7 @@ def import_embeddings(x,
         if embedding_registry['proper'][emb_name]['chunked']:
             cprint('Chunking {} ...'.format(emb_name), 'yellow')
             chunk(base_path,
-                    base_path.parent,
+                    base_path,
                     emb_file,
                     embedding_registry['proper'][emb_name]['chunked_file'],
                     number_of_chunks=embedding_registry['proper'][emb_name]['chunk_number'],

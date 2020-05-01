@@ -17,8 +17,6 @@ from utils import animated_loading
 import GPUtil
 from termcolor import cprint, colored
 
-#TODO: clear all WARNINGS!
-
 class StopException(Exception): pass
 
 def run_parallel(config_dict,
@@ -27,7 +25,9 @@ def run_parallel(config_dict,
                  cog_sources_list,
                  cog_source_to_feature,
                  n_jobs=None,
-                 gpu_ids=None):
+                 gpu_ids=None,
+                 cache_random=False,
+                 network=None):
 
     if gpu_ids:
         gpu_ids_list = gpu_ids
@@ -100,57 +100,80 @@ def run_parallel(config_dict,
     async_results_random = []
     rand_embeddings = []
 
+    rand_cache = {}
+    rand_key_to_proper = {}
+
     try:
-        for option in options:
+        for id_, option in enumerate(options):
             random_embeddings = option["random_embedding"]
             rand_embeddings.append(random_embeddings)
             proper_params = [('proper',
-                                                                            config_dict,
-                                                                            option["type"],
-                                                                            option["wordEmbedding"],
-                                                                            option["cognitiveData"],
-                                                                            option["cognitiveParent"],
-                                                                            option["multiHypothesis"],
-                                                                            option["multiFile"],
-                                                                            option["stratifiedSampling"],
-                                                                            option["balance"],
-                                                                            option["modality"],
-                                                                            option["feature"],
-                                                                            option["truncate_first_line"],
-                                                                            ','.join(map(str, gpu_ids_list)))]
+                             config_dict,
+                             option["type"],
+                             option["wordEmbedding"],
+                             option["cognitiveData"],
+                             option["cognitiveParent"],
+                             option["multiHypothesis"],
+                             option["multiFile"],
+                             option["stratifiedSampling"],
+                             option["balance"],
+                             option["modality"],
+                             option["feature"],
+                             option["truncate_first_line"],
+                             ','.join(map(str, gpu_ids_list)),
+                             network)]
             random_params = [] 
             if random_embeddings:
                 for random_embedding in config_dict["randEmbSetToParts"][random_embeddings]:
                     random_params.append(('random',
-                                                                                        config_dict,
-                                                                                        option["type"],
-                                                                                        random_embedding,
-                                                                                        option["cognitiveData"],
-                                                                                        option["cognitiveParent"],
-                                                                                        option["multiHypothesis"],
-                                                                                        option["multiFile"],
-                                                                                        option["stratifiedSampling"],
-                                                                                        option["balance"],
-                                                                                        option["modality"],
-                                                                                        option["feature"],
-                                                                                        option["truncate_first_line"],
-                                                                                        ','.join(map(str, gpu_ids_list))))
+                                            config_dict,
+                                            option["type"],
+                                            random_embedding,
+                                            option["cognitiveData"],
+                                            option["cognitiveParent"],
+                                            option["multiHypothesis"],
+                                            option["multiFile"],
+                                            option["stratifiedSampling"],
+                                            option["balance"],
+                                            option["modality"],
+                                            option["feature"],
+                                            option["truncate_first_line"],
+                                            ','.join(map(str, gpu_ids_list))),
+                                            network)
                 
             result_proper = pool.starmap_async(cog_evaluate.run_single, proper_params)
             if random_params:
-                result_random = pool.starmap_async(cog_evaluate.run_single, random_params)
+                if cache_random:
+                    # Unique key consisting of cognitive source, random embedding name (without embedding suffix) and parametrization as dumped JSON str
+                    random_key = json.dumps([option["cognitiveData"],
+                                             random_embeddings.split('_for_')[0], 
+                                             [config_dict["cogDataConfig"][option["cognitiveData"]]['wordEmbSpecifics'][rand_emb_part] for rand_emb_part in sorted(config_dict["randEmbSetToParts"][random_embeddings])]], indent=4, sort_keys=True)
+                    try:
+                        result_random = random_embeddings, rand_cache[random_key]
+                        cprint("[{}]: Reusing random embeddings results for {} (computation initiated by {})".format(option["cognitiveData"],
+                                                                                                                     random_embeddings,
+                                                                                                                     rand_key_to_proper[(option["cognitiveData"], random_key)]),
+                                                                                                                     'yellow')
+                    except KeyError:
+                        async_result = pool.starmap_async(cog_evaluate.run_single, random_params)
+                        result_random = random_embeddings, async_result
+                        rand_cache[random_key] = async_result
+                        rand_key_to_proper[(option["cognitiveData"], random_key)] = option["wordEmbedding"]
+                else:
+                    result_random = random_embeddings, pool.starmap_async(cog_evaluate.run_single, random_params)
             else:
-                result_random = None
+                result_random = None, None
             async_results_proper.append(result_proper)
             async_results_random.append(result_random)
         
-        async_results_proper = [(idx, ar) for idx, ar in enumerate(async_results_proper)]
-        async_results_random = [(idx, ar) for idx, ar in enumerate(async_results_random)]
+        async_results_proper = [(idx, None,  ar) for idx, ar in enumerate(async_results_proper)]
+        async_results_random = [(idx, rand_emb, ar) for idx, (rand_emb, ar) in enumerate(async_results_random)]
 
+        # Delete cache object to ensure GC of results that are no longer needed
+        del rand_cache
         prev_completed = None
     
         # Main loop
-
         num_jobs = len(async_results_proper)
         completed = 0
 
@@ -165,12 +188,12 @@ def run_parallel(config_dict,
                 # Iterate over MapResult objects for proper and random embeddings
                 for type_, ar_list, ar_list_remaining in [('proper', async_results_proper, async_results_proper_remaining),
                                                           ('random', async_results_random, async_results_random_remaining)]:
-                    for idx, ar in ar_list:
+                    for idx, rand_emb, ar in ar_list:
                         if ar is not None:
                             # Process not yet terminated
                             if not ar.ready():
                                 all_ready = False
-                                ar_list_remaining.append((idx, ar))
+                                ar_list_remaining.append((idx, rand_emb, ar))
                             # Processed finished or failed
                             else:
                                 # Terminate pool if a process fails
@@ -182,9 +205,9 @@ def run_parallel(config_dict,
                                     if type_ == 'proper':
                                         collector[idx]['proper'] = ar.get()[0]
                                     elif type_ == 'random':
-                                        collector[idx]['random'] = ar.get()
+                                        collector[idx]['random'] = rand_emb, ar.get()
                         else:
-                            collector[idx][type_] = ar
+                            collector[idx][type_] = None
 
                 # Iterate over collector
                 for idx in sorted(collector.keys()):
@@ -226,7 +249,7 @@ def run_parallel(config_dict,
                                                               (completed/num_jobs)*100),
                                                               attrs=['bold'])
                     prev_completed = completed
-
+        
                 async_results_proper = async_results_proper_remaining
                 async_results_random = async_results_random_remaining
 

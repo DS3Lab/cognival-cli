@@ -58,8 +58,12 @@ def extract_errors(run_id, modality, experiment, mapping_dict, input_dir, result
     else:
         random_df = None
 
-    save_errors(embeddings_df,
+    save_errors(emb_type,
+                embeddings_df,
                 'embeddings_avg_errors_' + '{}.txt'.format(experiment),
                 random_df,
                 'baseline_avg_errors_' + '{}.txt'.format(experiment),
                 results_dir)
+
+    if random_df is not None:
+        return True
