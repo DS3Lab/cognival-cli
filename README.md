@@ -30,8 +30,9 @@ For practical purposes, this tool should be used. It is based on the original co
 
 ### Installing from source
 1. Clone or download this repository as a ZIP.  
-2. Manually install all Python requirements specified in `requirements.txt`.  
-3. In the main `cognival-cli` directory, run:  
+2. Manually install all Python requirements specified in `requirements.txt`. 
+3. Execute `python -m nltk.downloader 'punkt'` to install the NLTK Punkt tokenizer (required by some sentence embeddings)
+4. In the main `cognival-cli` directory, run:  
 `python setup.py install`
 
 ### Requirements

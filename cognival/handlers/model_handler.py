@@ -4,7 +4,7 @@ from functools import partial
 os.environ['TF_CPP_MIN_LOG_LEVEL']='3'  #disable tensorflow debugging
 
 from tensorflow.compat.v1.keras.models import Sequential
-from tensorflow.compat.v1.keras.layers import Dense, Dropout, Conv1D, MaxPooling1D, BatchNormalization
+from tensorflow.compat.v1.keras.layers import Dense, Dropout, Conv1D, MaxPooling1D, BatchNormalization, Flatten, Reshape
 stderr = sys.stderr
 sys.stderr = open(os.devnull, 'w')
 from tensorflow.compat.v1.keras.wrappers.scikit_learn import KerasRegressor
@@ -15,7 +15,7 @@ import numpy as np
 from termcolor import cprint
 
 
-def create_model_template(network):
+def create_model_template(network, shape):
     def create_model(layers, activation, input_dim, output_dim):
         '''
         Builds and compiles a Keras Sequential model based on the given
@@ -33,33 +33,39 @@ def create_model_template(network):
                     model.add(Dense(nodes,input_dim=input_dim, activation=activation))
                 else:
                     model.add(Dense(nodes, activation=activation))
-                # Only add Dropout if there are two or more layers (reproducibility of original results)
-                if (i + 1) < len(layers):
-                    model.add(Dropout(rate=0.5))
+                model.add(Dropout(rate=0.5))
                 
-            # Only add BatchNormalization if there are two or more layers (reproducibility of original results)
-            if len(layers) > 1:
-                model.add(BatchNormalization())
+            model.add(BatchNormalization())
 
         elif network == 'cnn':
             if len(layers) < 2:
                 raise RuntimeError("CNN must have at least 2 layers (1 Conv1D layer and 1 dense layer)")
             for i, nodes in enumerate(layers[:-1]):
-                model.add(Conv1D(nodes,
-                                 kernel_size=3,
-                                 padding='valid',
-                                 activation=activation,
-                                 strides=1))
-                model.add(MaxPooling()) 
+                if i == 0:
+                    model.add(Reshape((shape[1], 1), input_shape=(shape[1], )))
+                    model.add(Conv1D(nodes,
+                                  input_shape=shape[1:],
+                                  kernel_size=3,
+                                  padding='valid',
+                                  activation=activation,
+                                  strides=2))
+                else:
+                    model.add(Conv1D(nodes,
+                                  kernel_size=3,
+                                  padding='valid',
+                                  activation=activation,
+                                  strides=1))
+                model.add(MaxPooling1D()) 
             model.add(BatchNormalization())
             # Last hidden layer is normal dense layer
+            model.add(Flatten())
             model.add(Dense(layers[-1], activation=activation))
         else:
             raise ValueError("Network must either be 'mlp' or 'cnn'")
         model.add(Dense(output_dim, activation='linear'))
         model.compile(loss='mse',optimizer='adam')
-
         return model
+
     return create_model
 
 
@@ -141,7 +147,7 @@ def model_handler(word_embedding,
         word_error = np.array([emb_type] + ['e' + str(i) for i in range(1, y_test[0].shape[1]+1)], dtype='str')
 
     for i in range(len(X_train)):
-        grid, grid_result = model_cv(create_model_template(network),
+        grid, grid_result = model_cv(create_model_template(network, X_train[i].shape),
                                      config,
                                      X_train[i],
                                      y_train[i])
