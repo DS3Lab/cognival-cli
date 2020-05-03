@@ -19,7 +19,7 @@ sys.stderr = open(os.devnull, 'w')
 from tensorflow.compat.v1.keras.wrappers.scikit_learn import KerasRegressor
 sys.stderr = stderr
 
-def create_model_template(network, shape):
+def create_model_template(network, shape, legacy):
     def create_model(layers, activation, input_dim, output_dim):
         '''
         Builds and compiles a Keras Sequential model based on the given
@@ -37,9 +37,11 @@ def create_model_template(network, shape):
                     model.add(Dense(nodes,input_dim=input_dim, activation=activation))
                 else:
                     model.add(Dense(nodes, activation=activation))
-                model.add(Dropout(rate=0.5))
-                
-            model.add(BatchNormalization())
+                if not legacy:
+                    model.add(Dropout(rate=0.5))
+    
+            if not legacy:    
+                model.add(BatchNormalization())
 
         elif network == 'cnn':
             if len(layers) < 2:
@@ -68,6 +70,7 @@ def create_model_template(network, shape):
             raise ValueError("Network must either be 'mlp' or 'cnn'")
         model.add(Dense(output_dim, activation='linear'))
         model.compile(loss='mse',optimizer='adam')
+        print(model.summary())
         return model
 
     return create_model
@@ -116,7 +119,7 @@ def model_predict(grid, words, X_test, y_test):
     return mse, word_error
 
 
-def model_loop(i, X_train, X_test, y_train, y_test, words_test, network, gpu_id, config, cognitive_data, feature, word_embedding):
+def model_loop(i, X_train, X_test, y_train, y_test, words_test, network, gpu_id, config, cognitive_data, feature, word_embedding, legacy):
     '''
     Performs GridsearchCV on a single fold of the (outer) cross-validation and returns best model refitted on full data.
     '''
@@ -143,7 +146,7 @@ def model_loop(i, X_train, X_test, y_train, y_test, words_test, network, gpu_id,
         set_session(session)
         session.run(init)
         with session.as_default():
-            grid, grid_result = model_cv(create_model_template(network, X_train[i].shape),
+            grid, grid_result = model_cv(create_model_template(network, X_train[i].shape, legacy),
                          config,
                          X_train[i],
                          y_train[i])
@@ -174,7 +177,8 @@ def model_handler(word_embedding,
                   X_test,
                   y_test,
                   network,
-                  gpu_id):
+                  gpu_id,
+                  legacy):
     '''
     Performs cross-validation on chunks of training data to determine best parametrization
     based on parameter grid given in config. Predicts with best-performing model on chunks
@@ -198,7 +202,7 @@ def model_handler(word_embedding,
         word_error = np.array([emb_type] + ['e' + str(i) for i in range(1, y_test[0].shape[1]+1)], dtype='str')
 
     for i in range(len(X_train)):
-        grid, grid_result, mse, w_e = model_loop(i, X_train, X_test, y_train, y_test, words_test, network, gpu_id, config, cognitive_data, feature, word_embedding)
+        grid, grid_result, mse, w_e = model_loop(i, X_train, X_test, y_train, y_test, words_test, network, gpu_id, config, cognitive_data, feature, word_embedding, legacy)
 
         grids.append(grid)
         grids_result.append(grid_result)

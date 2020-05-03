@@ -115,6 +115,7 @@ COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1ouonaByYn2cnDAWihnQ3cGmM
 @argument("network", type=str, description="Use a multi-layer perceptron with Dropout and BatchNormalization ('mlp', default) or \
                                             a 1D CNN ('cnn') with MaxPooling after each layer and BatchNormalization (Keras default parameters otherwise). \
                                             If CNN, at least two hidden layers must be specified and the last hidden layer is considered a Dense layer.")
+@argument("legacy", type=bool, description="If True, use legacy mode when network is MLP (no Dropout, no BatchRegularization). Defaults to False") 
 def run(embeddings=['all'],
         modalities=None,
         cognitive_sources=['all'],
@@ -123,7 +124,8 @@ def run(embeddings=['all'],
         n_gpus=None,
         baselines=True,
         cache_random=False,
-        network='mlp'):
+        network='mlp',
+        legacy=False):
     '''
     Run parallelized evaluation of single, selected or all combinations of embeddings and cognitive sources.
     '''
@@ -154,7 +156,8 @@ def run(embeddings=['all'],
                                visible_gpu_ids,
                                baselines,
                                cache_random,
-                               network)
+                               network,
+                               legacy)
     if config_dict:
         _save_config(config_dict, configuration, resources_path)
 
