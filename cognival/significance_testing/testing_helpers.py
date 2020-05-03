@@ -76,6 +76,10 @@ def save_errors(emb_type, emb_scores, emb_filename, base_scores, base_filename, 
         df_list = [(df_emb, Path(output_dir) / emb_filename)]
 
     for df, out_file in df_list:
+        try:
+            os.remove(out_file)
+        except FileNotFoundError:
+            pass
         df.to_csv(out_file,
                   sep=" ",
                   quotechar='"',

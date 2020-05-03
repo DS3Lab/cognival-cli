@@ -1,6 +1,7 @@
 import csv
 import json
 import os
+import shutil
 import numpy as np
 import pandas as pd
 
@@ -82,8 +83,8 @@ def write_results(config, log, word_error, history):
 
     experiments_dir = output_dir / "experiments" / path
 
-    if not os.path.exists(experiments_dir):
-        os.makedirs(experiments_dir)
+    shutil.rmtree(experiments_dir, ignore_errors=True)
+    os.makedirs(experiments_dir, exist_ok=True)
 
     with open(experiments_dir / '{}.json'.format(log["wordEmbedding"]),'w') as f:
         json.dump(log,f,indent=4, sort_keys=True)
