@@ -1156,7 +1156,7 @@ def update_embeddings(resources_path,
     
     for emb_name in embeddings:
         cprint("Updating {} ...".format(emb_name), attrs=['bold'], color='yellow')
-        if emb_name in embedding_registr['proper'] and embedding_registry['proper'][emb_name]['installed']:
+        if emb_name in embedding_registry['proper'] and embedding_registry['proper'][emb_name]['installed']:
             emb_type = embedding_registry['proper'][emb_name]['type'] 
             base_path = embeddings_path / embedding_registry['proper'][emb_name]['path'] / emb_type
             emb_file = Path(embedding_registry['proper'][emb_name]['embedding_file'])
