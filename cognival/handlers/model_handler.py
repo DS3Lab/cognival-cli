@@ -139,7 +139,7 @@ def model_loop(i, X_train, X_test, y_train, y_test, words_test, network, gpu_id,
 
     
     with tf.compat.v1.Session(config=tf_config) as session:
-        init = tf.global_variables_initializer() # This reinitializes keras weights, so must be put before Keras loading
+        init = tf.compat.v1.global_variables_initializer() # This reinitializes keras weights, so must be put before Keras loading
         set_session(session)
         session.run(init)
         with session.as_default():
@@ -157,7 +157,7 @@ def model_loop(i, X_train, X_test, y_train, y_test, words_test, network, gpu_id,
                  X_test[i],
                  y_test[i])
 
-    tf.reset_default_graph()
+    tf.compat.v1.reset_default_graph()
     clear_session()
 
     return grid, grid_result, mse, w_e
