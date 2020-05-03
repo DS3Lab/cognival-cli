@@ -181,8 +181,15 @@ def run(configuration,
     try:
         # Process and write results (required for significance testing) and option files (required for aggregation) per modality
         run_stats = collections.defaultdict(dict)
+        
+        # Remove mapping dict from aborted run with same Run ID (if applicable)
+        try:
+            os.remove(Path(config_dict['PATH']) / config_dict['outputDir'] / 'mapping_{}.json'.format(config_dict["run_id"]))
+        except FileNotFoundError:
+            pass
+
         for id_, (modality, result_proper, result_random, rand_emb, options) in enumerate(results):
-            # Confirm that embedding results are paired with corresponding random baseline resultsi
+            # Confirm that embedding results are paired with corresponding random baseline results
             if result_random is not None:
                 rand_emb_label, result_random = result_random
 
