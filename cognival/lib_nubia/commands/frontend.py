@@ -519,7 +519,7 @@ class Update:
 
     @command
     @argument('embeddings', type=list, description="Either list of embeddings or None (all embeddings, default).")
-    @argument('which', type=list, description="Whether to update 'word', 'sentence' or 'both' (default) embeddings.")
+    @argument('which', type=str, description="Whether to update 'word', 'sentence' or 'both' (default) embeddings.")
     def embeddings(self, embeddings=None, which='both'):
         """
         Update embeddings that are generated in CogniVal (BERT, ELMo), average sentence embeddings and random embeddings.
