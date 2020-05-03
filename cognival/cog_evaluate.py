@@ -16,7 +16,8 @@ def handler(mode,
             cognitive_data,
             feature,
             truncate_first_line,
-            network):
+            network,
+            gpu_id):
     '''
     Takes a configuration dictionary and keys for a word embedding and cognitive
     data source, applies a model (as per configuration) and returns
@@ -50,7 +51,8 @@ def handler(mode,
                                                        y_train,
                                                        X_test,
                                                        y_test,
-                                                       network)
+                                                       network,
+                                                       gpu_id)
 
     return word_error, grids_result, mserrors
 
@@ -82,29 +84,6 @@ def run_single(mode,
     :param truncate_first_line: If the first line of the embedding file should be truncated (when containing meta data)
     :param gpu_ids: IDs of available GPUs
     '''
-    # Tensorflow configuration
-    import tensorflow as tf
-    from tensorflow.compat.v1.keras.backend import set_session, clear_session
-
-    if gpu_id is not None:
-        gpu_count = 1
-        soft_placement = True
-    else:
-        gpu_count = 0
-        soft_placement = False
-    
-    tf_config = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1,
-                                         inter_op_parallelism_threads=1,
-                                         allow_soft_placement=soft_placement,
-                                         device_count={'GPU': gpu_count, 'CPU': 1})
-    if gpu_id is not None:
-        tf_config.gpu_options.allow_growth = True
-        tf_config.gpu_options.per_process_gpu_memory_fraction = 0.25
-        tf_config.gpu_options.visible_device_list = str(gpu_id)
-    
-    session = tf.compat.v1.Session(config=tf_config)
-    set_session(session)
-    
     ##############################################################################
     #   Create logging information
     ##############################################################################
@@ -136,7 +115,8 @@ def run_single(mode,
                                                  cognitive_data,
                                                  feature,
                                                  truncate_first_line,
-                                                 network)
+                                                 network,
+						 gpu_id)
 
     history = {'loss':[],'val_loss':[]}
     loss_list =[]
@@ -183,9 +163,5 @@ def run_single(mode,
 
     timeTaken = datetime.now() - startTime
     logging["timeTaken"] = str(timeTaken)
-
-    # Clean-up tf session
-    session.close()
-    clear_session()
 
     return word_embedding, logging, word_error, history

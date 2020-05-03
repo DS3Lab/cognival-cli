@@ -12,7 +12,6 @@ import cog_evaluate
 from contextlib import redirect_stdout
 
 from handlers.file_handler import *
-from utils import animated_loading
 
 import GPUtil
 from termcolor import cprint, colored

@@ -12,24 +12,7 @@ import spacy
 from tqdm import tqdm
 from termcolor import cprint
 
-from allennlp.commands.elmo import ElmoEmbedder
-import torch
-from torch.autograd import Variable
-from transformers import BertTokenizer, BertModel
-from skipthoughts import BiSkip
-
-import tensorflow as tf
-import tensorflow_hub as hub
 import time
-
-tf.compat.v1.logging.set_verbosity(0)
-
-from handlers.sentence_embeddings.infersent.models import InferSent
-from handlers.sentence_embeddings.quickthought import configuration as quickthought_config
-from handlers.sentence_embeddings.quickthought import encoder_manager as quickthought_enc_manager
-
-from handlers.sentence_embeddings.skip_thoughts import configuration as skipthought_config
-from handlers.sentence_embeddings.skip_thoughts import encoder_manager as skipthought_enc_manager
 
 def get_resources(base_path, resources_path):
     nlp = get_nlp()
@@ -78,6 +61,8 @@ def export_df(emb_path, emb_file, sentences, matrix, dimensions):
 
 
 def generate_bert_sentence_embs(resources_path, emb_params, base_path, emb_file):
+    from transformers import BertTokenizer, BertModel
+
     nlp, emb_path, sent_vocab, sentences = get_resources(base_path, resources_path)
 
     print("Obtaining transformers model {}. Unless already downloaded, this may take several minutes ...".format(emb_params['internal_name']) )
@@ -99,6 +84,8 @@ def generate_bert_sentence_embs(resources_path, emb_params, base_path, emb_file)
 
 
 def generate_elmo_sentence_embs(resources_path, emb_params, base_path, emb_file):
+    from allennlp.commands.elmo import ElmoEmbedder
+
     nlp, emb_path, sent_vocab, sentences = get_resources(base_path, resources_path)
     print("Tokenizing ...")
     sentence_tokens = [[token.text for token in nlp(sentence)] for sentence in tqdm(sentences)]
@@ -137,6 +124,9 @@ def generate_powermean_sentence_embs(resources_path, emb_params, base_path, emb_
 
 
 def generate_skipthought_sentence_embs(variant, resources_path, emb_params, base_path, emb_file):
+    from handlers.sentence_embeddings.skip_thoughts import configuration as skipthought_config
+    from handlers.sentence_embeddings.skip_thoughts import encoder_manager as skipthought_enc_manager
+
     nlp, emb_path, sent_vocab, sentences = get_resources(base_path, resources_path)
         
     encoder = skipthought_enc_manager.EncoderManager()
@@ -160,6 +150,9 @@ def generate_skipthought_sentence_embs(variant, resources_path, emb_params, base
 
 
 def generate_quickthought_sentence_embs(resources_path, emb_params, base_path, emb_file):
+    from handlers.sentence_embeddings.quickthought import configuration as quickthought_config
+    from handlers.sentence_embeddings.quickthought import encoder_manager as quickthought_enc_manager
+
     nlp, emb_path, sent_vocab, sentences = get_resources(base_path, resources_path)
     encoder = quickthought_enc_manager.EncoderManager()
     
@@ -220,6 +213,7 @@ def generate_use_sentence_embs(resources_path, emb_params, base_path, emb_file):
 
 
 def generate_infersent_sentence_embs(resources_path, emb_params, base_path, emb_file):
+    from handlers.sentence_embeddings.infersent.models import InferSent
     nlp, emb_path, sent_vocab, sentences = get_resources(base_path, resources_path)
     params_model = {'bsize': 64,
                     'word_emb_dim': 300,
@@ -245,6 +239,11 @@ def generate_sent_embeddings(name,
                              emb_params,
                              base_path,
                              emb_file):
+    import tensorflow as tf
+    import tensorflow_hub as hub
+    tf.compat.v1.logging.set_verbosity(0)
+    import torch
+
     if 'bert' in name:
         generate_bert_sentence_embs(resources_path, emb_params, base_path, emb_file)
     elif name == 'elmo-sentence':

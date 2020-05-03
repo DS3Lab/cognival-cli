@@ -3,17 +3,21 @@ import sys
 from functools import partial
 os.environ['TF_CPP_MIN_LOG_LEVEL']='3'  #disable tensorflow debugging
 
-from tensorflow.compat.v1.keras.models import Sequential
-from tensorflow.compat.v1.keras.layers import Dense, Dropout, Conv1D, MaxPooling1D, BatchNormalization, Flatten, Reshape
-stderr = sys.stderr
-sys.stderr = open(os.devnull, 'w')
-from tensorflow.compat.v1.keras.wrappers.scikit_learn import KerasRegressor
-sys.stderr = stderr
 from sklearn.model_selection import GridSearchCV
 import numpy as np
 
 from termcolor import cprint
+import importlib
 
+import tensorflow as tf
+from tensorflow.compat.v1.keras.backend import set_session, clear_session
+from tensorflow.compat.v1.keras.models import Sequential
+from tensorflow.compat.v1.keras.layers import Dense, Dropout, Conv1D, MaxPooling1D, BatchNormalization, Flatten, Reshape
+
+stderr = sys.stderr
+sys.stderr = open(os.devnull, 'w')
+from tensorflow.compat.v1.keras.wrappers.scikit_learn import KerasRegressor
+sys.stderr = stderr
 
 def create_model_template(network, shape):
     def create_model(layers, activation, input_dim, output_dim):
@@ -80,7 +84,6 @@ def model_cv(model_constr, config, X_train, y_train):
     :param X_train: training data (embeddings)    
     :param y_train: training labels (cognitive data)
     '''
-
     model = KerasRegressor(build_fn=model_constr, verbose=0)
 
     param_grid = dict(layers=config["layers"], activation=config["activations"], input_dim=[X_train.shape[1]],
@@ -113,6 +116,53 @@ def model_predict(grid, words, X_test, y_test):
     return mse, word_error
 
 
+def model_loop(i, X_train, X_test, y_train, y_test, words_test, network, gpu_id, config, cognitive_data, feature, word_embedding):
+    '''
+    Performs GridsearchCV on a single fold of the (outer) cross-validation and returns best model refitted on full data.
+    '''
+    if gpu_id is not None:
+        gpu_count = 1
+        soft_placement = True
+    else:
+        gpu_count = 0
+        soft_placement = False
+ 
+    tf_config = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1,
+                                         inter_op_parallelism_threads=1,
+                                         allow_soft_placement=False,
+                                         device_count={'GPU': soft_placement, 'CPU': 1})
+
+    if gpu_id is not None:
+        tf_config.gpu_options.allow_growth = True
+        tf_config.gpu_options.per_process_gpu_memory_fraction = 0.25
+        tf_config.gpu_options.visible_device_list = str(gpu_id)
+
+    
+    with tf.compat.v1.Session(config=tf_config) as session:
+        init = tf.global_variables_initializer() # This reinitializes keras weights, so must be put before Keras loading
+        set_session(session)
+        session.run(init)
+        with session.as_default():
+            grid, grid_result = model_cv(create_model_template(network, X_train[i].shape),
+                         config,
+                         X_train[i],
+                         y_train[i])
+
+        cprint("{} / {} / {} - Fold #{} GridsearchCV best params: {}".format(cognitive_data, feature, word_embedding, i + 1, \
+        " | ".join(["{}: {}".format(k, v) for k, v in grid_result.best_params_.items()])),
+        'magenta')
+        
+        mse, w_e = model_predict(grid,
+                 words_test[i],
+                 X_test[i],
+                 y_test[i])
+
+    tf.reset_default_graph()
+    clear_session()
+
+    return grid, grid_result, mse, w_e
+
+
 def model_handler(word_embedding,
                   cognitive_data,
                   feature,
@@ -123,7 +173,8 @@ def model_handler(word_embedding,
                   y_train,
                   X_test,
                   y_test,
-                  network):
+                  network,
+                  gpu_id):
     '''
     Performs cross-validation on chunks of training data to determine best parametrization
     based on parameter grid given in config. Predicts with best-performing model on chunks
@@ -147,21 +198,12 @@ def model_handler(word_embedding,
         word_error = np.array([emb_type] + ['e' + str(i) for i in range(1, y_test[0].shape[1]+1)], dtype='str')
 
     for i in range(len(X_train)):
-        grid, grid_result = model_cv(create_model_template(network, X_train[i].shape),
-                                     config,
-                                     X_train[i],
-                                     y_train[i])
-        
-        cprint("{} / {} / {} - Fold #{} GridsearchCV best params: {}".format(cognitive_data, feature, word_embedding, i + 1, \
-                " | ".join(["{}: {}".format(k, v) for k, v in grid_result.best_params_.items()])),
-                'magenta')
+        grid, grid_result, mse, w_e = model_loop(i, X_train, X_test, y_train, y_test, words_test, network, gpu_id, config, cognitive_data, feature, word_embedding)
 
         grids.append(grid)
         grids_result.append(grid_result)
-        mse, w_e = model_predict(grid,
-                                 words_test[i],
-                                 X_test[i],
-                                 y_test[i])
+        
         mserrors.append(mse)
         word_error = np.vstack([word_error,w_e])
+
     return word_error, grids_result, mserrors
