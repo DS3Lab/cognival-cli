@@ -61,6 +61,7 @@ def export_df(emb_path, emb_file, sentences, matrix, dimensions):
 
 
 def generate_bert_sentence_embs(resources_path, emb_params, base_path, emb_file):
+    import torch
     from transformers import BertTokenizer, BertModel
 
     nlp, emb_path, sent_vocab, sentences = get_resources(base_path, resources_path)
@@ -83,27 +84,52 @@ def generate_bert_sentence_embs(resources_path, emb_params, base_path, emb_file)
     export_df(emb_path, emb_file, sentences, embeddings, emb_params["dimensions"])
 
 
-def generate_elmo_sentence_embs(resources_path, emb_params, base_path, emb_file):
+def generate_elmo_sentence_embs(resources_path, emb_params, base_path, emb_file, fixed_mean_pooling):
     from allennlp.commands.elmo import ElmoEmbedder
+    import tensorflow as tf
+    import tensorflow_hub as hub
+    tf.compat.v1.logging.set_verbosity(0)
 
     nlp, emb_path, sent_vocab, sentences = get_resources(base_path, resources_path)
     print("Tokenizing ...")
     sentence_tokens = [[token.text for token in nlp(sentence)] for sentence in tqdm(sentences)]
     embeddings = []
-    elmo = ElmoEmbedder()
-    print("Embedding ...")
-    for sent_tok in tqdm(sentence_tokens):
-        elmo_output = elmo.embed_sentence(sent_tok) # pass in as list of tokens
-        elmo_output = elmo_output.swapaxes(0, 1) # reorder for reshaping
-        elmo_word_embs_flattened = elmo_output.reshape(len(sent_tok), 3072) # flatten layers
-        elmo_sent_emb = elmo_word_embs_flattened.mean(axis=0)
-        embeddings.append(elmo_sent_emb)
 
+    print("Embedding ...")
+
+    if fixed_mean_pooling:
+        for sent_chunk in tqdm(np.array_split(sentence_tokens, 64)):
+            tokens_length = [len(tokens) for tokens in sent_chunk]
+            max_len = max(tokens_length)
+            sent_chunk = [tokens + [""]*(max_len - len(tokens)) for tokens in sent_chunk]
+            with tf.Graph().as_default():
+                elmo = hub.Module(emb_params['url'], trainable=True)
+                emb_tensor = elmo(inputs={"tokens": sent_chunk,
+                                          "sequence_len": tokens_length},
+                                  signature="tokens",
+                                  as_dict=True)["default"] # a fixed mean-pooling of all contextualized word representations with shape [batch_size, 1024]
+                with tf.compat.v1.train.SingularMonitoredSession() as sess: 
+                    embeddings.append(emb_tensor.eval(session=sess))
+            tf.keras.backend.clear_session()
+    else:
+        elmo = ElmoEmbedder()
+        for sent_tok in tqdm(sentence_tokens):
+            elmo_output = elmo.embed_sentence(sent_tok) # pass in as list of tokens
+            elmo_output = elmo_output.swapaxes(0, 1) # reorder for reshaping
+            elmo_word_embs_flattened = elmo_output.reshape(len(sent_tok), 3072) # flatten layers
+            elmo_sent_emb = elmo_word_embs_flattened.mean(axis=0)
+            embeddings.append(elmo_sent_emb)
+   
     embeddings = np.vstack(embeddings)
+
     export_df(emb_path, emb_file, sentences, embeddings, emb_params["dimensions"])
 
 
 def generate_powermean_sentence_embs(resources_path, emb_params, base_path, emb_file):
+    import tensorflow as tf        
+    import tensorflow_hub as hub   
+    tf.compat.v1.logging.set_verbosity(0)
+
     nlp, emb_path, sent_vocab, sentences = get_resources(base_path, resources_path)
     print("Tokenizing ...")
     # powermean requires tokenized sentence strings
@@ -150,6 +176,10 @@ def generate_skipthought_sentence_embs(variant, resources_path, emb_params, base
 
 
 def generate_quickthought_sentence_embs(resources_path, emb_params, base_path, emb_file):
+    import tensorflow as tf           
+    import tensorflow_hub as hub   
+    tf.compat.v1.logging.set_verbosity(0)
+
     from handlers.sentence_embeddings.quickthought import configuration as quickthought_config
     from handlers.sentence_embeddings.quickthought import encoder_manager as quickthought_enc_manager
 
@@ -190,6 +220,10 @@ def generate_quickthought_sentence_embs(resources_path, emb_params, base_path, e
     
 
 def generate_use_sentence_embs(resources_path, emb_params, base_path, emb_file):
+    import tensorflow as tf
+    import tensorflow_hub as hub
+    tf.compat.v1.logging.set_verbosity(0) 
+
     nlp, emb_path, sent_vocab, sentences = get_resources(base_path, resources_path)
     # tensorflow session
     session = tf.compat.v1.Session()
@@ -213,6 +247,7 @@ def generate_use_sentence_embs(resources_path, emb_params, base_path, emb_file):
 
 
 def generate_infersent_sentence_embs(resources_path, emb_params, base_path, emb_file):
+    import torch
     from handlers.sentence_embeddings.infersent.models import InferSent
     nlp, emb_path, sent_vocab, sentences = get_resources(base_path, resources_path)
     params_model = {'bsize': 64,
@@ -239,15 +274,14 @@ def generate_sent_embeddings(name,
                              emb_params,
                              base_path,
                              emb_file):
-    import tensorflow as tf
-    import tensorflow_hub as hub
-    tf.compat.v1.logging.set_verbosity(0)
-    import torch
+
 
     if 'bert' in name:
         generate_bert_sentence_embs(resources_path, emb_params, base_path, emb_file)
     elif name == 'elmo-sentence':
-        generate_elmo_sentence_embs(resources_path, emb_params, base_path, emb_file)
+        generate_elmo_sentence_embs(resources_path, emb_params, base_path, emb_file, fixed_mean_pooling=False)
+    elif name == 'elmo-sentence-fixed-mean-pooling':
+        generate_elmo_sentence_embs(resources_path, emb_params, base_path, emb_file, fixed_mean_pooling=True)
     elif name == 'power-mean':
         generate_powermean_sentence_embs(resources_path, emb_params, base_path, emb_file)
     elif 'skip-thoughts' in name:

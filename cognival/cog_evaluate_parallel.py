@@ -26,7 +26,8 @@ def run_parallel(config_dict,
                  n_jobs=None,
                  gpu_ids=None,
                  cache_random=False,
-                 network=None):
+                 network=None,
+                 legacy=False):
 
     if gpu_ids:
         gpu_ids_list = gpu_ids
@@ -120,7 +121,8 @@ def run_parallel(config_dict,
                              option["feature"],
                              option["truncate_first_line"],
                              ','.join(map(str, gpu_ids_list)),
-                             network)]
+                             network,
+                             legacy)]
             random_params = [] 
             if random_embeddings:
                 for random_embedding in config_dict["randEmbSetToParts"][random_embeddings]:
@@ -138,7 +140,8 @@ def run_parallel(config_dict,
                                             option["feature"],
                                             option["truncate_first_line"],
                                             ','.join(map(str, gpu_ids_list))),
-                                            network)
+                                            network,
+                                            legacy)
                 
             result_proper = pool.starmap_async(cog_evaluate.run_single, proper_params)
             if random_params:

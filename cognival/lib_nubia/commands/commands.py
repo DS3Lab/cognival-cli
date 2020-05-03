@@ -129,7 +129,8 @@ def run(configuration,
         visible_gpu_ids,
         baselines,
         cache_random,
-        network):
+        network,
+        legacy):
 
     cog_sources_conf = _open_cog_config(resources_path)
     if not _check_cog_installed(resources_path):
@@ -176,7 +177,8 @@ def run(configuration,
                                 n_jobs=processes,
                                 gpu_ids=gpu_ids,
                                 cache_random=cache_random,
-                                network=network)
+                                network=network,
+                                legacy=legacy)
 
     try:
         # Process and write results (required for significance testing) and option files (required for aggregation) per modality
