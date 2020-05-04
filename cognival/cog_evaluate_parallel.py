@@ -139,9 +139,9 @@ def run_parallel(config_dict,
                                             option["modality"],
                                             option["feature"],
                                             option["truncate_first_line"],
-                                            ','.join(map(str, gpu_ids_list))),
+                                            ','.join(map(str, gpu_ids_list)),
                                             network,
-                                            legacy)
+                                            legacy))
                 
             result_proper = pool.starmap_async(cog_evaluate.run_single, proper_params)
             if random_params:
