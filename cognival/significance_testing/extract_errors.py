@@ -50,8 +50,14 @@ def extract_errors(run_id, modality, experiment, mapping_dict, input_dir, result
             random_df.rename(columns={random_df.columns[1]:'error'}, inplace=True)
 
     embeddings_df.set_index(emb_type, inplace=True)
-    assert not embeddings_df.index.has_duplicates
-
+    if embeddings_df.index.has_duplicates:
+        # Discard all sentences from zuco2 that already appear in zuco 1 (avoid distortion)
+        cprint("Warning: {} duplicate rows found, only kept first occurrence.".format(len(embeddings_df.iloc[embeddings_df.index.duplicated()])), color='yellow')
+        embeddings_df = embeddings_df.iloc[~embeddings_df.index.duplicated()]
+ 
+        if rand_embs_available:
+            random_df = random_df.iloc[~random_df.index.duplicated()]
+	
     if rand_embs_available:
         random_df.set_index(emb_type, inplace=True)
         assert not random_df.index.has_duplicates
