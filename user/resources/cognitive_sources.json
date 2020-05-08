@@ -34,33 +34,33 @@
                     "balance": null,
                     "installed": false,
                     "hypothesis_to_file": {
-                        "scaled_6_brennan_targets_18": "scaled_6_brennan_targets_18.txt",
-                        "scaled_6_brennan_targets_22": "scaled_6_brennan_targets_22.txt",
-                        "scaled_6_brennan_targets_23": "scaled_6_brennan_targets_23.txt",
-                        "scaled_6_brennan_targets_24": "scaled_6_brennan_targets_24.txt",
-                        "scaled_6_brennan_targets_26": "scaled_6_brennan_targets_26.txt",
-                        "scaled_6_brennan_targets_28": "scaled_6_brennan_targets_28.txt",
-                        "scaled_6_brennan_targets_30": "scaled_6_brennan_targets_30.txt",
-                        "scaled_6_brennan_targets_31": "scaled_6_brennan_targets_31.txt",
-                        "scaled_6_brennan_targets_35": "scaled_6_brennan_targets_35.txt",
-                        "scaled_6_brennan_targets_36": "scaled_6_brennan_targets_36.txt",
-                        "scaled_6_brennan_targets_37": "scaled_6_brennan_targets_37.txt",
-                        "scaled_6_brennan_targets_38": "scaled_6_brennan_targets_38.txt",
-                        "scaled_6_brennan_targets_39": "scaled_6_brennan_targets_39.txt",
-                        "scaled_6_brennan_targets_40": "scaled_6_brennan_targets_40.txt",
-                        "scaled_6_brennan_targets_41": "scaled_6_brennan_targets_41.txt",
-                        "scaled_6_brennan_targets_42": "scaled_6_brennan_targets_42.txt",
-                        "scaled_6_brennan_targets_43": "scaled_6_brennan_targets_43.txt",
-                        "scaled_6_brennan_targets_44": "scaled_6_brennan_targets_44.txt",
-                        "scaled_6_brennan_targets_45": "scaled_6_brennan_targets_45.txt",
-                        "scaled_6_brennan_targets_46": "scaled_6_brennan_targets_46.txt",
-                        "scaled_6_brennan_targets_47": "scaled_6_brennan_targets_47.txt",
-                        "scaled_6_brennan_targets_48": "scaled_6_brennan_targets_48.txt",
-                        "scaled_6_brennan_targets_49": "scaled_6_brennan_targets_49.txt",
-                        "scaled_6_brennan_targets_50": "scaled_6_brennan_targets_50.txt",
-                        "scaled_6_brennan_targets_51": "scaled_6_brennan_targets_51.txt",
-                        "scaled_6_brennan_targets_52": "scaled_6_brennan_targets_52.txt",
-                        "scaled_6_brennan_targets_53": "scaled_6_brennan_targets_53.txt"
+                        "brennan-0": "scaled_6_brennan_targets_18.txt",
+                        "brennan-1": "scaled_6_brennan_targets_22.txt",
+                        "brennan-2": "scaled_6_brennan_targets_23.txt",
+                        "brennan-3": "scaled_6_brennan_targets_24.txt",
+                        "brennan-4": "scaled_6_brennan_targets_26.txt",
+                        "brennan-5": "scaled_6_brennan_targets_28.txt",
+                        "brennan-6": "scaled_6_brennan_targets_30.txt",
+                        "brennan-7": "scaled_6_brennan_targets_31.txt",
+                        "brennan-8": "scaled_6_brennan_targets_35.txt",
+                        "brennan-9": "scaled_6_brennan_targets_36.txt",
+                        "brennan-10": "scaled_6_brennan_targets_37.txt",
+                        "brennan-11": "scaled_6_brennan_targets_38.txt",
+                        "brennan-12": "scaled_6_brennan_targets_39.txt",
+                        "brennan-13": "scaled_6_brennan_targets_40.txt",
+                        "brennan-14": "scaled_6_brennan_targets_41.txt",
+                        "brennan-15": "scaled_6_brennan_targets_42.txt",
+                        "brennan-16": "scaled_6_brennan_targets_43.txt",
+                        "brennan-17": "scaled_6_brennan_targets_44.txt",
+                        "brennan-18": "scaled_6_brennan_targets_45.txt",
+                        "brennan-19": "scaled_6_brennan_targets_46.txt",
+                        "brennan-20": "scaled_6_brennan_targets_47.txt",
+                        "brennan-21": "scaled_6_brennan_targets_48.txt",
+                        "brennan-22": "scaled_6_brennan_targets_49.txt",
+                        "brennan-23": "scaled_6_brennan_targets_50.txt",
+                        "brennan-24": "scaled_6_brennan_targets_51.txt",
+                        "brennan-25": "scaled_6_brennan_targets_52.txt",
+                        "brennan-26": "scaled_6_brennan_targets_53.txt"
                     }
                 },
                 "wehbe": {
@@ -72,14 +72,14 @@
                     "balance": null,
                     "installed": false,
                     "hypothesis_to_file": {
-                        "scaled_1000_wehbe_targets_1": "scaled_1000_wehbe_targets_1.txt",
-                        "scaled_1000_wehbe_targets_2": "scaled_1000_wehbe_targets_2.txt",
-                        "scaled_1000_wehbe_targets_3": "scaled_1000_wehbe_targets_3.txt",
-                        "scaled_1000_wehbe_targets_4": "scaled_1000_wehbe_targets_4.txt",
-                        "scaled_1000_wehbe_targets_5": "scaled_1000_wehbe_targets_5.txt",
-                        "scaled_1000_wehbe_targets_6": "scaled_1000_wehbe_targets_6.txt",
-                        "scaled_1000_wehbe_targets_7": "scaled_1000_wehbe_targets_7.txt",
-                        "scaled_1000_wehbe_targets_8": "scaled_1000_wehbe_targets_8.txt"
+                        "wehbe-0": "scaled_1000_wehbe_targets_1.txt",
+                        "wehbe-1": "scaled_1000_wehbe_targets_2.txt",
+                        "wehbe-2": "scaled_1000_wehbe_targets_3.txt",
+                        "wehbe-3": "scaled_1000_wehbe_targets_4.txt",
+                        "wehbe-4": "scaled_1000_wehbe_targets_5.txt",
+                        "wehbe-5": "scaled_1000_wehbe_targets_6.txt",
+                        "wehbe-6": "scaled_1000_wehbe_targets_7.txt",
+                        "wehbe-7": "scaled_1000_wehbe_targets_8.txt"
                     }
                 },
                 "mitchell": {
@@ -91,15 +91,15 @@
                     "stratified_sampling": false,
                     "installed": false,
                     "hypothesis_to_file": {
-                        "scaled_1000_mitchell_targets_1": "scaled_1000_mitchell_targets_1.txt",
-                        "scaled_1000_mitchell_targets_2": "scaled_1000_mitchell_targets_2.txt",
-                        "scaled_1000_mitchell_targets_3": "scaled_1000_mitchell_targets_3.txt",
-                        "scaled_1000_mitchell_targets_4": "scaled_1000_mitchell_targets_4.txt",
-                        "scaled_1000_mitchell_targets_5": "scaled_1000_mitchell_targets_5.txt",
-                        "scaled_1000_mitchell_targets_6": "scaled_1000_mitchell_targets_6.txt",
-                        "scaled_1000_mitchell_targets_7": "scaled_1000_mitchell_targets_7.txt",
-                        "scaled_1000_mitchell_targets_8": "scaled_1000_mitchell_targets_8.txt",
-                        "scaled_1000_mitchell_targets_9": "scaled_1000_mitchell_targets_9.txt"
+                        "mitchell-0": "scaled_1000_mitchell_targets_1.txt",
+                        "mitchell-1": "scaled_1000_mitchell_targets_2.txt",
+                        "mitchell-2": "scaled_1000_mitchell_targets_3.txt",
+                        "mitchell-3": "scaled_1000_mitchell_targets_4.txt",
+                        "mitchell-4": "scaled_1000_mitchell_targets_5.txt",
+                        "mitchell-5": "scaled_1000_mitchell_targets_6.txt",
+                        "mitchell-6": "scaled_1000_mitchell_targets_7.txt",
+                        "mitchell-7": "scaled_1000_mitchell_targets_8.txt",
+                        "mitchell-8": "scaled_1000_mitchell_targets_9.txt"
                     }
                 },
                 "pereira": {
@@ -111,21 +111,21 @@
                     "stratified_sampling": false,
                     "installed": false,
                     "hypothesis_to_file": {
-                        "scaled_1000_pereira_targets_M01": "scaled_1000_pereira_targets_M01.txt",
-                        "scaled_1000_pereira_targets_M02": "scaled_1000_pereira_targets_M02.txt",
-                        "scaled_1000_pereira_targets_M03": "scaled_1000_pereira_targets_M03.txt",
-                        "scaled_1000_pereira_targets_M04": "scaled_1000_pereira_targets_M04.txt",
-                        "scaled_1000_pereira_targets_M05": "scaled_1000_pereira_targets_M05.txt",
-                        "scaled_1000_pereira_targets_M06": "scaled_1000_pereira_targets_M06.txt",
-                        "scaled_1000_pereira_targets_M07": "scaled_1000_pereira_targets_M07.txt",
-                        "scaled_1000_pereira_targets_M08": "scaled_1000_pereira_targets_M08.txt",
-                        "scaled_1000_pereira_targets_M09": "scaled_1000_pereira_targets_M09.txt",
-                        "scaled_1000_pereira_targets_M10": "scaled_1000_pereira_targets_M10.txt",
-                        "scaled_1000_pereira_targets_M13": "scaled_1000_pereira_targets_M13.txt",
-                        "scaled_1000_pereira_targets_M14": "scaled_1000_pereira_targets_M14.txt",
-                        "scaled_1000_pereira_targets_M15": "scaled_1000_pereira_targets_M15.txt",
-                        "scaled_1000_pereira_targets_M16": "scaled_1000_pereira_targets_M16.txt",
-                        "scaled_1000_pereira_targets_M17": "scaled_1000_pereira_targets_M17.txt"
+                        "pereira-0": "scaled_1000_pereira_targets_M01.txt",
+                        "pereira-1": "scaled_1000_pereira_targets_M02.txt",
+                        "pereira-2": "scaled_1000_pereira_targets_M03.txt",
+                        "pereira-3": "scaled_1000_pereira_targets_M04.txt",
+                        "pereira-4": "scaled_1000_pereira_targets_M05.txt",
+                        "pereira-5": "scaled_1000_pereira_targets_M06.txt",
+                        "pereira-6": "scaled_1000_pereira_targets_M07.txt",
+                        "pereira-7": "scaled_1000_pereira_targets_M08.txt",
+                        "pereira-8": "scaled_1000_pereira_targets_M09.txt",
+                        "pereira-9": "scaled_1000_pereira_targets_M10.txt",
+                        "pereira-10": "scaled_1000_pereira_targets_M13.txt",
+                        "pereira-11": "scaled_1000_pereira_targets_M14.txt",
+                        "pereira-12": "scaled_1000_pereira_targets_M15.txt",
+                        "pereira-13": "scaled_1000_pereira_targets_M16.txt",
+                        "pereira-14": "scaled_1000_pereira_targets_M17.txt"
                     }
                 }
             },
@@ -682,7 +682,7 @@
 	"sentence_fmri_pereira_concat",
 	"sentence_fmri_all_concat"
     ],
-    "source_to_file_index": {
+    "source_to_hypothesis_index": {
         "word": {
             "fmri_brennan": [
                 "fmri_brennan-0",
@@ -821,7 +821,7 @@
             ]
         }
     },
-    "file_to_source_index": {
+    "hypothesis_to_source_index": {
         "word": {
             "fmri_brennan-0": "fmri_brennan",
             "fmri_brennan-1": "fmri_brennan",

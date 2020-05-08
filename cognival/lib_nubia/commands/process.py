@@ -407,10 +407,11 @@ def resolve_cog_emb(modalities,
             if '{}_{}'.format(emb_type, source) in cog_source_index:
                 cognitive_sources_resolved.append(source)
             else:
-                if source in cog_config_dict['source_to_file_index'][emb_type]:
-                    for subj_source in cog_config_dict['source_to_file_index'][emb_type][source]:
+                if source in cog_config_dict['source_to_hypothesis_index'][emb_type]:
+                    for subj_source in cog_config_dict['source_to_hypothesis_index'][emb_type][source]:
                         cognitive_sources_resolved.append(subj_source)
                 else:
+                    breakpoint()
                     cprint('Cognitive source {} unknown, aborting ...'.format(source), 'red')
                     raise AbortException
     cognitive_sources = cognitive_sources_resolved
@@ -525,8 +526,8 @@ def populate(resources_path,
         raise AbortException
     else:
         emb_type = config_dict['type']
-        cog_source_to_file_index = cog_config_dict["source_to_file_index"]
-        cog_file_to_source_index = cog_config_dict["file_to_source_index"]
+        cog_source_to_hypothesis_index = cog_config_dict["source_to_hypothesis_index"]
+        cog_hypothesis_to_source_index = cog_config_dict["hypothesis_to_source_index"]
         cog_config_dict = cog_config_dict["sources"][emb_type]
 
     if mode == 'reference':
@@ -549,7 +550,7 @@ def populate(resources_path,
                         # Populate from installed cognitive sources
 
                         # Resolve cog. source if part of multi-hypothesis source
-                        csource_resolved = cog_file_to_source_index[emb_type].get(csource, csource)
+                        csource_resolved = cog_hypothesis_to_source_index[emb_type].get(csource, csource)
                         modality, csource_suff = csource.split('_', maxsplit=1)
                         modality, csource_resolved_suff = csource_resolved.split('_', maxsplit=1)
                         csource_dict = cog_config_dict[modality][csource_resolved_suff]
@@ -561,7 +562,7 @@ def populate(resources_path,
                             features = csource_dict['features'] if not csource_dict['features'] == 'single' else ['ALL_DIM']
                         # Multi file cognitive source
                         else:
-                            keys = cog_source_to_file_index[emb_type][csource_resolved] 
+                            keys = cog_source_to_hypothesis_index[emb_type][csource_resolved] 
                             csource_resolved_suffs = [csource_file.split('_', maxsplit=1)[1] for csource_file in keys]
                             
                             if csource_dict['multi_hypothesis'] == 'feature':
