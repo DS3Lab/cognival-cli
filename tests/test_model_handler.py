@@ -1262,7 +1262,7 @@ def handler_result():
 
 def test_create_model(reference_model_config, set_seed):
     layers, activation, input_dim, output_dim = [100, 50], 'relu', 30, 15
-    model = create_model(layers, activation, input_dim, output_dim)
+    model = create_model_template('mlp', None, True)(layers, activation, input_dim, output_dim)
     assert model.get_config() == reference_model_config
 
 
@@ -1271,7 +1271,7 @@ def test_model_cv(config_embedding, data, grid_search_reference, set_seed):
     grid_reduced, best_params = grid_search_reference
     # Test only first chunk
     X_train, y_train = X_train[0], y_train[0]
-    _, grid_result = model_cv(create_model,
+    _, grid_result = model_cv(create_model_template('mlp', None, True),
                               config_embedding,
                               X_train,
                               y_train)
@@ -1284,7 +1284,7 @@ def test_model_predict(data, config_embedding, predict_result, set_seed):
     words_test, X_train, y_train, X_test, y_test = words_test[0], X_train[0], y_train[0], X_test[0], y_test[0]
     mse_reference, w_e_reference = predict_result
     # Test only first chunk
-    model = KerasRegressor(build_fn=create_model, verbose=0)
+    model = KerasRegressor(build_fn=create_model_template('mlp', None, True), verbose=0)
     model.set_params(**{'activation': 'relu',
                       'batch_size': 128,
                       'epochs': 100,
@@ -1312,7 +1312,10 @@ def test_model_handler(config_embedding, data, handler_result, grid_search_refer
                                                          X_train,
                                                          y_train,
                                                          X_test,
-                                                         y_test)
+                                                         y_test,
+                                                         'mlp',
+                                                         None,
+                                                         True)
     mse = mse_errors[0]
     grid_result = grids_result[0]
     w_e = word_error
