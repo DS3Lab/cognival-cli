@@ -233,18 +233,6 @@ def run_parallel(config_dict,
                 f = io.StringIO()
                 line_count = 0
 
-                try:
-                    # Show GPU utilization if any GPUs assigned
-                    if gpu_ids_list:
-                        with redirect_stdout(f):
-                            GPUtil.showUtilization()
-                        s = f.getvalue()
-                        line_count = len(s.split('\n'))
-                        sys.stdout.write(colored(s, 'yellow'))
-                        sys.stdout.write("\n")
-                except ValueError:
-                    pass
-
                 if completed != prev_completed:
                     cprint('Progress: #{}/{} ({:.2f}%)'.format(completed,
                                                               num_jobs,

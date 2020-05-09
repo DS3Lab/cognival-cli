@@ -70,7 +70,6 @@ def create_model_template(network, shape, legacy):
             raise ValueError("Network must either be 'mlp' or 'cnn'")
         model.add(Dense(output_dim, activation='linear'))
         model.compile(loss='mse',optimizer='adam')
-        print(model.summary())
         return model
 
     return create_model
@@ -123,6 +122,8 @@ def model_loop(i, X_train, X_test, y_train, y_test, words_test, network, gpu_id,
     '''
     Performs GridsearchCV on a single fold of the (outer) cross-validation and returns best model refitted on full data.
     '''
+    os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_id)
+
     if gpu_id is not None:
         gpu_count = 1
         soft_placement = True
@@ -132,15 +133,14 @@ def model_loop(i, X_train, X_test, y_train, y_test, words_test, network, gpu_id,
  
     tf_config = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1,
                                          inter_op_parallelism_threads=1,
-                                         allow_soft_placement=False,
-                                         device_count={'GPU': soft_placement, 'CPU': 1})
+                                         allow_soft_placement=soft_placement,
+                                         device_count={'GPU': gpu_count, 'CPU': 1})
 
     if gpu_id is not None:
         tf_config.gpu_options.allow_growth = True
-        tf_config.gpu_options.per_process_gpu_memory_fraction = 0.25
+        tf_config.gpu_options.per_process_gpu_memory_fraction = 1.0
         tf_config.gpu_options.visible_device_list = str(gpu_id)
 
-    
     with tf.compat.v1.Session(config=tf_config) as session:
         init = tf.compat.v1.global_variables_initializer() # This reinitializes keras weights, so must be put before Keras loading
         set_session(session)
