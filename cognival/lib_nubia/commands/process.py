@@ -411,7 +411,6 @@ def resolve_cog_emb(modalities,
                     for subj_source in cog_config_dict['source_to_hypothesis_index'][emb_type][source]:
                         cognitive_sources_resolved.append(subj_source)
                 else:
-                    breakpoint()
                     cprint('Cognitive source {} unknown, aborting ...'.format(source), 'red')
                     raise AbortException
     cognitive_sources = cognitive_sources_resolved
