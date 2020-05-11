@@ -299,7 +299,7 @@ class Config:
                                              "In the latter case, no automatic insertion of missing sources occurs. If set to None (default), "
                                              "the scope is 'all' if the configuration is empty and 'config' after adding the first source-embedding pair(s).")
     def experiment(self,
-                   baselines=False,
+                   baselines=True,
                    modalities=None,
                    cognitive_sources=['all'],
                    embeddings=['all'],
