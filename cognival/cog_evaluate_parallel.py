@@ -246,7 +246,7 @@ def run_parallel(config_dict,
             except StopException:
                 break   
 
-    except KeyboardInterrupt:
+    except:
         pool.terminate()
         raise
     else:
