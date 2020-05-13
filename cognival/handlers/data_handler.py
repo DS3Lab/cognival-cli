@@ -376,7 +376,7 @@ def data_handler(mode, config, stratified_sampling, balance, word_embedding, cog
         df_join = df_multi_join(df_cognitive_data,
                                 df_word_embedding,
                                 emb_type,
-                                chunk_number=8)
+                                chunk_number=16)
 
     df_join.dropna(inplace=True)
     

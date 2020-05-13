@@ -143,10 +143,16 @@ def run_single(mode,
             logging['folds'][i]['MSE_PREDICTION'] = mserrors[i]
 
         logging['folds'][i]['LOSS'] = grids_result[i].best_estimator_.model.history.history['loss']
-        logging['folds'][i]['VALIDATION_LOSS'] = grids_result[i].best_estimator_.model.history.history['val_loss']
+        try:
+           logging['folds'][i]['VALIDATION_LOSS'] = grids_result[i].best_estimator_.model.history.history['val_loss']
+        except KeyError:
+            pass
 
         loss_list.append(np.array(grids_result[i].best_estimator_.model.history.history['loss'],dtype='float'))
-        val_loss_list.append(np.array(grids_result[i].best_estimator_.model.history.history['val_loss'], dtype='float'))
+        try:
+            val_loss_list.append(np.array(grids_result[i].best_estimator_.model.history.history['val_loss'], dtype='float'))
+        except KeyError:
+            val_loss_list = []
 
     if config['cogDataConfig'][cognitive_data]['type'] == "multivariate_output":
         mserrors = np.array(mserrors, dtype='float')
