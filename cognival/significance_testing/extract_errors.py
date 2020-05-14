@@ -37,17 +37,15 @@ def extract_errors(run_id, modality, experiment, mapping_dict, input_dir, result
     embeddings_scores = {}
     baseline_scores = {}
     
-    if modality in ('fmri', 'eeg'):
-        embeddings_df.insert(1, 'error', embeddings_df[embeddings_df.columns.difference([emb_type])].mean(axis='columns'))
-        embeddings_df.drop(embeddings_df.columns.difference([emb_type, 'error']), axis='columns', inplace=True)
-        if rand_embs_available:
-            random_df.insert(1, 'error', random_df[random_df.columns.difference([emb_type, 'error'])].mean(axis='columns'))
-            random_df.drop(random_df.columns.difference([emb_type, 'error']), axis='columns', inplace=True)
-
-    elif modality == 'eye-tracking':
-        embeddings_df.rename(columns={embeddings_df.columns[1]:'error'}, inplace=True)
-        if rand_embs_available:
-            random_df.rename(columns={random_df.columns[1]:'error'}, inplace=True)
+    embeddings_df = embeddings_df.set_index('sentence').abs().reset_index()
+    if rand_embs_available:
+        random_df = random_df.set_index('sentence').abs().reset_index()
+ 
+    embeddings_df.insert(1, 'error', embeddings_df[embeddings_df.columns.difference([emb_type])].mean(axis='columns'))
+    embeddings_df.drop(embeddings_df.columns.difference([emb_type, 'error']), axis='columns', inplace=True)
+    if rand_embs_available:
+        random_df.insert(1, 'error', random_df[random_df.columns.difference([emb_type, 'error'])].mean(axis='columns'))
+        random_df.drop(random_df.columns.difference([emb_type, 'error']), axis='columns', inplace=True)
 
     embeddings_df.set_index(emb_type, inplace=True)
     if embeddings_df.index.has_duplicates:
@@ -63,7 +61,7 @@ def extract_errors(run_id, modality, experiment, mapping_dict, input_dir, result
         assert not random_df.index.has_duplicates
     else:
         random_df = None
-
+   
     save_errors(emb_type,
                 embeddings_df,
                 'embeddings_avg_errors_' + '{}.txt'.format(experiment),

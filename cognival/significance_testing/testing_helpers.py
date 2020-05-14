@@ -46,11 +46,6 @@ def test_significance(baseline, model, alpha, test, debug=False):
 
 
 def save_errors(emb_type, emb_scores, emb_filename, base_scores, base_filename, output_dir):
-    emb_scores['error'] = emb_scores['error'].abs()
-
-    if base_scores is not None:
-        base_scores['error'] = base_scores['error'].abs()
-
     strings = []
     emb_scores_col = []
     base_scores_col = []
