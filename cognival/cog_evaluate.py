@@ -110,17 +110,21 @@ def run_single(mode,
 
     startTime = datetime.now()
 
-    word_error, grids_result, mserrors = handler(mode,
-                                                 config,
-                                                 stratified_sampling,
-                                                 balance,
-                                                 word_embedding,
-                                                 cognitive_data,
-                                                 feature,
-                                                 truncate_first_line,
-                                                 network,
-						 gpu_id,
-                                                 legacy)
+    # Throw generic exception to parent process
+    try:
+        word_error, grids_result, mserrors = handler(mode,
+                                                     config,
+                                                     stratified_sampling,
+                                                     balance,
+                                                     word_embedding,
+                                                     cognitive_data,
+                                                     feature,
+                                                     truncate_first_line,
+                                                     network,
+                                                     gpu_id,
+                                                     legacy)
+    except Exception as e:
+        raise Exception(e)
 
     history = {'loss':[],'val_loss':[]}
     loss_list =[]

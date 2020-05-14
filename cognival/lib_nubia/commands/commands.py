@@ -382,7 +382,7 @@ def config_show(configuration, config_dict, details, cognitive_source, hide_base
                                             transpose=False)
         table_strs.append(formatted_table)
         table_strs.append('\n')
-        experiment_rows = [chunked_list_concat_str(list(config_dict['cogDataConfig']), 4)]
+        experiment_rows = [chunked_list_concat_str(list(config_dict['cogDataConfig']), 3)]
         experiment_rows += [chunked_list_concat_str(list(['{} ({})'.format(k, v['random_embedding'] if 'random_embedding' in v and v['random_embedding'] else 'None') \
                                                             for k, v in config_dict['wordEmbConfig'].items()]), 2)]
         experiment_rows = [experiment_rows]
