@@ -36,10 +36,10 @@ def extract_errors(run_id, modality, experiment, mapping_dict, input_dir, result
 
     embeddings_scores = {}
     baseline_scores = {}
-    
-    embeddings_df = embeddings_df.set_index('sentence').abs().reset_index()
+
+    embeddings_df = embeddings_df.set_index(emb_type).abs().reset_index()
     if rand_embs_available:
-        random_df = random_df.set_index('sentence').abs().reset_index()
+        random_df = random_df.set_index(emb_type).abs().reset_index()
  
     embeddings_df.insert(1, 'error', embeddings_df[embeddings_df.columns.difference([emb_type])].mean(axis='columns'))
     embeddings_df.drop(embeddings_df.columns.difference([emb_type, 'error']), axis='columns', inplace=True)
