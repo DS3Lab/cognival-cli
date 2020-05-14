@@ -41,10 +41,17 @@ def extract_errors(run_id, modality, experiment, mapping_dict, input_dir, result
     if rand_embs_available:
         random_df = random_df.set_index(emb_type).abs().reset_index()
  
-    embeddings_df.insert(1, 'error', embeddings_df[embeddings_df.columns.difference([emb_type])].mean(axis='columns'))
+    if not 'error' in embeddings_df.columns:
+        embeddings_df.insert(1, 'error', embeddings_df[embeddings_df.columns.difference([emb_type])].mean(axis='columns'))
+    else:
+        # eye-tracking on word-level: word column, single error column
+        assert len(embeddings_df.columns) == 2
     embeddings_df.drop(embeddings_df.columns.difference([emb_type, 'error']), axis='columns', inplace=True)
     if rand_embs_available:
-        random_df.insert(1, 'error', random_df[random_df.columns.difference([emb_type, 'error'])].mean(axis='columns'))
+        if not 'error' in random_df.columns:
+            random_df.insert(1, 'error', random_df[random_df.columns.difference([emb_type, 'error'])].mean(axis='columns'))
+        else:
+            assert len(random_df.columns) == 2
         random_df.drop(random_df.columns.difference([emb_type, 'error']), axis='columns', inplace=True)
 
     embeddings_df.set_index(emb_type, inplace=True)
