@@ -292,7 +292,7 @@ def generate_sent_embeddings(name,
         generate_skipthought_sentence_embs(variant, resources_path, emb_params, base_path, emb_file)
     elif name == 'quick-thoughts':
         generate_quickthought_sentence_embs(resources_path, emb_params, base_path, emb_file)
-    elif name == 'use':
+    elif name in ('use', 'use-large'):
         generate_use_sentence_embs(resources_path, emb_params, base_path, emb_file)
     elif name == 'infersent':
         generate_infersent_sentence_embs(resources_path, emb_params, base_path, emb_file)

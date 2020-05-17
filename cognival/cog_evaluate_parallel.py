@@ -55,8 +55,8 @@ def run_parallel(config_dict,
                 option["cognitiveParent"] = config_dict["cogDataConfig"][cognitive_data]["parent"]
                 option["multiHypothesis"] = config_dict["cogDataConfig"][cognitive_data]["multi_hypothesis"]  
                 option["multiFile"] = config_dict["cogDataConfig"][cognitive_data]["multi_file"]
-                option["stratifiedSampling"]  = config_dict["cogDataConfig"][cognitive_data]["stratified_sampling"]
-                option["balance"]  = config_dict["cogDataConfig"][cognitive_data]["balance"]
+                option["stratifiedSampling"]  = config_dict["cogDataConfig"][cognitive_data].get("stratified_sampling", False)
+                option["balance"]  = config_dict["cogDataConfig"][cognitive_data].get("balance", False)
                 option["modality"] = config_dict["cogDataConfig"][cognitive_data]["modality"]
                 option["feature"] = feature
                 option["wordEmbedding"] = word_embedding if word_embedding in config_dict["cogDataConfig"][cognitive_data]['wordEmbSpecifics'] else None

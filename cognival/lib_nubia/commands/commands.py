@@ -474,7 +474,7 @@ def config_experiment(configuration,
     # Never add random baselines if not yet present
     if main_conf_dict['wordEmbConfig'] and baselines and not main_conf_dict['randEmbConfig']:
         cprint('Cannot add random baselines to existing configuration without random baselines! Aborting ...', 'red')
-        return
+        #return
 
     # Always add random baselines if already present
     if main_conf_dict['randEmbConfig']:
@@ -551,6 +551,9 @@ def config_experiment(configuration,
                                                               'modality',
                                                               'multi_hypothesis',
                                                               'multi_file',
+                                                              'kpca_n_dims',
+                                                              'kpca_kernel',
+                                                              'kpca_gamma',
                                                               'stratified_sampling',
                                                               'balance'],
                                             skip_params=['dataset', 'wordEmbSpecifics'])
@@ -574,6 +577,7 @@ def config_experiment(configuration,
                     do_populate = True
                 if baselines and (emb not in main_conf_dict["wordEmbConfig"] or not main_conf_dict["wordEmbConfig"][emb]['random_embedding']):
                     cprint('Random baselines not yet associated with {}, adding ...'.format(emb), 'yellow')
+                    do_populate = True
 
                 if do_populate:
                     try:

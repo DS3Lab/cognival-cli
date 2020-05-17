@@ -13,6 +13,7 @@ def handler(mode,
             stratified_sampling,
             balance,
             word_embedding,
+            modality,
             cognitive_data,
             feature,
             truncate_first_line,
@@ -43,9 +44,10 @@ def handler(mode,
                                                                 truncate_first_line)
 
     word_error, grids_result, mserrors = model_handler(word_embedding,
+                                                       modality,
                                                        cognitive_data,
                                                        feature,
-                                                       config["cogDataConfig"][cognitive_data]["wordEmbSpecifics"][word_embedding],
+                                                       config["cogDataConfig"][cognitive_data],
                                                        config['type'],
                                                        words_test,
                                                        X_train,
@@ -117,6 +119,7 @@ def run_single(mode,
                                                      stratified_sampling,
                                                      balance,
                                                      word_embedding,
+                                                     modality,
                                                      cognitive_data,
                                                      feature,
                                                      truncate_first_line,
@@ -171,7 +174,6 @@ def run_single(mode,
     ##############################################################################
     #   Prepare results for plot
     ##############################################################################
-
     history['loss'] = np.mean([loss_list[i] for i in range (len(loss_list))],axis=0)
     history['val_loss'] = np.mean([val_loss_list[i] for i in range(len(val_loss_list))], axis=0)
 
