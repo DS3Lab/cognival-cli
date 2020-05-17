@@ -479,7 +479,10 @@ def update_emb_config(emb, csource, cdict, config_patch, rand_embeddings, main_c
             # Propagate patch to all random baseline parts if associated with embeddings
             if config_rand_emb:
                 for rand_emb_part in main_conf_dict['randEmbSetToParts']['{}_for_{}'.format(config_rand_emb, emb)]:
-                    main_conf_dict['cogDataConfig'][csource]["wordEmbSpecifics"][rand_emb_part].update(config_patch)
+                    try:
+                        main_conf_dict['cogDataConfig'][csource]["wordEmbSpecifics"][rand_emb_part].update(config_patch)
+                    except KeyError:
+                        main_conf_dict['cogDataConfig'][csource]["wordEmbSpecifics"][rand_emb_part] = copy.deepcopy(config_patch)
     
     return main_conf_dict
 
