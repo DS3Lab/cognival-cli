@@ -99,7 +99,6 @@ def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y)
     :param X: training split of data (embeddings)    
     :param y: training split of labels (cognitive data)
     '''
-    print(cog_config)
     config = cog_config['wordEmbSpecifics'][word_embedding]
     param_grid = dict(layers=config["layers"], activation=config["activations"], input_dim=[X.shape[1]],
                       output_dim=[y.shape[1]], batch_size=config["batch_size"], epochs=config["epochs"])
@@ -113,25 +112,26 @@ def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y)
                                       scoring='neg_mean_squared_error',
                                       cv=config['cv_split'])
         grid_result = grid.fit(X, y, verbose=0, validation_split=config["validation_split"])
-        print(config, grid, grid_result)
 
     elif emb_type == 'sentence':
-        kpca_n_dims = cog_config.get('kpca_n_dims', None)
-        if not kpca_n_dims:
-            if modality == 'eeg':
-                kpca_n_dims = 32
-            elif modality == 'fmri':
-                kpca_n_dims = 256
-        kpca_gamma = cog_config.get('kpca_gamma', 0.01)
-        kpca_kernel = cog_config.get('kpca_kernel', 'poly')
-        param_grid['output_dim'] = [kpca_n_dims]
-        print("Performing KernelPCA (n_dims: {} / kernel: {} / gamma: {})".format(kpca_n_dims, kpca_kernel, kpca_gamma))
+        # Modify output dimensionality in case of EEG or fMRI (KPCA)
+        if modality in ('eeg', 'fmri'):
+            kpca_n_dims = cog_config.get('kpca_n_dims', None)
+            if not kpca_n_dims:
+                if modality == 'eeg':
+                    kpca_n_dims = 32
+                elif modality == 'fmri':
+                    kpca_n_dims = 256
+            kpca_gamma = cog_config.get('kpca_gamma', 0.01)
+            kpca_kernel = cog_config.get('kpca_kernel', 'poly')
+            param_grid['output_dim'] = [kpca_n_dims]
+            print("Performing KernelPCA (n_dims: {} / kernel: {} / gamma: {})".format(kpca_n_dims, kpca_kernel, kpca_gamma))
 
         # Can't do target transformation with GridsearchCV, thus manual implementation
         print("Applying custom grid search ...")
         print(X.shape)
 
-        kf = KFold(n_splits=3, random_state=None, shuffle=False)
+        kf = KFold(n_splits=config['cv_split'], random_state=None, shuffle=False)
         param_grid = list(ParameterGrid(param_grid))
         mean_scores = []
 
@@ -155,9 +155,9 @@ def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y)
                 
                 # Target transformation within fold to prevent data leakage
                 if modality in ('eeg', 'fmri'):
-                    y_train = ss.fit_transform(y_train)
+                    #y_train = ss.fit_transform(y_train)
                     y_train = pca.fit_transform(y_train)
-                    y_test = ss.transform(y_test)
+                    #y_test = ss.transform(y_test)
                     y_test = pca.transform(y_test)
                 
                 y_train = minmax.fit_transform(y_train)
@@ -186,7 +186,8 @@ def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y)
         pca = KernelPCA(min(kpca_n_dims, (X.shape[0] - 1)), kernel=kpca_kernel, gamma=kpca_gamma)
         # Target transform
         if modality in ('eeg', 'fmri'):
-            y = ss.fit_transform(y)
+            #y = ss.fit_transform(y)
+            ss = None
             y = pca.fit_transform(y)
         else:
             ss = None
@@ -216,8 +217,9 @@ def model_predict(grid, ss, pca, minmax, words, X_test, y_test):
         y_pred = y_pred.reshape(-1,1)
     
     # Apply transformations fitted on training targets to test targets
-    if ss and pca:
+    if ss:
         y_test = ss.transform(y_test)
+    if pca:
         y_test = pca.transform(y_test)
     y_test = minmax.transform(y_test)
 
@@ -317,8 +319,11 @@ def model_handler(word_embedding,
     if y_test[0].shape[1] == 1:
         word_error = np.array([emb_type, 'error'],dtype='str')
     else:
-        word_error = np.array([emb_type] + ['e' + str(i) for i in range(cog_config['kpca_n_dims'])], dtype='str')
-
+        # Word error dimensionality of multi-dim output depends on whether PCA is performed (eeg, fmri)
+        if modality in ('eeg', 'fmri'):
+            word_error = np.array([emb_type] + ['e' + str(i) for i in range(cog_config['kpca_n_dims'])], dtype='str')
+        else:
+            word_error = np.array([emb_type] + ['e' + str(i) for i in range(1, y_test[0].shape[1]+1)], dtype='str')
     for i in range(len(X_train)):
         grid, grid_result, mse, w_e = model_loop(i, X_train, X_test, y_train, y_test, words_test, network, gpu_id, cog_config, modality, cognitive_data, feature, emb_type, word_embedding, legacy)
 
