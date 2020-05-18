@@ -51,5 +51,5 @@ def save_scores(emb_scores, emb_filename, base_scores, base_filename, output_dir
     base_file = open(Path(output_dir) / base_filename, 'w')
     for word, score in emb_scores.items():
         if word in base_scores:
-            print(abs(float(score)), file=emb_file)
-            print(abs(float(base_scores[word])), file=base_file)
+            print(float(score), file=emb_file)
+            print(float(base_scores[word]), file=base_file)

@@ -23,26 +23,26 @@ def extract_results(run_id, modality, experiment, mapping_dict, input_dir, resul
         for line in embeddings_file[1:]:
             line = line.strip().split()
             voxels = [float(i) for i in line[1:]]
-            avg_voxels = np.mean(voxels)
+            avg_voxels = np.mean(np.abs(voxels))
             embeddings_scores[line[0]] = avg_voxels
 
         for line in baseline_file[1:]:
             line = line.strip().split()
             voxels = [float(i) for i in line[1:]]
-            avg_voxels = np.mean(voxels)
+            avg_voxels = np.mean(np.abs(voxels))
             baseline_scores[line[0]] = avg_voxels
 
     if modality == 'eeg':
         for line in embeddings_file[1:]:
             line = line.strip().split()
             electrodes = [float(i) for i in line[1:]]
-            avg_electrodes = np.mean(electrodes)
+            avg_electrodes = np.mean(np.abs(electrodes))
             embeddings_scores[line[0]] = avg_electrodes
     
         for line in baseline_file[1:]:
             line = line.strip().split()
             electrodes = [float(i) for i in line[1:]]
-            avg_electrodes = np.mean(electrodes)
+            avg_electrodes = np.mean(np.abs(electrodes))
             baseline_scores[line[0]] = avg_electrodes
 
     if modality == 'eye-tracking':
