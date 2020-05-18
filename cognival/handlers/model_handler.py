@@ -68,7 +68,7 @@ def model_predict(grid, words, X_test, y_test):
     y_pred = grid.predict(X_test)
     if y_test.shape[1] ==1:
         y_pred = y_pred.reshape(-1,1)
-    error = y_test - y_pred
+    error = np.abs(y_test - y_pred)
     word_error = np.hstack([words,error])
     if y_test.shape[1] ==1:
         mse = np.mean(np.square(error))
