@@ -21,6 +21,11 @@ For practical purposes, this tool should be used. It is based on the original co
  The CogniVal tool generates and fits a neural network regression to predict cognitive data such as fMRI, eye-tracking and EEG (corpora mapping words to cognitive signals) from word embedding inputs.
  Thus, it allows determining the predictive power of sets of of word embeddings with respect to cognitive sources. Currently supported modalities are **eye-tracking**, **electroencephalography (EEG)** and **functional magnetic resonance imaging (fMRI)**. Furthermore, the significance of the prediction can be estimated by comparing a set of embeddings with n-fold random baselines of identical dimensionality and computing statistic significance using the Wilcoxon signed-rank test with conservative Bonferroni correction, counteracting the multiple hypotheses problem.
 
+## Version history
+* v0.1.1 Initial pre-release
+* v0.1.3 fixed plots of aggregated measures across runs
+* v0.1.4 fixed issue with significance score computation for EEG and fMRI (**Note**: requires a full re-run of experiments with random baselines)
+
 ## Installation
 
 ### Installing latest release with pip
