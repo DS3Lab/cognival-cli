@@ -362,7 +362,7 @@ def config_show(configuration, config_dict, details, cognitive_source, hide_base
 
     if cognitive_sources:
         table_strs.append(colored(fill("Note: Use 'config experiment cognitive-sources=[{}] single-edit=True' to edit the properties "
-            "of the specified cognitive source(s) and associated embedding specifics.".format(configuration, ', '.join(cognitive_sources)), 160)))
+            "of the specified cognitive source(s) and associated embedding specifics.".format(', '.join(cognitive_sources)), 160)))
         table_strs.append('\n')
 
     for cognitive_source in cognitive_sources:
