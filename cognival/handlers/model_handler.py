@@ -148,16 +148,16 @@ def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y)
                 X_train, X_test = X[train_index], X[test_index]
                 y_train, y_test = y[train_index], y[test_index]
                 
-                if modality in ('eeg', 'fmri'):
-                    params['output_dim'] = min(kpca_n_dims, y_train.shape[0] - 1)
-                model.set_params(**params)
- 
                 # KPCA dimensionality bounded by inner fold size (cap n_dims by data_size - 1)
                 kpca_inner_dims = min(kpca_n_dims, (y_train.shape[0] - 1))
                 if not idx:
                     print("Inner CV KernelPCA (n_dims: {} / kernel: {} / gamma: {})".format(kpca_inner_dims, kpca_kernel, kpca_gamma if kpca_gamma else 'sklearn default'))
                 pca = KernelPCA(kpca_inner_dims, kernel=kpca_kernel, gamma=kpca_gamma)
  
+                if modality in ('eeg', 'fmri'):
+                    params['output_dim'] = kpca_inner_dims
+                model.set_params(**params)
+
                 # Target transformation within fold to prevent data leakage
                 if modality in ('eeg', 'fmri'):
                     #y_train = ss.fit_transform(y_train)
