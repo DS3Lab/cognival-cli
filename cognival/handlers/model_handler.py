@@ -122,10 +122,11 @@ def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y)
                     kpca_n_dims = 32
                 elif modality == 'fmri':
                     kpca_n_dims = 256
-            kpca_gamma = cog_config.get('kpca_gamma', 0.01)
+            kpca_gamma = cog_config.get('kpca_gamma', None)
+            kpca_gamma = kpca_gamma if kpca_gamma else None
             kpca_kernel = cog_config.get('kpca_kernel', 'poly')
             param_grid['output_dim'] = [kpca_n_dims]
-            print("Performing KernelPCA (n_dims: {} / kernel: {} / gamma: {})".format(kpca_n_dims, kpca_kernel, kpca_gamma))
+            print("Performing KernelPCA (n_dims: {} / kernel: {} / gamma: {})".format(kpca_n_dims, kpca_kernel, kpca_gamma if kpca_gamma else 'sklearn default'))
 
         # Can't do target transformation with GridsearchCV, thus manual implementation
         print("Applying custom grid search ...")
