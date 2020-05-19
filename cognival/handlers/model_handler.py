@@ -125,12 +125,9 @@ def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y)
             kpca_gamma = cog_config.get('kpca_gamma', None)
             kpca_gamma = kpca_gamma if kpca_gamma else None
             kpca_kernel = cog_config.get('kpca_kernel', 'poly')
-            param_grid['output_dim'] = [kpca_n_dims]
-            print("Performing KernelPCA (n_dims: {} / kernel: {} / gamma: {})".format(kpca_n_dims, kpca_kernel, kpca_gamma if kpca_gamma else 'sklearn default'))
-
+            
         # Can't do target transformation with GridsearchCV, thus manual implementation
         print("Applying custom grid search ...")
-        print(X.shape)
 
         kf = KFold(n_splits=config['cv_split'], random_state=None, shuffle=False)
         param_grid = list(ParameterGrid(param_grid))
@@ -139,21 +136,28 @@ def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y)
         for params in param_grid:
             cv_scores = []
             
-            for train_index, test_index in kf.split(X):
+            for idx, (train_index, test_index) in enumerate(kf.split(X)):
                 # Need to create regressor anew EVERY time to avoid incremental fitting
                 model = KerasRegressor(build_fn=model_constr, verbose=0)
-                model.set_params(**params)
                 
                 # Target transformers
                 ss = StandardScaler() 
                 minmax = MinMaxScaler()   
-                # Cap n_dims by data_size - 1
-                pca = KernelPCA(min(kpca_n_dims, (X.shape[0] - 1)), kernel=kpca_kernel, gamma=kpca_gamma)
 
                 #print("TRAIN:", train_index, "TEST:", test_index)
                 X_train, X_test = X[train_index], X[test_index]
                 y_train, y_test = y[train_index], y[test_index]
                 
+                if modality in ('eeg', 'fmri'):
+                    params['output_dim'] = min(kpca_n_dims, y_train.shape[0] - 1)
+                model.set_params(**params)
+ 
+                # KPCA dimensionality bounded by inner fold size (cap n_dims by data_size - 1)
+                kpca_inner_dims = min(kpca_n_dims, (y_train.shape[0] - 1))
+                if not idx:
+                    print("Inner CV KernelPCA (n_dims: {} / kernel: {} / gamma: {})".format(kpca_inner_dims, kpca_kernel, kpca_gamma if kpca_gamma else 'sklearn default'))
+                pca = KernelPCA(kpca_inner_dims, kernel=kpca_kernel, gamma=kpca_gamma)
+ 
                 # Target transformation within fold to prevent data leakage
                 if modality in ('eeg', 'fmri'):
                     #y_train = ss.fit_transform(y_train)
@@ -177,14 +181,17 @@ def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y)
         print("Best score:", mean_scores[best_id])
         print("Best params:", param_grid[best_id])
 
+        ss = StandardScaler()
+        minmax = MinMaxScaler()
+        # KPCA dimensionality bounded by outer fold size (cap n_dims by data_size - 1)
+        kpca_outer_dims = min(kpca_n_dims, (y.shape[0] - 1))
         # Retrain regressor on full data
         model = KerasRegressor(build_fn=model_constr, verbose=0)
+        # Reset output dim to correspond to outer fold size
+        best_params['output_dim'] = kpca_outer_dims
         model.set_params(**best_params)
-        
-        ss = StandardScaler() 
-        minmax = MinMaxScaler()   
-        # Cap n_dims by data_size - 1
-        pca = KernelPCA(min(kpca_n_dims, (X.shape[0] - 1)), kernel=kpca_kernel, gamma=kpca_gamma)
+        print("Outer CV KernelPCA (n_dims: {} / kernel: {} / gamma: {})".format(kpca_outer_dims, kpca_kernel, kpca_gamma if kpca_gamma else 'sklearn default'))
+        pca = KernelPCA(kpca_outer_dims, kernel=kpca_kernel, gamma=kpca_gamma)
         # Target transform
         if modality in ('eeg', 'fmri'):
             #y = ss.fit_transform(y)
