@@ -224,7 +224,7 @@ def model_predict(grid, ss, pca, minmax, words, X_test, y_test):
         y_test = pca.transform(y_test)
     y_test = minmax.transform(y_test)
 
-    error = y_test - y_pred
+    error = np.abs(y_test - y_pred)
 
     word_error = np.hstack([words,error])
     if y_test.shape[1] ==1:
