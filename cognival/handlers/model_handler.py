@@ -88,7 +88,7 @@ def create_model_template(network, shape, legacy):
     return create_model
 
 
-def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y):
+def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y, fold_size_lower_b):
     '''
     Performs grid search cross-validation using the given
     model construction function, configuration and
@@ -184,7 +184,7 @@ def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y)
         ss = StandardScaler()
         minmax = MinMaxScaler()
         # KPCA dimensionality bounded by outer fold size (cap n_dims by data_size - 1)
-        kpca_outer_dims = min(kpca_n_dims, (y.shape[0] - 1))
+        kpca_outer_dims = min(kpca_n_dims, (fold_size_lower_b - 1))
         # Retrain regressor on full data
         model = KerasRegressor(build_fn=model_constr, verbose=0)
         # Reset output dim to correspond to outer fold size
@@ -192,6 +192,7 @@ def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y)
         model.set_params(**best_params)
         print("Outer CV KernelPCA (n_dims: {} / kernel: {} / gamma: {})".format(kpca_outer_dims, kpca_kernel, kpca_gamma if kpca_gamma else 'sklearn default'))
         pca = KernelPCA(kpca_outer_dims, kernel=kpca_kernel, gamma=kpca_gamma)
+
         # Target transform
         if modality in ('eeg', 'fmri'):
             #y = ss.fit_transform(y)
@@ -241,7 +242,7 @@ def model_predict(grid, ss, pca, minmax, words, X_test, y_test):
     return mse, word_error
 
 
-def model_loop(i, X_train, X_test, y_train, y_test, words_test, network, gpu_id, cog_config, modality, cognitive_data, feature, emb_type, word_embedding, legacy):
+def model_loop(i, X_train, X_test, y_train, y_test, fold_size_lower_b, words_test, network, gpu_id, cog_config, modality, cognitive_data, feature, emb_type, word_embedding, legacy):
     '''
     Performs GridsearchCV on a single fold of the (outer) cross-validation and returns best model refitted on full data.
     '''
@@ -275,7 +276,8 @@ def model_loop(i, X_train, X_test, y_train, y_test, words_test, network, gpu_id,
                          cog_config,
                          word_embedding,
                          X_train[i],
-                         y_train[i])
+                         y_train[i],
+                         fold_size_lower_b)
 
         cprint("{} / {} / {} - Fold #{} GridsearchCV best params: {}".format(cognitive_data, feature, word_embedding, i + 1, \
         " | ".join(["{}: {}".format(k, v) for k, v in grid_result.best_params_.items()])),
@@ -324,6 +326,11 @@ def model_handler(word_embedding,
     grids_result = []
     mserrors = []
 
+    # Determine lower bound of fold size for outer KPCA (inner KPCA dim can fluctuate, as word/sentence-level error is not exported here)
+    fold1_train_size = X_train[0].shape[0]
+    fold1_test_size = X_test[0].shape[0]
+    fold_size_lower_b = int(np.floor(((fold1_train_size + fold1_test_size)/len(X_train)) * len(X_train[1:])))
+
     if y_test[0].shape[1] == 1:
         word_error = np.array([emb_type, 'error'],dtype='str')
     else:
@@ -333,11 +340,18 @@ def model_handler(word_embedding,
         else:
             word_error = np.array([emb_type] + ['e' + str(i) for i in range(1, y_test[0].shape[1]+1)], dtype='str')
     for i in range(len(X_train)):
-        grid, grid_result, mse, w_e = model_loop(i, X_train, X_test, y_train, y_test, words_test, network, gpu_id, cog_config, modality, cognitive_data, feature, emb_type, word_embedding, legacy)
+        grid, grid_result, mse, w_e = model_loop(i, X_train, X_test, y_train, y_test, fold_size_lower_b, words_test, network, gpu_id, cog_config, modality, cognitive_data, feature, emb_type, word_embedding, legacy)
 
         grids_result.append(grid_result)
         
         mserrors.append(mse)
-        word_error = np.vstack([word_error,w_e])
+
+        # Resize header if necessary
+        if not i:
+            word_error = word_error[:w_e.shape[1]]
+        try:
+            word_error = np.vstack([word_error,w_e])
+        except:
+            print(i, w_e)
 
     return word_error, grids_result, mserrors
