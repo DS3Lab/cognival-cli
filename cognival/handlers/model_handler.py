@@ -148,11 +148,12 @@ def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y,
                 X_train, X_test = X[train_index], X[test_index]
                 y_train, y_test = y[train_index], y[test_index]
                 
-                # KPCA dimensionality bounded by inner fold size (cap n_dims by data_size - 1)
-                kpca_inner_dims = min(kpca_n_dims, (y_train.shape[0] - 1))
-                if not idx:
-                    print("Inner CV KernelPCA (n_dims: {} / kernel: {} / gamma: {})".format(kpca_inner_dims, kpca_kernel, kpca_gamma if kpca_gamma else 'sklearn default'))
-                pca = KernelPCA(kpca_inner_dims, kernel=kpca_kernel, gamma=kpca_gamma)
+                if modality in ('eeg', 'fmri'):
+                    # KPCA dimensionality bounded by inner fold size (cap n_dims by data_size - 1)
+                    kpca_inner_dims = min(kpca_n_dims, (y_train.shape[0] - 1))
+                    if not idx:
+                        print("Inner CV KernelPCA (n_dims: {} / kernel: {} / gamma: {})".format(kpca_inner_dims, kpca_kernel, kpca_gamma if kpca_gamma else 'sklearn default'))
+                    pca = KernelPCA(kpca_inner_dims, kernel=kpca_kernel, gamma=kpca_gamma)
  
                 if modality in ('eeg', 'fmri'):
                     params['output_dim'] = kpca_inner_dims
@@ -183,15 +184,18 @@ def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y,
 
         ss = StandardScaler()
         minmax = MinMaxScaler()
-        # KPCA dimensionality bounded by outer fold size (cap n_dims by data_size - 1)
-        kpca_outer_dims = min(kpca_n_dims, (fold_size_lower_b - 1))
+        if modality in ('eeg', 'fmri'):
+            # KPCA dimensionality bounded by outer fold size (cap n_dims by data_size - 1)
+            kpca_outer_dims = min(kpca_n_dims, (fold_size_lower_b - 1))
         # Retrain regressor on full data
         model = KerasRegressor(build_fn=model_constr, verbose=0)
-        # Reset output dim to correspond to outer fold size
-        best_params['output_dim'] = kpca_outer_dims
+        if modality in ('eeg', 'fmri'):
+            # Reset output dim to correspond to outer fold size
+            best_params['output_dim'] = kpca_outer_dims
         model.set_params(**best_params)
-        print("Outer CV KernelPCA (n_dims: {} / kernel: {} / gamma: {})".format(kpca_outer_dims, kpca_kernel, kpca_gamma if kpca_gamma else 'sklearn default'))
-        pca = KernelPCA(kpca_outer_dims, kernel=kpca_kernel, gamma=kpca_gamma)
+        if modality in ('eeg', 'fmri'):
+            print("Outer CV KernelPCA (n_dims: {} / kernel: {} / gamma: {})".format(kpca_outer_dims, kpca_kernel, kpca_gamma if kpca_gamma else 'sklearn default'))
+            pca = KernelPCA(kpca_outer_dims, kernel=kpca_kernel, gamma=kpca_gamma)
 
         # Target transform
         if modality in ('eeg', 'fmri'):
