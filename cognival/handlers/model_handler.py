@@ -113,6 +113,8 @@ def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y,
                                       cv=config['cv_split'])
         grid_result = grid.fit(X, y, verbose=0, validation_split=config["validation_split"])
 
+        ss, pca, minmax = None, None, None
+
     elif emb_type == 'sentence':
         # Modify output dimensionality in case of EEG or fMRI (KPCA)
         if modality in ('eeg', 'fmri'):
@@ -154,9 +156,8 @@ def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y,
                     if not idx:
                         print("Inner CV KernelPCA (n_dims: {} / kernel: {} / gamma: {})".format(kpca_inner_dims, kpca_kernel, kpca_gamma if kpca_gamma else 'sklearn default'))
                     pca = KernelPCA(kpca_inner_dims, kernel=kpca_kernel, gamma=kpca_gamma)
- 
-                if modality in ('eeg', 'fmri'):
                     params['output_dim'] = kpca_inner_dims
+
                 model.set_params(**params)
 
                 # Target transformation within fold to prevent data leakage
@@ -168,10 +169,12 @@ def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y,
                 
                 y_train = minmax.fit_transform(y_train)
                 y_test = minmax.transform(y_test)
-                    
+
                 model.fit(X_train, y_train)
                 y_pred = model.predict(X_test)
-                cv_scores.append(mean_squared_error(y_test, y_pred))
+
+                mse = mean_squared_error(y_test, y_pred)
+                cv_scores.append(mse)
                 
             mean_score = np.mean(cv_scores)
             mean_scores.append(mean_score)
@@ -234,7 +237,8 @@ def model_predict(grid, ss, pca, minmax, words, X_test, y_test):
         y_test = ss.transform(y_test)
     if pca:
         y_test = pca.transform(y_test)
-    y_test = minmax.transform(y_test)
+    if minmax:
+        y_test = minmax.transform(y_test)
 
     error = np.abs(y_test - y_pred)
 
