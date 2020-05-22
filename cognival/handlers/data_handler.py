@@ -10,6 +10,25 @@ from tqdm import tqdm
 
 from termcolor import cprint
 
+# Source: https://chrisalbon.com/machine_learning/feature_selection/drop_highly_correlated_features/
+def filter_df_corr(arr, corr_val):                                                                  
+    df = pd.DataFrame(data=arr, columns=list(range(arr.shape[1])))                                  
+                                                                                                    
+    # Create correlation matrix                                                                     
+    corr_matrix = df.corr().abs()                                                                   
+                                                                                                    
+    # Select upper triangle of correlation matrix                                                   
+    upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(np.bool))             
+                                                                                                    
+    # Find features with correlation greater than 0.95                                              
+    to_drop = [column for column in upper.columns if any(upper[column] > corr_val)]                 
+                                                                                                    
+    # Drop features                                                                                 
+    df.drop(to_drop, axis=1, inplace=True)                                                          
+                                                                                                    
+    return df.to_numpy()                                                                            
+
+
 def chunk(input_path_name,
           output_path_name,
           input_file_name,
@@ -412,5 +431,14 @@ def data_handler(mode, config, stratified_sampling, balance, word_embedding, cog
 
         X = df_join.drop(features, axis=1)
         X = np.array(X, dtype='float')
+
+    if emb_type == 'sentence' and config['cogDataConfig'][cognitive_data]['modality'] == 'fmri':
+        # If dataset has more than 15k features, randomly sample 15,000 voxels with fixed seed. Remove highly correlated features
+        # to avoid errors in downstream KernelPCA
+        if y.shape[1] > 15000:
+            np.random.seed(config["seed"])                                                              
+            y = y[:, np.random.randint(y.shape[1], size=15000)]                             
+        y = filter_df_corr(y, 0.95)                                                     
+        print('Features below .95 threshold:', y.shape[1])
 
     return split_folds(word_embedding, cognitive_data, feature, strings, X, y, config["folds"], config["seed"], balance, sub_sources)
