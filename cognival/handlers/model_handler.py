@@ -162,13 +162,17 @@ def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y,
 
                 # Target transformation within fold to prevent data leakage
                 if modality in ('eeg', 'fmri'):
-                    #y_train = ss.fit_transform(y_train)
+                    y_train = ss.fit_transform(y_train)
                     y_train = pca.fit_transform(y_train)
-                    #y_test = ss.transform(y_test)
+                    y_test = ss.transform(y_test)
                     y_test = pca.transform(y_test)
-                
                 y_train = minmax.fit_transform(y_train)
                 y_test = minmax.transform(y_test)
+
+                # Clip test values outside of [0, 1] (unseen by MinMaxScaler upon fitting)
+                print('Test range before clipping:', np.min(y_test), np.max(y_test))
+                y_test = np.clip(y_test, 0.0, 1.0)
+                print('After clipping:', np.min(y_test), np.max(y_test))
 
                 model.fit(X_train, y_train)
                 y_pred = model.predict(X_test)
@@ -202,13 +206,11 @@ def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y,
 
         # Target transform
         if modality in ('eeg', 'fmri'):
-            #y = ss.fit_transform(y)
-            ss = None
+            y = ss.fit_transform(y)
             y = pca.fit_transform(y)
         else:
             ss = None
             pca = None
-
         y = minmax.fit_transform(y)
 
         # Wrap in pseudo-Grid object to keep logging code invariant
@@ -239,6 +241,11 @@ def model_predict(grid, ss, pca, minmax, words, X_test, y_test):
         y_test = pca.transform(y_test)
     if minmax:
         y_test = minmax.transform(y_test)
+
+    # Clip test values outside of [0, 1] (unseen by MinMaxScaler upon fitting)
+    print('Test range before clipping:', np.min(y_test), np.max(y_test))
+    y_test = np.clip(y_test, 0.0, 1.0)
+    print('After clipping:', np.min(y_test), np.max(y_test))
 
     error = np.abs(y_test - y_pred)
 
