@@ -9,6 +9,7 @@ from sklearn.decomposition import KernelPCA
 from sklearn.metrics import mean_squared_error
 
 import numpy as np
+import pandas as pd
 
 from termcolor import cprint
 import importlib
@@ -22,6 +23,9 @@ stderr = sys.stderr
 sys.stderr = open(os.devnull, 'w')
 from tensorflow.compat.v1.keras.wrappers.scikit_learn import KerasRegressor
 sys.stderr = stderr
+
+# Warnings lead to an exception
+np.seterr(all='raise')
 
 # pseudo-GridsearchCV wrapper for custom grid search results
 class PseudoGrid():
