@@ -102,15 +102,6 @@ from .templates import MAIN_CONFIG_TEMPLATE
 
 from .strings import EXAMPLE_COMMANDS
 
-# Pretty warnings
-import warnings
-
-def custom_formatwarning(msg, *args, **kwargs):
-    # ignore everything except the message
-    return colored('Warning: {}\n'.format(msg), 'yellow')
-
-warnings.formatwarning = custom_formatwarning
-
 NUM_BERT_WORKERS = 1
 COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1S0Fa_gGOJMuPxUrkZHW0RXk7bSPc7ffR'
 DUAL_EMB_TYPES = ['bert', 'elmo']
@@ -613,7 +604,7 @@ def config_experiment(configuration,
                 config_patch = config_editor("embedding_exp",
                                             config_template,
                                             [emb_to_label[emb]],
-                                            cognitive_sources,
+                                            csource,
                                             singleton_params=['cv_split', 'validation_split'])
                 if config_patch is None:
                     return
@@ -1632,7 +1623,7 @@ def import_embeddings(x,
     
     # Do nothing in case download and provision is handled by external library (e.g. allennlp/elmo)
     else:
-        cprint('No URL specified, delegating embedding provision to external package ...', 'yellow')
+        pass
 
     # Iterate over all embedding files (e.g. GloVe has multiple files requiring processing)
     for emb_name in path2embeddings[folder]:
