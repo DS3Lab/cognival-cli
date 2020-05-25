@@ -8,6 +8,8 @@ from handlers.file_handler import *
 
 from termcolor import cprint
 
+np.seterr(all='raise')
+
 def handler(mode,
             config,
             stratified_sampling,
@@ -175,7 +177,11 @@ def run_single(mode,
     #   Prepare results for plot
     ##############################################################################
     history['loss'] = np.mean([loss_list[i] for i in range (len(loss_list))],axis=0)
-    history['val_loss'] = np.mean([val_loss_list[i] for i in range(len(val_loss_list))], axis=0)
+    val_loss_list = [val_loss_list[i] for i in range(len(val_loss_list))]
+    if val_loss_list:
+        history['val_loss'] = np.mean(val_loss_list, axis=0)
+    else:
+        history['val_loss'] = []
 
     timeTaken = datetime.now() - startTime
     logging["timeTaken"] = str(timeTaken)

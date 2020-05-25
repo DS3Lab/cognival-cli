@@ -19,7 +19,7 @@ def filter_df_corr(arr, corr_val):
                                                                                                     
     # Select upper triangle of correlation matrix                                                   
     upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(np.bool))             
-                                                                                                    
+
     # Find features with correlation greater than 0.95                                              
     to_drop = [column for column in upper.columns if any(upper[column] > corr_val)]                 
                                                                                                     
