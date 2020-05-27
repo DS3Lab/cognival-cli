@@ -545,6 +545,7 @@ def config_experiment(configuration,
                                                               'kpca_n_dims',
                                                               'kpca_kernel',
                                                               'kpca_gamma',
+                                                              'standardize',
                                                               'stratified_sampling',
                                                               'balance'],
                                             skip_params=['dataset', 'wordEmbSpecifics'])

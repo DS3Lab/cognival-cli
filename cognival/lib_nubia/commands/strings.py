@@ -20,6 +20,7 @@ EDITOR_DESCRIPTIONS = { "properties": {"cognival_path": "Path for storing user d
                                      "kpca_n_dims": "Dimensionality of KernelPCA (only relevant for EEG and fMRI)",
                                      "kpca_gamma": "Gamma of KernelPCA",
                                      "kpca_kernel": "Kernel of KernelPCA",
+                                     "standardize": "Whether to standardize prior to KernelPCA",
                                      "multi_hypothesis": "If the source has multiple hypotheses, either 'subject' for multi-subject sources (e.g. fmri) or 'feature' for multi-feature sources (e.g. eye-tracking). False otherwise.",
                                      "multi_file": "True if the source has multiple files (subjects or feature), False otherwise.",
                                      "stratified_sampling": "True if source is composite of multiple source and stratified (proportional) sampling is to be applied.",

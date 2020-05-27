@@ -29,6 +29,7 @@ COGNITIVE_CONFIG_TEMPLATE = {
                             'kpca_n_dim': None,
                             'kpca_gamma': None,
                             'kpca_kernel': None,
+                            'standardize': False,
                             "stratified_sampling": None,
                             "balance": None,
                             "modality": None,
