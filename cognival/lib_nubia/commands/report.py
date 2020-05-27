@@ -188,9 +188,9 @@ def generate_report(configuration,
                     average_multi_hypothesis,
                     train_history_plots,
                     features,
-                    heatmaps,
-                    heatmaps_sample_n,
-                    heatmaps_discard_na,
+                    err_tables,
+                    err_tables_sample_n,
+                    err_tables_discard_na,
                     export_err_tables=False,
                     html=True,
                     pdf=False,
@@ -266,7 +266,7 @@ def generate_report(configuration,
         except FileNotFoundError:
             continue
 
-    if heatmaps:
+    if err_tables:
         # Collection avg error results and generating min-max scaled tables
         for path, _, error_csvs in os.walk(avg_errors_dir):
             if error_csvs:
@@ -322,11 +322,11 @@ def generate_report(configuration,
                                           engine='auto',
                                           compression='gzip')
 
-                        if heatmaps_discard_na:
+                        if err_tables_discard_na:
                             df.dropna(inplace=True)
 
-                        if heatmaps_sample_n:
-                            df = df.sample(n=heatmaps_sample_n)
+                        if err_tables_sample_n:
+                            df = df.sample(n=err_tables_sample_n)
 
                         avg_error_dfs[modality.upper()][(source, feature)] = df
 

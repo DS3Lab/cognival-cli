@@ -92,7 +92,7 @@ def create_model_template(network, shape, legacy):
     return create_model
 
 
-def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y, fold_size_lower_b):
+def model_cv(model_constr, modality, cognitive_data, emb_type, cog_config, word_embedding, X, y, fold_size_lower_b):
     '''
     Performs grid search cross-validation using the given
     model construction function, configuration and
@@ -166,9 +166,12 @@ def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y,
 
                 # Target transformation within fold to prevent data leakage
                 if modality in ('eeg', 'fmri'):
-                    y_train = ss.fit_transform(y_train)
+                    if cog_config.get('standardize', True):
+                        if not 'standardize' in cog_config:
+                            cprint('Missing "standardize" field, defaulting to True', 'yellow')
+                        y_train = ss.fit_transform(y_train)
+                        y_test = ss.transform(y_test)
                     y_train = pca.fit_transform(y_train)
-                    y_test = ss.transform(y_test)
                     y_test = pca.transform(y_test)
                 y_train = minmax.fit_transform(y_train)
                 y_test = minmax.transform(y_test)
@@ -210,7 +213,10 @@ def model_cv(model_constr, modality, emb_type, cog_config, word_embedding, X, y,
 
         # Target transform
         if modality in ('eeg', 'fmri'):
-            y = ss.fit_transform(y)
+            if cog_config.get('standardize', True):
+                y = ss.fit_transform(y)
+            else:
+                ss = None
             y = pca.fit_transform(y)
         else:
             ss = None
@@ -291,6 +297,7 @@ def model_loop(i, X_train, X_test, y_train, y_test, fold_size_lower_b, words_tes
         with session.as_default():
             grid, grid_result, ss, pca, minmax = model_cv(create_model_template(network, X_train[i].shape, legacy),
                          modality,
+                         cognitive_data,
                          emb_type,
                          cog_config,
                          word_embedding,

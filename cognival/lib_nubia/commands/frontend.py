@@ -712,10 +712,10 @@ def properties():
 @argument('average_multi_hypothesis', type=bool, description='Average multi-hypothesis (multi-feature or multi-subject) results.')
 @argument('history_plots', type=bool, description='Whether to include training history plots (note: significantly increases report size when number of experiments is large.')
 @argument('features', type=bool, description='Whether to include the feature column in detail tables.')
-@argument('heatmaps', type=bool, description='Whether to include word/sentence to embedding per-source error heatmaps')
-@argument('heatmaps_sample_n', type=int, description='If not None (default), randomly sample n words/sentences. Show all otherwise.')
-@argument('heatmaps_discard_na', type=bool, description='If True (default: False), only keep rows with values for all embeddings. Occurs *before* sampling.')
-@argument('export_err_tables', type=bool, description='If True and heatmaps == True, export error DataFrames (basis of heatmap tables) as gzipped parquet to report directory. Requires pyarrow or fastparquet. Sampling and discarding of NaNs does not affect export.')
+@argument('err_tables', type=bool, description='Whether to include word/sentence to embedding per-source error err_tables Note: the metric is the mean absolute error (MAE) across dimensions for EEG and fMRI or absolute error for eye-tracking, hence it differs in its magnitude from the regression MSE.)')
+@argument('err_tables_sample_n', type=int, description='If not None (default), randomly sample n words/sentences. Show all otherwise.')
+@argument('err_tables_discard_na', type=bool, description='If True (default: False), only keep rows with values for all embeddings. Occurs *before* sampling.')
+@argument('export_err_tables', type=bool, description='If True and err_tables == True, export error DataFrames (basis of heatmap tables) as gzipped parquet to report directory. Requires pyarrow or fastparquet. Sampling and discarding of NaNs does not affect export.')
 @argument('html', type=bool, description='Generate html report.')
 @argument('open_html', type=bool, description='Open generated html report.')
 @argument('pdf', type=bool, description='Generate pdf report.')
@@ -728,9 +728,9 @@ def report(run_id=0,
            average_multi_hypothesis=True,
            history_plots=False,
            features=True,
-           heatmaps=False,
-           heatmaps_sample_n=None,
-           heatmaps_discard_na=False,
+           err_tables=False,
+           err_tables_sample_n=None,
+           err_tables_discard_na=False,
            export_err_tables=False,
            html=True,
            open_html=False,
@@ -758,9 +758,9 @@ def report(run_id=0,
                     average_multi_hypothesis,
                     history_plots,
                     features,
-                    heatmaps,
-                    heatmaps_sample_n,
-                    heatmaps_discard_na,
+                    err_tables,
+                    err_tables_sample_n,
+                    err_tables_discard_na,
                     export_err_tables,
                     html,
                     pdf,
