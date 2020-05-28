@@ -1,3 +1,5 @@
+import numpy as np, scipy.stats as st
+
 def extract_results_gaze(combinations):
     combination_results = {}
     embeddings = set()
@@ -10,15 +12,21 @@ def extract_results_gaze(combinations):
     
     embeddings = list(embeddings)
 
+    results_lists = {}
     avg_results = {}
-    for emb_type in embeddings:
+    ci_results = {}
+    for emb in embeddings:
         for res in combination_results.values():
             for r in res:
-                if r[0] == emb_type:
-                    if not emb_type in avg_results:
-                        avg_results[emb_type] = [r[1]]
+                if r[0] == emb:
+                    if not emb in avg_results:
+                        avg_results[emb] = [r[1]]
+                        std_results[emb] = [r[1]]
                     else:
-                        avg_results[emb_type].append(r[1])
-        avg_results[emb_type] = sum(avg_results[emb_type]) / len(avg_results[emb_type])
+                        avg_results[emb].append(r[1])
+                        std_results[emb].append(r[1])
+        results_list[emb] = avg_results[emb]
+        avg_results[emb] = sum(avg_results[emb]) / len(avg_results[emb])
+        ci_results[emb] = st.t.interval(0.95, len(res)-1, loc=np.mean(res), scale=st.sem(res))
 
-    return avg_results
+    return results_lists, avg_results, ci_results

@@ -979,7 +979,7 @@ def aggregate(configuration,
         if not options_dict:
             continue
 
-        results = extract_results[modality](options_dict)
+        results_lists, avg_results, ci_results = extract_results[modality](options_dict)
 
         significance = aggregate_significance[modality](report_dir,
                                                         run_id,
@@ -992,16 +992,26 @@ def aggregate(configuration,
         # Tabulate aggregated scores for CLI display and JSON export
         for emb, base in zip(embeddings, baselines):
             try:
-                avg_base = results[base]
-                avg_emb = results[emb]
+                list_emb = results_lists[emb]
+                list_base = results_lists[base]
+                avg_base = avg_results[base]
+                avg_emb = avg_results[emb]
+                ci_base = ci_results[base]
+                ci_emb = ci_results[emb]
                 df_rows_cli.append({'Word embedding': emb,
-                                    'Ø MSE Baseline': avg_base,
-                                    'Ø MSE Proper': avg_emb,
+                                    'ØØ MSE Baseline': avg_base,
+                                    'Ø MSE CI Baseline': ci_base,
+                                    'ØØ MSE Embeddings': avg_emb,
+                                    'Ø MSE CI Embeddings': ci_emb,
                                     'Significance': colored(significance[emb], 'yellow')})
 
                 df_rows.append({'Word embedding':emb,
-                                'Ø MSE Baseline':avg_base,
-                                'Ø MSE Proper':avg_emb,
+                                'Ø MSEs Baseline': list_base,
+                                'ØØ MSE Baseline': avg_base,
+                                'Ø MSE CI Baseline': ci_base,
+                                'Ø MSEs Embeddings': list_emb,
+                                'ØØ MSE Embeddings': avg_emb,
+                                'Ø MSE CI Embeddings': ci_emb,
                                 'Significance': significance[emb]})
 
             except KeyError:
@@ -1014,10 +1024,10 @@ def aggregate(configuration,
         df_json = df.to_json()
 
         yield df_json
-        
+
         with open(report_dir / modality / str(run_id) / 'aggregated_scores.json', 'w') as f:
             f.write(df_json)
-        
+
         if not quiet:
             print(tabulate.tabulate(df_cli, headers="keys", tablefmt="fancy_grid", showindex=False))
 
