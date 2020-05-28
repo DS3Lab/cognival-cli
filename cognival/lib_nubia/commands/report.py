@@ -19,21 +19,17 @@ import pdfkit
 from operator import truediv as div
 from subprocess import Popen, DEVNULL
 
+import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.ticker import ScalarFormatter, LogLocator, LinearLocator, FormatStrFormatter, MultipleLocator
+from natsort import index_natsorted, order_by_index, ns
 import seaborn as sns
 import random
 
 from termcolor import cprint
 from .utils import _open_config
 
-# Set seaborn figure size and font scale
-xkcd_colors = [v for k, v in sns.xkcd_rgb.items() if not any([prop in k for prop in ['faded', 'light', 'pale', 'dark']])]
-random.seed(48)
-random.shuffle(xkcd_colors)
-
-# Set style
-sns.set(style="whitegrid", color_codes=True)
-sns.set_context('paper')
+bar_colors = ['#222222', '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22'] + [v for k, v in sns.xkcd_rgb.items() if not any([prop in k for prop in ['faded', 'light', 'pale', 'dark']])]
 
 MODALITIES_SHORT_TO_FULL = {'eeg':'EEG',
                             'eye-tracking': 'Eye-Tracking',
@@ -74,44 +70,85 @@ def get_sig(sig_value, average_multi_hypothesis):
     else:
         return '0/1'
 
+# Source: https://stackoverflow.com/a/53218939
+def unnesting(df, explode):
+    idx = df.index.repeat(df[explode[0]].str.len())
+    df1 = pd.concat([
+        pd.DataFrame({x: np.concatenate(df[x].values)}) for x in explode], axis=1)
+    df1.index = idx
 
-def sig_bar_plot(df, max_y=1.0):
+    return df1.join(df.drop(explode, 1), how='left')
+
+
+def sig_bar_plot(df):
     '''
     Generates a bar plot with average MSE and significance stats per embedding type.
     '''
+    df = unnesting(df, ["Ø MSE"])
+    df.reset_index(drop=True, inplace=True)
+    max_y = max(df["Ø MSE"])
+    min_y = min(df["Ø MSE"])
+    df = df[sorted(df.columns)]
+    # Sort embedding names naturally
+    df = df.reindex(index=order_by_index(df.index, index_natsorted(df['Embeddings'], alg=ns.IC)))
+    df.rename(columns={'Ø MSE CI': 'ci_mse'}, inplace=True)
     sig_labels = [row['Significance'] for _, row in df.iterrows() if row['Significance'] != '-']
     # Make the barplot
-    with sns.plotting_context("paper", font_scale=1.1):
-        bar = sns.catplot(x="Embedding", y="Ø MSE", hue="Type", kind="bar", data=df, palette=["C1", "#dddddd"], legend=False)
-        bar.ax.set(ylim=(0, max_y + 0.1))
+    #sns.set_context("paper", rc={"font.size":16,"axes.titlesize":20,"axes.labelsize":18})   
+    with sns.plotting_context("paper", rc={"font.size":16,"axes.titlesize":18,"axes.labelsize":16}):
+        sns.set(font_scale = 1.1)
+        # Set style
+        sns.set(style="whitegrid", color_codes=True)
+        num_embeddings = len(df['Embeddings'].unique())
+        fig = plt.figure()
+        bar = sns.boxplot(x="Embeddings", y="Ø MSE", hue="Type", data=df[df.columns.difference(['Significance', 'Modality'])], showfliers=True)
+        bar.get_legend().remove()
+        bar.set(ylim=(min_y - 0.1*min_y, max_y + 0.1*max_y))
 
         # Loop over the bars
-        patches = list(bar.ax.patches)
-        half_patch_num = len(patches)//2
+        import matplotlib.patches
+        patches = bar.findobj(matplotlib.patches.PathPatch)
 
         # proper embeddings (get xkcd colors)
-        for idx, thisbar in enumerate(patches[:half_patch_num]):
-            thisbar.set_width(0.95 * thisbar.get_width())
-            thisbar.set_color(xkcd_colors[idx])
-            x = thisbar.get_x()
-            y = thisbar.get_height() + 0.01
-            bar.ax.annotate('({})\n{:.2f}'.format(sig_labels[idx], thisbar.get_height()), (x, y))   
+        for idx, thisbar in enumerate(patches[::2]):
+            #thisbar.set_width(0.95 * thisbar.get_width())
+            thisbar.set_facecolor(bar_colors[idx])
+            #x = thisbar.get_x()
+            #y = -0.015*max_y
+            #bar.annotate('({})\n{:.2e}'.format(sig_labels[idx], thisbar.get_height()), (x, y), rotation=45, ha='left')   
 
         # random embeddings (grey)
-        for idx, thisbar in enumerate(patches[half_patch_num:]):
-            thisbar.set_width(0.95 * thisbar.get_width())
-            thisbar.set_hatch('-')
-            x = thisbar.get_x()
-            y = thisbar.get_height() + 0.01
-            bar.ax.annotate('{:.2f}'.format(thisbar.get_height()), (x, y)) 
+        for idx, thisbar in enumerate(patches[1::2]):
+            #thisbar.set_width(0.95 * thisbar.get_width())
+            thisbar.set_facecolor("#dddddd")
+            #x = thisbar.get_x()
+            #y = -0.01*max_y
+            #bar.annotate('{:.2e}'.format(thisbar.get_height()), (x, y), rotation=45, ha='center') 
         
         # Adjust the margins
         plt.subplots_adjust(bottom= 0.2, top = 0.8)
         plt.xticks(rotation=45)
+        plt.yscale('log')
+        bar.set_yticklabels(['']*len(bar.get_yticklabels()))
+        y_major = MultipleLocator(10**(np.ceil(np.log10(min_y)))*2)
+        y_minor = MultipleLocator(10**(np.ceil(np.log10(min_y))))
+
+        bar.yaxis.set_major_locator(y_major)
+        bar.yaxis.set_minor_locator(y_minor)
+
+        sf = ScalarFormatter()
+        sf.set_scientific(False)
+        bar.yaxis.set_major_formatter(sf)
+        bar.yaxis.set_minor_formatter(sf)
+        plt.draw()
+        plt.grid(which='both', axis='y')
+        ytl = [item.get_text() for item in bar.get_yticklabels(minor=True)]
+        ytl = ytl[:2] + ((len(ytl)-2)*[""])
+        bar.set_yticklabels(ytl, minor=True)
 
         with BytesIO() as figfile:
-            bar.fig.set_size_inches(18, 8)
-            plt.savefig(figfile, format='png', dpi=300, bbox_inches="tight")
+            fig.set_size_inches(num_embeddings + 1, 9)
+            plt.savefig(figfile, format='png', dpi=200, bbox_inches="tight")
             figfile.seek(0)  # rewind to beginning of file
             statsfig_b64 = base64.b64encode(figfile.getvalue()).decode('utf8')
     return statsfig_b64
@@ -119,7 +156,7 @@ def sig_bar_plot(df, max_y=1.0):
 def agg_stats_over_time_plots(agg_reports_dict, run_id):
     '''
     Generates line plots with aggregate stats over time (run_ids)
-    Ø MSE Baseline, Ø MSE Proper, Significance
+    Ø MSE Baseline, Ø MSE Embeddings, Significance
     '''
     modality_to_plots = {}
     for modality, run_ids in agg_reports_dict.items():
@@ -140,7 +177,7 @@ def agg_stats_over_time_plots(agg_reports_dict, run_id):
 
         plots_b64 = []
 
-        for measure in ["Ø MSE Baseline", "Ø MSE Proper", "Significance"]:
+        for measure in ["ØØ MSE Baseline", "ØØ MSE Embeddings", "Significance"]:
             plt.clf()
             plt.cla()
             plt.figure()
@@ -576,30 +613,36 @@ def generate_report(configuration,
             if not mod_report:
                 continue
             mod_report_formatted = deepcopy(mod_report)
-            for col in ['Ø MSE Baseline', 'Ø MSE Proper']:
+            for col in ['ØØ MSE Baseline',  'ØØ MSE Embeddings']:
                 for k, v in mod_report_formatted[col].items():
                     mod_report_formatted[col][k] = ('{:.%df}' % precision).format(v)
+            for col in  ['Ø MSE CI Baseline',  'Ø MSE CI Embeddings']:
+                for k, v in mod_report_formatted[col].items():
+                    mod_report_formatted[col][k] = " – ".join([('{:.%df}' % precision).format(x) for x in v])
+
             agg_modality_to_max_run_id[modality] = run_id
             df_agg = pd.DataFrame(mod_report_formatted)
             df_agg_num = pd.DataFrame(mod_report)
 
             df_agg.reset_index(inplace=True)
-            df_agg.rename(columns={'index': 'Word embedding'}, inplace=True)
+            df_agg.rename(columns={'index':  'Embeddings'}, inplace=True)
             df_agg_num.reset_index(inplace=True)
-            df_agg_num.rename(columns={'index': 'Word embedding'}, inplace=True)
-            df_agg = df_agg[['Word embedding', 'Ø MSE Baseline', 'Ø MSE Proper', 'Significance']]
+            df_agg_num.rename(columns={'index': 'Embeddings'}, inplace=True)
+            df_agg = df_agg[['Embeddings', 'ØØ MSE Baseline', 'Ø MSE CI Baseline', 'ØØ MSE Embeddings', 'Ø MSE CI Embeddings', 'Significance']]
             df_agg_dict[MODALITIES_SHORT_TO_FULL[modality]] = df_agg
 
             for _, row in df_agg_num.iterrows():
                 row_proper = {'Modality': MODALITIES_SHORT_TO_FULL[modality],
-                            'Embedding': row['Word embedding'],
-                            'Ø MSE': row['Ø MSE Proper'],
+                            'Embeddings': row['Embeddings'],
+                            'Ø MSE': row['Ø MSEs Embeddings'],
+                            'Ø MSE CI': row['Ø MSE CI Embeddings'],
                             'Type': 'proper',
                             'Significance': row['Significance']}
 
                 row_random = {'Modality': MODALITIES_SHORT_TO_FULL[modality],
-                            'Embedding': row['Word embedding'],
-                            'Ø MSE': row['Ø MSE Baseline'],
+                            'Embeddings': row['Embeddings'],
+                            'Ø MSE': row['Ø MSEs Baseline'],
+                            'Ø MSE CI': row['Ø MSE CI Baseline'],
                             'Type': 'random',
                             'Significance': '-'}
 
@@ -607,14 +650,13 @@ def generate_report(configuration,
 
         if df_agg_for_plot_rows:
             df_agg_for_plot = pd.DataFrame(df_agg_for_plot_rows)
-            max_y = df_agg_for_plot['Ø MSE'].max()
 
             df_list = [pd.DataFrame(y) for x, y in df_agg_for_plot.groupby('Modality', as_index=False)]
 
             sig_stats_plots = []
             for df_agg_for_plot in df_list:
                 sig_stats_plots.append((df_agg_for_plot['Modality'].values[0],
-                                        sig_bar_plot(df_agg_for_plot, max_y=max_y)))
+                                        sig_bar_plot(df_agg_for_plot)))
         
             # Generate stats over time plots if run_id > 1
             if run_id > 1:
