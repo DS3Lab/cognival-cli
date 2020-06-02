@@ -21,12 +21,10 @@ def extract_results_gaze(combinations):
                 if r[0] == emb:
                     if not emb in avg_results:
                         avg_results[emb] = [r[1]]
-                        std_results[emb] = [r[1]]
                     else:
                         avg_results[emb].append(r[1])
-                        std_results[emb].append(r[1])
-        results_list[emb] = avg_results[emb]
+        results_lists[emb] = avg_results[emb]
         avg_results[emb] = sum(avg_results[emb]) / len(avg_results[emb])
-        ci_results[emb] = st.t.interval(0.95, len(res)-1, loc=np.mean(res), scale=st.sem(res))
+        ci_results[emb] = st.t.interval(0.95, len(results_lists[emb])-1, loc=np.mean(results_lists[emb]), scale=st.sem(results_lists[emb]))
 
     return results_lists, avg_results, ci_results
