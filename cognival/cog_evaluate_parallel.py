@@ -48,6 +48,12 @@ def run_parallel(config_dict,
         feature_list = [feature for feature in config_dict["cogDataConfig"][cognitive_data]["features"] if feature in cog_source_to_feature[cog_data_list[idx]]]
         for feature in feature_list:
             for word_embedding in embeddings_list:
+                #try:
+                #    if len(config_dict["cogDataConfig"][cognitive_data]['wordEmbSpecifics'][word_embedding]['layers']) == 1:
+                #        print("Skipping parametrization with only one layer spec ...", cognitive_data, feature, word_embedding)
+                #        continue
+                #except KeyError:
+                #    continue
                 truncate_first_line = config_dict["wordEmbConfig"][word_embedding]["truncate_first_line"]
                 option = {"cognitiveData": "empty", "feature": "empty", "wordEmbedding": "empty"}
                 option["type"] = config_dict["type"]

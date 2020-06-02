@@ -84,6 +84,15 @@ def sig_bar_plot(df):
     '''
     Generates a bar plot with average MSE and significance stats per embedding type.
     '''
+    df['Embeddings'] = df['Embeddings'].apply(lambda x: {\
+                'fasttext-wiki-subword':'fastText',
+                'bert-base-cased': 'BERT',
+                'skip-thoughts-bi': 'Skip-Thought',
+                'elmo-sentence': 'ELMo',
+                'glove.6B.50': 'GloVe',
+                'use': 'USE',
+                'infersent': 'Infersent',
+                'power-mean': 'Power-Mean'}.get(x, x))
     df = unnesting(df, ["Ø MSE"])
     df.reset_index(drop=True, inplace=True)
     max_y = max(df["Ø MSE"])
@@ -101,9 +110,9 @@ def sig_bar_plot(df):
         sns.set(style="whitegrid", color_codes=True)
         num_embeddings = len(df['Embeddings'].unique())
         fig = plt.figure()
-        bar = sns.boxplot(x="Embeddings", y="Ø MSE", hue="Type", data=df[df.columns.difference(['Significance', 'Modality'])], showfliers=True)
+        bar = sns.boxplot(x="Embeddings", y="Ø MSE", hue="Type", data=df[df.columns.difference(['Significance', 'Modality'])], showfliers=False)
         bar.get_legend().remove()
-        bar.set(ylim=(min_y - 0.1*min_y, max_y + 0.1*max_y))
+        #bar.set(ylim=(min_y - 0.1*min_y, max_y + 0.1*max_y))
 
         # Loop over the bars
         import matplotlib.patches
@@ -130,16 +139,16 @@ def sig_bar_plot(df):
         plt.xticks(rotation=45)
         plt.yscale('log')
         bar.set_yticklabels(['']*len(bar.get_yticklabels()))
-        y_major = MultipleLocator(10**(np.ceil(np.log10(min_y)))*2)
-        y_minor = MultipleLocator(10**(np.ceil(np.log10(min_y))))
+        y_major = MultipleLocator(10**(np.ceil(np.log10(min_y))-1)*2)
+        y_minor = MultipleLocator(10**(np.ceil(np.log10(min_y))-1))
 
         bar.yaxis.set_major_locator(y_major)
-        bar.yaxis.set_minor_locator(y_minor)
+        #bar.yaxis.set_minor_locator(y_minor)
 
         sf = ScalarFormatter()
         sf.set_scientific(False)
         bar.yaxis.set_major_formatter(sf)
-        bar.yaxis.set_minor_formatter(sf)
+        #bar.yaxis.set_minor_formatter(sf)
         plt.draw()
         plt.grid(which='both', axis='y')
         ytl = [item.get_text() for item in bar.get_yticklabels(minor=True)]
@@ -526,17 +535,20 @@ def generate_report(configuration,
     results = []
     for experiment, exp_file in experiment_to_path.items():
         if 'random' in experiment:
-            with open(exp_file) as f:
-                result_dict = json.load(f)
-            result = {'Modality': MODALITIES_SHORT_TO_FULL[result_dict['modality']],
-                      'Ø MSE': result_dict['AVERAGE_MSE'],
-                      'SD MSE': np.std([x['MSE_PREDICTION'] for x in result_dict['folds']]),
-                      'Word embedding': result_dict['wordEmbedding'],
-                      'Subject': result_dict['cognitiveData'] if result_dict['multi_hypothesis'] == 'subject' else '-',
-                      'Cognitive source': result_dict['cognitiveParent'],
-                      'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature'],
-                      'Details': result_dict['details']}
-            results.append(result)
+            try:
+                with open(exp_file) as f:
+                    result_dict = json.load(f)
+                result = {'Modality': MODALITIES_SHORT_TO_FULL[result_dict['modality']],
+                          'Ø MSE': result_dict['AVERAGE_MSE'],
+                          'SD MSE': np.std([x['MSE_PREDICTION'] for x in result_dict['folds']]),
+                          'Word embedding': result_dict['wordEmbedding'],
+                          'Subject': result_dict['cognitiveData'] if result_dict['multi_hypothesis'] == 'subject' else '-',
+                          'Cognitive source': result_dict['cognitiveParent'],
+                          'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature'],
+                          'Details': result_dict['details']}
+                results.append(result)
+            except FileNotFoundError:
+                pass
 
     if results:
         df_random = pd.DataFrame(results)

@@ -605,7 +605,7 @@ def config_experiment(configuration,
                 config_patch = config_editor("embedding_exp",
                                             config_template,
                                             [emb_to_label[emb]],
-                                            csource,
+                                            [csource],
                                             singleton_params=['cv_split', 'validation_split'])
                 if config_patch is None:
                     return
