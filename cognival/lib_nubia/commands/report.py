@@ -103,63 +103,65 @@ def sig_bar_plot(df):
     df.rename(columns={'Ø MSE CI': 'ci_mse'}, inplace=True)
     sig_labels = [row['Significance'] for _, row in df.iterrows() if row['Significance'] != '-']
     # Make the barplot
-    #sns.set_context("paper", rc={"font.size":16,"axes.titlesize":20,"axes.labelsize":18})   
-    with sns.plotting_context("paper", rc={"font.size":16,"axes.titlesize":18,"axes.labelsize":16}):
-        sns.set(font_scale = 1.1)
-        # Set style
-        sns.set(style="whitegrid", color_codes=True)
-        num_embeddings = len(df['Embeddings'].unique())
-        fig = plt.figure()
-        bar = sns.boxplot(x="Embeddings", y="Ø MSE", hue="Type", data=df[df.columns.difference(['Significance', 'Modality'])], showfliers=False)
-        bar.get_legend().remove()
-        #bar.set(ylim=(min_y - 0.1*min_y, max_y + 0.1*max_y))
+    num_embeddings = len(df['Embeddings'].unique())
+     # Set style
+    sns.set(style="whitegrid", color_codes=True)
+    fig = plt.figure()
+    bar = sns.boxplot(x="Embeddings", y="Ø MSE", hue="Type", data=df[df.columns.difference(['Significance', 'Modality'])], showfliers=False)
+    bar.get_legend().remove()
+    #bar.set(ylim=(min_y - 0.1*min_y, max_y + 0.1*max_y))
 
-        # Loop over the bars
-        import matplotlib.patches
-        patches = bar.findobj(matplotlib.patches.PathPatch)
+    # Loop over the bars
+    import matplotlib.patches
+    patches = bar.findobj(matplotlib.patches.PathPatch)
 
-        # proper embeddings (get xkcd colors)
-        for idx, thisbar in enumerate(patches[::2]):
-            #thisbar.set_width(0.95 * thisbar.get_width())
-            thisbar.set_facecolor(bar_colors[idx])
-            #x = thisbar.get_x()
-            #y = -0.015*max_y
-            #bar.annotate('({})\n{:.2e}'.format(sig_labels[idx], thisbar.get_height()), (x, y), rotation=45, ha='left')   
+    # proper embeddings (get xkcd colors)
+    for idx, thisbar in enumerate(patches[::2]):
+        #thisbar.set_width(0.95 * thisbar.get_width())
+        thisbar.set_facecolor(bar_colors[idx])
+        #x = thisbar.get_x()
+        #y = -0.015*max_y
+        #bar.annotate('({})\n{:.2e}'.format(sig_labels[idx], thisbar.get_height()), (x, y), rotation=45, ha='left')   
 
-        # random embeddings (grey)
-        for idx, thisbar in enumerate(patches[1::2]):
-            #thisbar.set_width(0.95 * thisbar.get_width())
-            thisbar.set_facecolor("#dddddd")
-            #x = thisbar.get_x()
-            #y = -0.01*max_y
-            #bar.annotate('{:.2e}'.format(thisbar.get_height()), (x, y), rotation=45, ha='center') 
-        
-        # Adjust the margins
-        plt.subplots_adjust(bottom= 0.2, top = 0.8)
-        plt.xticks(rotation=45)
-        plt.yscale('log')
-        bar.set_yticklabels(['']*len(bar.get_yticklabels()))
-        y_major = MultipleLocator(10**(np.ceil(np.log10(min_y))-1)*2)
-        y_minor = MultipleLocator(10**(np.ceil(np.log10(min_y))-1))
+    # random embeddings (grey)
+    for idx, thisbar in enumerate(patches[1::2]):
+        #thisbar.set_width(0.95 * thisbar.get_width())
+        thisbar.set_facecolor("#dddddd")
+        #x = thisbar.get_x()
+        #y = -0.01*max_y
+        #bar.annotate('{:.2e}'.format(thisbar.get_height()), (x, y), rotation=45, ha='center') 
+    
+    # Adjust the margins
+    plt.subplots_adjust(bottom= 0.2, top = 0.8)
+    plt.xticks(rotation=45, ha='right')
+    plt.yscale('log')
+    bar.set_yticklabels(['']*len(bar.get_yticklabels()))
+    y_major = MultipleLocator(10**(np.ceil(np.log10(min_y))*2-1))
+    y_minor = MultipleLocator(10**(np.ceil(np.log10(min_y))*2-1))
 
-        bar.yaxis.set_major_locator(y_major)
-        #bar.yaxis.set_minor_locator(y_minor)
+    bar.yaxis.set_major_locator(y_major)
+    bar.yaxis.set_minor_locator(y_minor)
 
-        sf = ScalarFormatter()
-        sf.set_scientific(False)
-        bar.yaxis.set_major_formatter(sf)
-        #bar.yaxis.set_minor_formatter(sf)
-        plt.draw()
-        plt.grid(which='both', axis='y')
-        ytl = [item.get_text() for item in bar.get_yticklabels(minor=True)]
-        ytl = ytl[:2] + ((len(ytl)-2)*[""])
-        bar.set_yticklabels(ytl, minor=True)
+    sf = ScalarFormatter()
+    sf.set_scientific(False)
+    bar.yaxis.set_major_formatter(sf)
+    #bar.yaxis.set_minor_formatter(sf)
+    plt.draw()
+    plt.grid(which='both', axis='y')
+    ytl = [item.get_text() for item in bar.get_yticklabels(minor=True)]
+    #ytl = ytl[:2] + ((len(ytl)-2)*[""])
+    ytl = len(ytl)*[""]
+    bar.set_yticklabels(ytl, minor=True)
+    bar.xaxis.label.set_visible(False)
+    sns.set_context("notebook", rc={"font.size":16,"axes.titlesize":24,"axes.labelsize":22}, font_scale=4)
 
-        with BytesIO() as figfile:
-            fig.set_size_inches(num_embeddings + 1, 9)
-            plt.savefig(figfile, format='png', dpi=200, bbox_inches="tight")
-            figfile.seek(0)  # rewind to beginning of file
-            statsfig_b64 = base64.b64encode(figfile.getvalue()).decode('utf8')
+    bar.set_ylabel(bar.get_ylabel(), fontsize=18)
+    bar.tick_params(labelsize=16)
+    with BytesIO() as figfile:
+        fig.set_size_inches(int(num_embeddings*0.75), 6)
+        plt.savefig(figfile, format='png', dpi=300, bbox_inches="tight")
+        figfile.seek(0)  # rewind to beginning of file
+        statsfig_b64 = base64.b64encode(figfile.getvalue()).decode('utf8')
     return statsfig_b64
 
 def agg_stats_over_time_plots(agg_reports_dict, run_id):
