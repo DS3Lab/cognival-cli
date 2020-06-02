@@ -439,6 +439,6 @@ def data_handler(mode, config, stratified_sampling, balance, word_embedding, cog
             np.random.seed(config["seed"])                                                              
             y = y[:, np.random.randint(y.shape[1], size=15000)]                             
         y = filter_df_corr(y, 0.95)                                                     
-        print('Features below .95 threshold:', y.shape[1])
+        print('{} / {} / {} - Features below .95 threshold: {}'.format(cognitive_data, feature, word_embedding, y.shape[1])) 
 
     return split_folds(word_embedding, cognitive_data, feature, strings, X, y, config["folds"], config["seed"], balance, sub_sources)

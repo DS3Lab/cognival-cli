@@ -92,7 +92,7 @@ def create_model_template(network, shape, legacy):
     return create_model
 
 
-def model_cv(model_constr, modality, cognitive_data, emb_type, cog_config, word_embedding, X, y, fold_size_lower_b):
+def model_cv(model_constr, modality, cognitive_data, feature, emb_type, cog_config, word_embedding, X, y, fold_size_lower_b):
     '''
     Performs grid search cross-validation using the given
     model construction function, configuration and
@@ -193,8 +193,7 @@ def model_cv(model_constr, modality, cognitive_data, emb_type, cog_config, word_
         # Smallest value is best-performing
         best_id = np.argmin(mean_scores)
         best_params = param_grid[best_id]
-        print("Best score:", mean_scores[best_id])
-        print("Best params:", param_grid[best_id])
+        cprint("{} / {} / {} - Best score inner CV: {}".format(cognitive_data, feature, word_embedding, mean_scores[best_id]), "magenta")
 
         ss = StandardScaler()
         minmax = MinMaxScaler()
@@ -298,6 +297,7 @@ def model_loop(i, X_train, X_test, y_train, y_test, fold_size_lower_b, words_tes
             grid, grid_result, ss, pca, minmax = model_cv(create_model_template(network, X_train[i].shape, legacy),
                          modality,
                          cognitive_data,
+                         feature,
                          emb_type,
                          cog_config,
                          word_embedding,
