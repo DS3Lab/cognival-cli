@@ -136,8 +136,8 @@ def sig_bar_plot(df):
     plt.xticks(rotation=45, ha='right')
     plt.yscale('log')
     bar.set_yticklabels(['']*len(bar.get_yticklabels()))
-    y_major = MultipleLocator(10**(np.ceil(np.log10(min_y))*2-1))
-    y_minor = MultipleLocator(10**(np.ceil(np.log10(min_y))*2-1))
+    y_major = MultipleLocator(10**(np.ceil(np.log10(min_y))-1))
+    y_minor = MultipleLocator(10**(np.ceil(np.log10(min_y))-1))
 
     bar.yaxis.set_major_locator(y_major)
     bar.yaxis.set_minor_locator(y_minor)
@@ -148,10 +148,14 @@ def sig_bar_plot(df):
     #bar.yaxis.set_minor_formatter(sf)
     plt.draw()
     plt.grid(which='both', axis='y')
+    # Scrub minor labels
     ytl = [item.get_text() for item in bar.get_yticklabels(minor=True)]
-    #ytl = ytl[:2] + ((len(ytl)-2)*[""])
     ytl = len(ytl)*[""]
     bar.set_yticklabels(ytl, minor=True)
+    ytl = [item.get_text() for item in bar.get_yticklabels()]
+    # Scrub every second of upper half major labels
+    ytl = ytl[:2] + [x if not idx % 2 else '' for idx, x in enumerate(ytl[2:])]
+    bar.set_yticklabels(ytl)
     bar.xaxis.label.set_visible(False)
     sns.set_context("notebook", rc={"font.size":16,"axes.titlesize":24,"axes.labelsize":22}, font_scale=4)
 
