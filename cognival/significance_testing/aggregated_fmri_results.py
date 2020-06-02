@@ -13,7 +13,7 @@ def extract_results(combinations):
     avg_results = {}
     ci_results = {}
     for emb, res in combination_results.items():
-        results_list[emb] = res
+        results_lists[emb] = res
         avg_results[emb] = sum(res) / len(res)
         ci_results[emb] = st.t.interval(0.95, len(res)-1, loc=np.mean(res), scale=st.sem(res))
 
