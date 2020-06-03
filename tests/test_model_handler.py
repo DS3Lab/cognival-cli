@@ -1266,15 +1266,21 @@ def test_create_model(reference_model_config, set_seed):
     assert model.get_config() == reference_model_config
 
 
-def test_model_cv(config_embedding, data, grid_search_reference, set_seed):
+def test_model_cv(config, config_embedding, data, grid_search_reference, set_seed):
     _, X_train, y_train, _, _ = data
     grid_reduced, best_params = grid_search_reference
     # Test only first chunk
     X_train, y_train = X_train[0], y_train[0]
-    _, grid_result = model_cv(create_model_template('mlp', None, True),
-                              config_embedding,
+    _, grid_result, _, _, _ = model_cv(create_model_template('mlp', None, True),
+                              'eeg',
+                              'zuco-eeg',
+                              None,
+                              'word',
+                              config['cogDataConfig']['zuco-eeg'],
+                              'glove-50',
                               X_train,
-                              y_train)
+                              y_train,
+                              0)
     assert {k:v for k, v in grid_result.get_params().items() if not k in ['estimator', 'estimator__build_fn']} == grid_reduced
     assert grid_result.best_params_ == best_params
     
@@ -1292,21 +1298,22 @@ def test_model_predict(data, config_embedding, predict_result, set_seed):
                       'layers': [5],
                       'output_dim': 105})
     model.fit(X_train, y_train)
-    mse, w_e = model_predict(model, words_test, X_test, y_test)
+    mse, w_e = model_predict(model, None, None, None, words_test, X_test, y_test)
     assert mse == pytest.approx(mse_reference, rel=1e-3, abs=1e-3)
     # TODO: Restore test, requires refactoring 
     #assert np.array_equal(w_e[:10], w_e_reference)
     
 
-def test_model_handler(config_embedding, data, handler_result, grid_search_reference, set_seed):
+def test_model_handler(config, config_embedding, data, handler_result, grid_search_reference, set_seed):
     words_test, X_train, y_train, X_test, y_test = data
     words_test, X_train, y_train, X_test, y_test = [words_test[0]], [X_train[0]], [y_train[0]], [X_test[0]], [y_test[0]]
     mse_reference, w_e_reference = handler_result
     grid_reduced, best_params = grid_search_reference
-    word_error, grids_result, mse_errors = model_handler('dummy_embedding',
-                                                         'dummy_source',
+    word_error, grids_result, mse_errors = model_handler('glove-50',
+                                                         'eeg',
+                                                         'zuco-eeg',
                                                          'dummy_feature',
-                                                         config_embedding,
+                                                         config['cogDataConfig']['zuco-eeg'],
                                                          'word',
                                                          words_test,
                                                          X_train,
