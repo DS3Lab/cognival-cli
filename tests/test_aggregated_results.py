@@ -33,7 +33,7 @@ def test_extract_results_eye_tracking(refdir_eye_tracking):
     with open(refdir_eye_tracking / 'options1.0.json') as f:
         combinations = json.load(f)
     
-    avg_results = extract_results_gaze(combinations)
+    results_lists, avg_results, ci_results = extract_results_gaze(combinations)
     assert avg_results['glove-50'] == pytest.approx(0.00668823196591811, abs=1e-3, rel=1e-3)
     assert avg_results['random-embeddings-50'] == pytest.approx(0.008006483877673488, abs=1e-3, rel=1e-3)
 
@@ -42,7 +42,7 @@ def test_extract_results_eeg(refdir_eeg):
     with open(refdir_eeg / 'options1.0.json') as f:
         combinations = json.load(f)
 
-    avg_results = extract_results_eeg(combinations)
+    results_lists, avg_results, ci_results = extract_results_eeg(combinations)
     assert avg_results['glove-50'] == pytest.approx(0.008593254540586731, abs=1e-3, rel=1e-3)
     assert avg_results['random-embeddings-50'] == pytest.approx(0.010960347359505416, abs=1e-3, rel=1e-3)
 
@@ -51,7 +51,7 @@ def test_extract_results_fmri(refdir_fmri):
     with open(refdir_fmri / 'options1.0.json') as f:
         combinations = json.load(f)
 
-    avg_results = extract_results_fmri(combinations)
+    results_lists, avg_results, ci_results = extract_results_fmri(combinations)
     assert avg_results['glove-50'] == pytest.approx(0.00668823196591811, abs=1e-3, rel=1e-3)
     assert avg_results['random-embeddings-50'] == pytest.approx(0.003556954166535499, abs=1e-3, rel=1e-3)
 
