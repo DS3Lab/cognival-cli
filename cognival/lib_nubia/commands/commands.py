@@ -945,6 +945,14 @@ def aggregate(configuration,
         try:
             with open(Path(out_dir) / 'experiments' / modality / 'options_{}.json'.format(run_id)) as f:
                 options_dict = json.load(f)
+                for v in options_dict.values():
+                    res_path = Path(out_dir) / 'experiments' / modality / v['cognitiveData'] / v['feature'] / v['wordEmbedding'] / str(run_id) / (v['wordEmbedding'] + '.json')
+                    with open(res_path) as f:
+                        emb_result = json.load(f)
+                        # Update average MSE
+                        v['AVERAGE_MSE'] = emb_result['AVERAGE_MSE']
+                        v['ALL_MSE'] = [fold['MSE_PREDICTION'] for fold in emb_result['folds']]
+
                 options_dicts.append(options_dict)
         except FileNotFoundError:
             if not quiet:
@@ -979,7 +987,7 @@ def aggregate(configuration,
         if not options_dict:
             continue
 
-        results_lists, avg_results, ci_results = extract_results[modality](options_dict)
+        fold_errors, results_lists, avg_results, ci_results = extract_results[modality](options_dict)
 
         significance = aggregate_significance[modality](report_dir,
                                                         run_id,
@@ -992,6 +1000,8 @@ def aggregate(configuration,
         # Tabulate aggregated scores for CLI display and JSON export
         for emb, base in zip(embeddings, baselines):
             try:
+                list_fold_err_emb = fold_errors[emb]
+                list_fold_err_base = fold_errors[base]
                 list_emb = results_lists[emb]
                 list_base = results_lists[base]
                 avg_base = avg_results[base]
@@ -1000,19 +1010,17 @@ def aggregate(configuration,
                 ci_emb = ci_results[emb]
                 df_rows_cli.append({'Word embedding': emb,
                                     'ØØ MSE Baseline': avg_base,
-                                    'Ø MSE CI Baseline': ci_base,
                                     'ØØ MSE Embeddings': avg_emb,
-                                    'Ø MSE CI Embeddings': ci_emb,
                                     'Significance': colored(significance[emb], 'yellow')})
 
                 df_rows.append({'Word embedding':emb,
                                 'Ø MSEs Baseline': list_base,
                                 'ØØ MSE Baseline': avg_base,
-                                'Ø MSE CI Baseline': ci_base,
                                 'Ø MSEs Embeddings': list_emb,
                                 'ØØ MSE Embeddings': avg_emb,
-                                'Ø MSE CI Embeddings': ci_emb,
-                                'Significance': significance[emb]})
+                                'Significance': significance[emb],
+                                'Fold errors Baseline': list_fold_err_base,
+                                'Fold errors Embeddings': list_fold_err_emb})
 
             except KeyError:
                 pass
