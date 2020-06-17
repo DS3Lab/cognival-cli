@@ -209,7 +209,7 @@ def main():
             return
 
     if(name=="Permutation"):
-        R = max(10000, int(len(data_A) * (1 / float(alpha))))
+        R = max(1000, int(len(data_A) * (1 / float(alpha))))
         #print(R)
         pval = rand_permutation(data_A, data_B, len(data_A), R)
         if (float(pval) <= float(alpha)):

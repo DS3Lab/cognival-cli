@@ -748,7 +748,7 @@ def report(run_id=0,
     resources_path = ctx.resources_path
 
     cprint('Computing significance stats ...', 'yellow')
-    significance(run_id, modalities, alpha, test, quiet=True)
+    significance(run_id, modalities, alpha, test, quiet=False)
     cprint('Aggregating ...', 'yellow')
     aggregate(run_id, modalities, test, quiet=True)
     generate_report(configuration,

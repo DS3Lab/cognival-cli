@@ -84,7 +84,7 @@ def generate_bert_sentence_embs(resources_path, emb_params, base_path, emb_file)
     export_df(emb_path, emb_file, sentences, embeddings, emb_params["dimensions"])
 
 
-def generate_elmo_sentence_embs(resources_path, emb_params, base_path, emb_file, fixed_mean_pooling):
+def generate_elmo_sentence_embs(name, resources_path, emb_params, base_path, emb_file, fixed_mean_pooling):
     from allennlp.commands.elmo import ElmoEmbedder
     import tensorflow as tf
     import tensorflow_hub as hub
@@ -112,7 +112,12 @@ def generate_elmo_sentence_embs(resources_path, emb_params, base_path, emb_file,
                     embeddings.append(emb_tensor.eval(session=sess))
             tf.keras.backend.clear_session()
     else:
-        elmo = ElmoEmbedder()
+        if 'large' in name:
+            print('using 5.5B model')
+            elmo = ElmoEmbedder('https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_options.json',
+                                'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_weights.hdf5')
+        else:
+            elmo = ElmoEmbedder()
         for sent_tok in tqdm(sentence_tokens):
             elmo_output = elmo.embed_sentence(sent_tok) # pass in as list of tokens
             elmo_output = elmo_output.swapaxes(0, 1) # reorder for reshaping
@@ -278,10 +283,10 @@ def generate_sent_embeddings(name,
 
     if 'bert' in name:
         generate_bert_sentence_embs(resources_path, emb_params, base_path, emb_file)
-    elif name == 'elmo-sentence':
-        generate_elmo_sentence_embs(resources_path, emb_params, base_path, emb_file, fixed_mean_pooling=False)
+    elif name == 'elmo-sentence' or name == 'elmo-sentence-large':
+        generate_elmo_sentence_embs(name, resources_path, emb_params, base_path, emb_file, fixed_mean_pooling=False)
     elif name == 'elmo-sentence-fixed-mean-pooling':
-        generate_elmo_sentence_embs(resources_path, emb_params, base_path, emb_file, fixed_mean_pooling=True)
+        generate_elmo_sentence_embs(name, resources_path, emb_params, base_path, emb_file, fixed_mean_pooling=True)
     elif name == 'power-mean':
         generate_powermean_sentence_embs(resources_path, emb_params, base_path, emb_file)
     elif 'skip-thoughts' in name:

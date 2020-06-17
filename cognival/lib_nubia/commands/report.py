@@ -86,17 +86,21 @@ def sig_bar_plot(df):
     '''
     df['Embeddings'] = df['Embeddings'].apply(lambda x: {\
                 'fasttext-wiki-subword':'fastText',
+                'fasttext-cc':'fastText',
+                'fasttext-cc-subword':'fastText',
                 'bert-base-cased': 'BERT',
+                'bert-large-cased': 'BERT',
                 'skip-thoughts-bi': 'Skip-Thought',
                 'elmo-sentence': 'ELMo',
+                'elmo-sentence-large': 'ELMo',
                 'glove.6B.50': 'GloVe',
                 'use': 'USE',
                 'infersent': 'Infersent',
                 'power-mean': 'Power-Mean'}.get(x, x))
-    df = unnesting(df, ["Fold errors"])
+    df = unnesting(df, ["MSE CV folds"])
     df.reset_index(drop=True, inplace=True)
-    max_y = max(df["Fold errors"])
-    min_y = min(df["Fold errors"])
+    max_y = max(df["MSE CV folds"])
+    min_y = min(df["MSE CV folds"])
     df = df[sorted(df.columns)]
     # Sort embedding names naturally
     df = df.reindex(index=order_by_index(df.index, index_natsorted(df['Embeddings'], alg=ns.IC)))
@@ -106,7 +110,7 @@ def sig_bar_plot(df):
      # Set style
     sns.set(style="whitegrid", color_codes=True)
     fig = plt.figure()
-    bar = sns.boxplot(x="Embeddings", y="Fold errors", hue="Type", data=df[df.columns.difference(['Significance', 'Modality'])], showfliers=False)
+    bar = sns.boxplot(x="Embeddings", y="MSE CV folds", hue="Type", data=df[df.columns.difference(['Significance', 'Modality'])], showfliers=False)
     bar.get_legend().remove()
     #bar.set(ylim=(min_y - 0.1*min_y, max_y + 0.1*max_y))
 
@@ -655,13 +659,13 @@ def generate_report(configuration,
             for _, row in df_agg_num.iterrows():
                 row_proper = {'Modality': MODALITIES_SHORT_TO_FULL[modality],
                             'Embeddings': row['Embeddings'],
-                            'Fold errors': row['Fold errors Embeddings'],
+                            'MSE CV folds': row['Fold errors Embeddings'],
                             'Type': 'proper',
                             'Significance': row['Significance']}
 
                 row_random = {'Modality': MODALITIES_SHORT_TO_FULL[modality],
                             'Embeddings': row['Embeddings'],
-                            'Fold errors': row['Fold errors Baseline'],
+                            'MSE CV folds': row['Fold errors Baseline'],
                             'Type': 'random',
                             'Significance': '-'}
 
