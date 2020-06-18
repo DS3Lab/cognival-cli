@@ -1,3 +1,4 @@
+import copy
 import csv
 import sys
 import warnings
@@ -63,16 +64,16 @@ def mcNemar(table):
     return pval
 
 def inner_rand_perm(data_A, data_B, n, delta_orig):
-    temp_A = data_A
-    temp_B = data_B
+    temp_A = copy.deepcopy(data_A)
+    temp_B = copy.deepcopy(data_B)
     samples = [np.random.randint(1, 3) for i in range(n)] #which samples to swap without repetitions
     swap_ind = [i for i, val in enumerate(samples) if val == 1]
     for ind in swap_ind:
         temp_B[ind], temp_A[ind] = temp_A[ind], temp_B[ind]
     delta = float(sum([ x - y for x, y in zip(temp_A, temp_B)]))/n
     if(delta<=delta_orig):
-        return 1
-    return 0
+        return 1.0
+    return 0.0
 
 #Permutation-randomization (parallelized)
 #Repeat R times: randomly flip each m_i(A),m_i(B) between A and B with probability 0.5, calculate delta(A,B).
@@ -82,8 +83,8 @@ def inner_rand_perm(data_A, data_B, n, delta_orig):
 def rand_permutation(data_A, data_B, n, R):
     delta_orig = float(sum([x - y for x, y in zip(data_A, data_B)]))/n
     #print(delta_orig)
-    r = sum(Parallel(n_jobs=12)(delayed(inner_rand_perm)(data_A, data_B, n, delta_orig) for i in range(0, R)))
-    #print(r)
+    r = sum(Parallel(n_jobs=31)(delayed(inner_rand_perm)(data_A, data_B, n, delta_orig) for i in range(0, R)))
+    print(r)
     pval = float(r+1.0)/(R+1.0)
     return pval
 
@@ -97,8 +98,8 @@ def inner_bootstrap(data_A, data_B, n, delta_orig):
         temp_B.append(data_B[samp])
     delta = float(sum([x - y for x, y in zip(temp_A, temp_B)])) / n
     if (delta < 2*delta_orig):
-        return 1
-    return 0
+        return 1.0
+    return 0.0
 
 
 #Bootstrap
