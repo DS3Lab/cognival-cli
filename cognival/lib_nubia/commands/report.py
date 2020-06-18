@@ -244,6 +244,7 @@ def agg_stats_over_time_plots(agg_reports_dict, run_id):
 
 
 def generate_report(configuration,
+                    test,
                     run_id,
                     resources_path,
                     precision,
@@ -400,9 +401,9 @@ def generate_report(configuration,
                     modality, ver = path.split('/')[-2:]
                     with open(Path(path) / report) as f_sig:
                         report_dict = json.loads(f_sig.read())
-                    if report == 'Wilcoxon.json':
+                    if report == '{}.json'.format(test):
                         sig_test_reports_dict[modality][int(ver)] = report_dict
-                    else:
+                    elif report == 'aggregated_scores.json':
                         agg_reports_dict[modality][int(ver)] = report_dict
 
 

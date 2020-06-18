@@ -376,7 +376,7 @@ class Config:
 @command
 @argument('run_id', type=int, description='Run ID to be aggregated. Defaults to 0, treated as last run (run_id - 1).')
 @argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
-@argument('alpha', type=str, description='Alpha value')
+@argument('alpha', type=float, description='Alpha value')
 @argument('test', type=str, description='Significance test')
 def significance(run_id=0,
                  modalities=['eye-tracking', 'eeg', 'fmri'],
@@ -706,7 +706,7 @@ def properties():
 @command
 @argument('run_id', type=int, description='Run ID for which to generate a report. Defaults to 0, treated as last run (run_id - 1).')
 @argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
-@argument('alpha', type=str, description='Alpha value')
+@argument('alpha', type=float, description='Alpha value')
 @argument('test', type=str, description='Significance test')
 @argument('precision', type=int, description='Number of decimal points in report (except for bonferroni alpha)')
 @argument('average_multi_hypothesis', type=bool, description='Average multi-hypothesis (multi-feature or multi-subject) results.')
@@ -752,6 +752,7 @@ def report(run_id=0,
     cprint('Aggregating ...', 'yellow')
     aggregate(run_id, modalities, test, quiet=True)
     generate_report(configuration,
+                    test,
                     run_id,
                     resources_path,
                     precision,
