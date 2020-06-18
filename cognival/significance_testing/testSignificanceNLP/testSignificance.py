@@ -62,7 +62,7 @@ def mcNemar(table):
     pval = 1-stats.chi2.cdf(statistic,1)
     return pval
 
-def inner(data_A, data_B, n, delta_orig):
+def inner_rand_perm(data_A, data_B, n, delta_orig):
     temp_A = data_A
     temp_B = data_B
     samples = [np.random.randint(1, 3) for i in range(n)] #which samples to swap without repetitions
@@ -82,10 +82,23 @@ def inner(data_A, data_B, n, delta_orig):
 def rand_permutation(data_A, data_B, n, R):
     delta_orig = float(sum([x - y for x, y in zip(data_A, data_B)]))/n
     #print(delta_orig)
-    r = sum(Parallel(n_jobs=12)(delayed(inner)(data_A, data_B, n, delta_orig) for i in range(0, R)))
+    r = sum(Parallel(n_jobs=31)(delayed(inner_rand_perm)(data_A, data_B, n, delta_orig) for i in range(0, R)))
     #print(r)
     pval = float(r+1.0)/(R+1.0)
     return pval
+
+
+def inner_bootstrap(data_A, data_B, n, delta_orig):
+    temp_A = []
+    temp_B = []
+    samples = np.random.randint(0,n,n) #which samples to add to the subsample with repetitions
+    for samp in samples:
+        temp_A.append(data_A[samp])
+        temp_B.append(data_B[samp])
+    delta = float(sum([x - y for x, y in zip(temp_A, temp_B)])) / n
+    if (delta < 2*delta_orig):
+        return 1
+    return 0
 
 
 #Bootstrap
@@ -95,21 +108,9 @@ def rand_permutation(data_A, data_B, n, R):
 # "An Empirical Investigation of Statistical Significance in NLP".
 def Bootstrap(data_A, data_B, n, R):
     delta_orig = float(sum([x - y for x, y in zip(data_A, data_B)])) / n
-    r = 0
-    for x in range(0, R):
-        temp_A = []
-        temp_B = []
-        samples = np.random.randint(0,n,n) #which samples to add to the subsample with repetitions
-        for samp in samples:
-            temp_A.append(data_A[samp])
-            temp_B.append(data_B[samp])
-        delta = float(sum([x - y for x, y in zip(temp_A, temp_B)])) / n
-        if (delta < 2*delta_orig):
-            r = r + 1
+    r = sum(Parallel(n_jobs=31)(delayed(inner_bootstrap)(data_A, data_B, n, delta_orig) for i in range(0, R)))
     pval = float(r)/(R)
     return pval
-
-
 
 
 def main():
@@ -211,7 +212,7 @@ def main():
             return
 
     if(name=="Permutation"):
-        R = max(1000, int(len(data_A) * (1 / float(alpha))))
+        R = max(5000, int(len(data_A) * (1 / float(alpha))))
         #print(R)
         pval = rand_permutation(data_A, data_B, len(data_A), R)
         if (float(pval) <= float(alpha)):
