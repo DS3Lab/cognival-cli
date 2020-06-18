@@ -82,7 +82,7 @@ def inner_rand_perm(data_A, data_B, n, delta_orig):
 def rand_permutation(data_A, data_B, n, R):
     delta_orig = float(sum([x - y for x, y in zip(data_A, data_B)]))/n
     #print(delta_orig)
-    r = sum(Parallel(n_jobs=31)(delayed(inner_rand_perm)(data_A, data_B, n, delta_orig) for i in range(0, R)))
+    r = sum(Parallel(n_jobs=12)(delayed(inner_rand_perm)(data_A, data_B, n, delta_orig) for i in range(0, R)))
     #print(r)
     pval = float(r+1.0)/(R+1.0)
     return pval
@@ -212,7 +212,7 @@ def main():
             return
 
     if(name=="Permutation"):
-        R = max(5000, int(len(data_A) * (1 / float(alpha))))
+        R = max(10000, int(len(data_A) * (1 / float(alpha))))
         #print(R)
         pval = rand_permutation(data_A, data_B, len(data_A), R)
         if (float(pval) <= float(alpha)):

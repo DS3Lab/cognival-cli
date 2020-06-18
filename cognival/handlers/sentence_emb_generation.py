@@ -363,7 +363,7 @@ def generate_avg_sent_embeddings(name,
     for sent in tqdm(sentences):
         sent_word_emb = []
         for token in nlp(sent):
-            if any(token.tag_.startswith(x) for x in ('N', 'V', 'J', 'RB')):
+            if any(token.tag_.startswith(x) for x in ('NN', 'V', 'J', 'RB')):
                 if token.text in emb_dict:
                     sent_word_emb.append(emb_dict[token.text])
                 elif token.text.lower() in emb_dict:
