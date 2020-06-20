@@ -287,6 +287,7 @@ def generate_report(configuration,
         return
 
     config_dict_report['run_id'] = run_id
+    config_dict_report['sig_test'] = test
 
     if not html and not pdf:
         cprint('No output format enabled, aborting ...', 'red')
