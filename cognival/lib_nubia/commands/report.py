@@ -95,9 +95,11 @@ def sig_bar_plot(df):
                 'elmo-sentence-large': 'ELMo',
                 'glove.6B.50': 'GloVe',
                 'use': 'USE',
-                'infersent': 'Infersent',
+                'infersent': 'InferSent',
                 'power-mean': 'Power-Mean'}.get(x, x))
     df = unnesting(df, ["MSE CV folds"])
+    df['Embeddings'] = pd.Categorical(df['Embeddings'], ["GloVe", "fastText", "ELMo", "Power-Mean", "Skip-Thought", "BERT", "InferSent", "USE"])
+    df.sort_values(['Embeddings', 'Type'], inplace=True)
     df.reset_index(drop=True, inplace=True)
     max_y = max(df["MSE CV folds"])
     min_y = min(df["MSE CV folds"])
