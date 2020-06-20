@@ -25,6 +25,7 @@ from matplotlib.ticker import ScalarFormatter, LogLocator, LinearLocator, Format
 from natsort import index_natsorted, order_by_index, ns
 import seaborn as sns
 import random
+import shutil
 
 from termcolor import cprint
 from .utils import _open_config
@@ -365,6 +366,9 @@ def generate_report(configuration,
         
         with tqdm() as pbar:
             for modality, modality_dict in avg_error_single_dfs.items():
+                err_t_path = report_dir / modality / str(run_id) / 'error_tables'
+                shutil.rmtree(err_t_path, ignore_errors=True)
+                os.makedirs(err_t_path, exist_ok=True)
                 for source, source_dict in modality_dict.items():
                     for feature, feature_dict in source_dict.items():
                         pbar.update()
@@ -376,15 +380,12 @@ def generate_report(configuration,
                         df.rename(columns={'index': config_dict['type']}, inplace=True)
 
                         if export_err_tables:
-                            err_t_path = report_dir / modality / str(run_id) / 'error_tables'
                             if feature == '—':
                                 err_t_file = '{}_error_table.parquet.gz'.format(source)
                             else:
                                 err_t_file = '{}_{}_error_table.parquet.gz'.format(source,
                                                                                    feature)
                             
-                            shutil.rmtree(err_t_path, ignore_errors=True)
-                            os.makedirs(err_t_path, exist_ok=True)
                             df.to_parquet(err_t_path / err_t_file,
                                           engine='auto',
                                           compression='gzip')
