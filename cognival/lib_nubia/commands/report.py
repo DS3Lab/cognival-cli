@@ -383,6 +383,7 @@ def generate_report(configuration,
                                 err_t_file = '{}_{}_error_table.parquet.gz'.format(source,
                                                                                    feature)
                             
+                            shutil.rmtree(err_t_path, ignore_errors=True)
                             os.makedirs(err_t_path, exist_ok=True)
                             df.to_parquet(err_t_path / err_t_file,
                                           engine='auto',
