@@ -766,6 +766,7 @@ def significance(configuration,
                  run_id,
                  modalities,
                  alpha,
+                 num_hypotheses,
                  test,
                  quiet):
     out_dir = Path(config_dict["PATH"]) / config_dict["outputDir"]
@@ -794,7 +795,8 @@ def significance(configuration,
         if not quiet:
             cprint('No results for run_id {}, aborting ...'.format(run_id), 'red')
         return
-    
+    if num_hypotheses and (len(modalities) > 1):
+        raise RuntimeError("Cannot evaluate more than one modality when num_hypotheses is fixed!")
     for modality in modalities:
         if not quiet:
             cprint('\n[{}]\n'.format(modality.upper()), attrs=['bold'], color='green')
@@ -838,7 +840,12 @@ def significance(configuration,
             # Compute bonferroni-corrected alpha (per embedding)
             embedding_to_bonferroni = {}
             for embed, num_hyp in hypothesis_counter.items():
-                embedding_to_bonferroni[embed] = bonferroni_correction(alpha, num_hyp)
+                if num_hypotheses:
+                    if len(set(hypothesis_counter.values())) > 1:
+                        raise RuntimeError("Cannot use fixed hypothesis count when number of hypotheses heterogneous!")
+                    embedding_to_bonferroni[embed] = bonferroni_correction(alpha, num_hypotheses)
+                else:
+                    embedding_to_bonferroni[embed] = bonferroni_correction(alpha, num_hyp)
 
         if not quiet:
             cprint('\n[Significance tests]:', attrs=['bold'])

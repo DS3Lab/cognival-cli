@@ -375,12 +375,14 @@ class Config:
 
 @command
 @argument('run_id', type=int, description='Run ID to be aggregated. Defaults to 0, treated as last run (run_id - 1).')
-@argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
+@argument('modalities', type=list, description='Modalities for which significance is to be termined (default: all applicable)')
 @argument('alpha', type=float, description='Alpha value')
+@argument('num_hypotheses', type=int, description='Number of hypotheses. Defaults to None, i.e. is inferred from the results associated with a run. Note: This needs to be specified manually if not all experiments of a modality are performed in the same run, otherwise, the Bonferroni correction is incorrect!')
 @argument('test', type=str, description='Significance test')
 def significance(run_id=0,
                  modalities=['eye-tracking', 'eeg', 'fmri'],
                  alpha=0.01,
+                 num_hypotheses=None,
                  test='Wilcoxon',
                  quiet=False):
     '''
@@ -403,6 +405,7 @@ def significance(run_id=0,
                           run_id,
                           modalities,
                           alpha,
+                          num_hypotheses,
                           test,
                           quiet))
 
@@ -705,8 +708,9 @@ def properties():
 
 @command
 @argument('run_id', type=int, description='Run ID for which to generate a report. Defaults to 0, treated as last run (run_id - 1).')
-@argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
+@argument('modalities', type=list, description='Modalities for which significance is to be termined (default: all applicable)')
 @argument('alpha', type=float, description='Alpha value')
+@argument('num_hypotheses', type=int, description='Number of hypotheses. Defaults to None, i.e. is inferred from the results associated with a run. Note: This needs to be specified manually if not all experiments of a modality are performed in the same run, otherwise, the Bonferroni correction is incorrect!')
 @argument('test', type=str, description='Significance test')
 @argument('precision', type=int, description='Number of decimal points in report (except for bonferroni alpha)')
 @argument('average_multi_hypothesis', type=bool, description='Average multi-hypothesis (multi-feature or multi-subject) results.')
@@ -723,6 +727,7 @@ def properties():
 def report(run_id=0,
            modalities=['eye-tracking', 'eeg', 'fmri'],
            alpha=0.01,
+           num_hypotheses=None,
            test="Wilcoxon",
            precision=3,
            average_multi_hypothesis=True,
@@ -748,7 +753,7 @@ def report(run_id=0,
     resources_path = ctx.resources_path
 
     cprint('Computing significance stats ...', 'yellow')
-    significance(run_id, modalities, alpha, test, quiet=False)
+    significance(run_id, modalities, alpha, num_hypotheses, test, quiet=False)
     cprint('Aggregating ...', 'yellow')
     aggregate(run_id, modalities, test, quiet=True)
     generate_report(configuration,

@@ -68,11 +68,11 @@ def test_significance(baseline, model, alpha, test, debug=False):
         #print('Sum of absolute errors averaged across dimensions - model: {:.2f} | baseline: {:.2f}'.format(sum(model), sum(baseline)))
         # Take upper bound for p-value (worst-case), fixed confidence of 0.99
         if test == 'Permutation-Mean':
-            pvalue = mc_permutation_test(model, baseline, n=10000, f='mean', side='both', cores=24, confidence=.99).upper
+            pvalue = mc_permutation_test(model, baseline, n=25000, f='mean', side='both', cores=24, confidence=.99).upper
         elif test == 'Permutation-Median':
-            pvalue = mc_permutation_test(model, baseline, n=10000, f='median', side='both', cores=24, confidence=.99).upper
+            pvalue = mc_permutation_test(model, baseline, n=25000, f='median', side='both', cores=24, confidence=.99).upper
         elif test == 'Permutation-IQR':
-            pvalue = mc_permutation_test(model, baseline, n=10000, f=iqr, side='both', cores=24, confidence=.99).upper
+            pvalue = mc_permutation_test(model, baseline, n=25000, f=iqr, side='both', cores=24, confidence=.99).upper
         else:
             raise ValueError("test")
         significant = True if float(pvalue) <= float(alpha) else False
