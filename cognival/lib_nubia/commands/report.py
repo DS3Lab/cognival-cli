@@ -647,9 +647,9 @@ def generate_report(configuration,
             if not mod_report:
                 continue
             mod_report_formatted = deepcopy(mod_report)
-            #for col in ['ØØ MSE Baseline',  'ØØ MSE Embeddings']:
-            #    for k, v in mod_report_formatted[col].items():
-            #        mod_report_formatted[col][k] = ('{:.%df}' % precision).format(v)
+            for col in ['ØØ MSE Baseline',  'ØØ MSE Embeddings']:
+                for k, v in mod_report_formatted[col].items():
+                    mod_report_formatted[col][k] = ('{:.%df}' % precision).format(v)
 
             agg_modality_to_max_run_id[modality] = run_id
             df_agg = pd.DataFrame(mod_report_formatted)
@@ -659,27 +659,7 @@ def generate_report(configuration,
             df_agg.rename(columns={'index':  'Embeddings'}, inplace=True)
             df_agg_num.reset_index(inplace=True)
             df_agg_num.rename(columns={'index': 'Embeddings'}, inplace=True)
-            #df_agg = df_agg[['Embeddings', 'ØØ MSE Baseline', 'ØØ MSE Embeddings', 'Significance']]
-            df_agg = df_agg[['Embeddings','ØØ MSE Embeddings']]
-            df_agg['Embeddings'] = df_agg['Embeddings'].apply(lambda x: {\
-                'fasttext-wiki-subword':'fastText',
-                'fasttext-cc':'fastText',
-                'fasttext-cc-subword':'fastText',
-                'bert-base-cased': 'BERT',
-                'bert-large-cased': 'BERT',
-                'skip-thoughts-bi': 'Skip-Thought',
-                'elmo-sentence': 'ELMo',
-                'elmo-sentence-large': 'ELMo',
-                'glove.6B.50': 'GloVe',
-                'use': 'USE',
-                'infersent': 'InferSent',
-                'power-mean': 'Power-Mean'}.get(x, x))
-            df_agg['Embeddings'] = pd.Categorical(df_agg['Embeddings'], ["GloVe", "fastText", "ELMo", "Power-Mean", "Skip-Thought", "BERT", "InferSent", "USE"])
-            df_agg.sort_values(['Embeddings'], inplace=True)
-            df_agg = df_agg.groupby('Embeddings').mean()
-            df_agg.reset_index(inplace=True)
-            df_agg['ØØ MSE Embeddings'] = df_agg['ØØ MSE Embeddings'].apply(lambda v: ('{:.%df}' % precision).format(v))
-
+            df_agg = df_agg[['Embeddings', 'ØØ MSE Baseline', 'ØØ MSE Embeddings', 'Significance']]
             df_agg_dict[MODALITIES_SHORT_TO_FULL[modality]] = df_agg
 
             for _, row in df_agg_num.iterrows():

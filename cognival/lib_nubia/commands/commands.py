@@ -1020,7 +1020,7 @@ def aggregate(configuration,
                                     'ØØ MSE Embeddings': avg_emb,
                                     'Significance': colored(significance[emb], 'yellow')})
 
-                df_rows.append({'Word embedding': emb,
+                df_rows.append({'Word embedding':emb,
                                 'Ø MSEs Baseline': list_base,
                                 'ØØ MSE Baseline': avg_base,
                                 'Ø MSEs Embeddings': list_emb,
