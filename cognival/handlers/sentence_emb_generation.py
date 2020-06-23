@@ -138,7 +138,7 @@ def generate_powermean_sentence_embs(resources_path, emb_params, base_path, emb_
     nlp, emb_path, sent_vocab, sentences = get_resources(base_path, resources_path)
     print("Tokenizing ...")
     # powermean requires tokenized sentence strings
-    sentences_tokenized = [" ".join([token.text for token in nlp(sentence)]) for sentence in tqdm(sentences)]
+    sentences_tokenized = [" ".join([token.text.lower() for token in nlp(sentence)]) for sentence in tqdm(sentences)]
 
     print("Embedding (chunked) ...")
     embeddings = []
