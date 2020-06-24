@@ -317,6 +317,7 @@ def generate_report(configuration,
     results = []
 
     for key, value in mapping_dict.items():
+        # proper field: path with run_id
         experiment_to_path[key] = experiments_dir / value['proper'] / '{}.json'.format(value['embedding'])
         try:
             random_to_proper[value['random_name']] = key
@@ -332,17 +333,20 @@ def generate_report(configuration,
                 training_history_plots = None
         except FileNotFoundError:
             continue
-
+    
     if err_tables:
         # Collection avg error results and generating min-max scaled tables
         for path, _, error_csvs in os.walk(avg_errors_dir):
             if error_csvs:
+                modality, ver = path.split('/')[-2:]
+                ver = int(ver)
+                if ver != run_id:
+                    continue
+            else:
+                continue
+            if error_csvs:
                 for error_csv in error_csvs:
                     if not 'baseline' in error_csv:
-                        modality, ver = path.split('/')[-2:]
-                        ver = int(ver)
-                        if ver != run_id:
-                            continue
                         df = pd.read_csv(Path(path) / error_csv,
                                  sep=" ",
                                  encoding="utf-8",
@@ -355,14 +359,13 @@ def generate_report(configuration,
                             result_dict = json.load(f)
                         
                         source, feature, emb = result_dict['cognitiveData'], result_dict['feature'], result_dict['wordEmbedding']
-                        
                         feature = feature if feature != 'ALL_DIM' else '—'
                         df.rename(columns={'error':emb}, inplace=True)
                         df.set_index(config_dict['type'], inplace=True)
                         assert not df.index.has_duplicates
                         avg_error_single_dfs[modality][source][feature][emb] = df
 
-        print("Creating heatmap (error) tables ...")
+        print("Creating error tables ...")
         
         with tqdm() as pbar:
             for modality, modality_dict in avg_error_single_dfs.items():
@@ -374,8 +377,6 @@ def generate_report(configuration,
                         pbar.update()
                         embeddings, dfs = zip(*list(feature_dict.items()))
                         df = pd.concat(dfs, axis='columns')
-                        df -= df.min().min()
-                        df /= df.max().max()
                         df.reset_index(inplace=True)
                         df.rename(columns={'index': config_dict['type']}, inplace=True)
 
