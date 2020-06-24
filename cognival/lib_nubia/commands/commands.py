@@ -841,8 +841,6 @@ def significance(configuration,
             embedding_to_bonferroni = {}
             for embed, num_hyp in hypothesis_counter.items():
                 if num_hypotheses:
-                    if len(set(hypothesis_counter.values())) > 1:
-                        raise RuntimeError("Cannot use fixed hypothesis count when number of hypotheses heterogneous!")
                     embedding_to_bonferroni[embed] = bonferroni_correction(alpha, num_hypotheses)
                 else:
                     embedding_to_bonferroni[embed] = bonferroni_correction(alpha, num_hyp)
