@@ -30,7 +30,7 @@ import shutil
 from termcolor import cprint
 from .utils import _open_config
 
-bar_colors = ['#222222', '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22'] + [v for k, v in sns.xkcd_rgb.items() if not any([prop in k for prop in ['faded', 'light', 'pale', 'dark']])]
+bar_colors = ['#888888', '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22'] + [v for k, v in sns.xkcd_rgb.items() if not any([prop in k for prop in ['faded', 'light', 'pale', 'dark']])]
 
 MODALITIES_SHORT_TO_FULL = {'eeg':'EEG',
                             'eye-tracking': 'Eye-Tracking',
@@ -99,7 +99,7 @@ def sig_bar_plot(df):
                 'infersent': 'InferSent',
                 'power-mean': 'Power-Mean'}.get(x, x))
     df = unnesting(df, ["MSE CV folds"])
-    df['Embeddings'] = pd.Categorical(df['Embeddings'], ["GloVe", "fastText", "ELMo", "Power-Mean", "Skip-Thought", "BERT", "InferSent", "USE"])
+    df['Embeddings'] = pd.Categorical(df['Embeddings'], ["GloVe", "fastText", "Power-Mean", "ELMo", "BERT", "Skip-Thought", "InferSent", "USE"])
     df.sort_values(['Embeddings', 'Type'], inplace=True)
     df.reset_index(drop=True, inplace=True)
     max_y = max(df["MSE CV folds"])

@@ -6,7 +6,7 @@ import numpy as np
 from scipy import stats
 import pandas as pd
 from joblib import Parallel, delayed
-
+from permute.core import one_sample
 #np.seterr(all='raise')
 warnings.filterwarnings("error", category=RuntimeWarning)
 
@@ -63,56 +63,6 @@ def mcNemar(table):
     pval = 1-stats.chi2.cdf(statistic,1)
     return pval
 
-def inner_rand_perm(data_A, data_B, n, delta_orig):
-    temp_A = copy.deepcopy(data_A)
-    temp_B = copy.deepcopy(data_B)
-    samples = [np.random.randint(1, 3) for i in range(n)] #which samples to swap without repetitions
-    swap_ind = [i for i, val in enumerate(samples) if val == 1]
-    for ind in swap_ind:
-        temp_B[ind], temp_A[ind] = temp_A[ind], temp_B[ind]
-    delta = float(sum([ x - y for x, y in zip(temp_A, temp_B)]))/n
-    if(delta<=delta_orig):
-        return 1.0
-    return 0.0
-
-#Permutation-randomization (parallelized)
-#Repeat R times: randomly flip each m_i(A),m_i(B) between A and B with probability 0.5, calculate delta(A,B).
-# let r be the number of times that delta(A,B)<orig_delta(A,B)
-# significance level: (r+1)/(R+1)
-# Assume that larger value (metric) is better
-def rand_permutation(data_A, data_B, n, R):
-    delta_orig = float(sum([x - y for x, y in zip(data_A, data_B)]))/n
-    #print(delta_orig)
-    r = sum(Parallel(n_jobs=31)(delayed(inner_rand_perm)(data_A, data_B, n, delta_orig) for i in range(0, R)))
-    print(r)
-    pval = float(r+1.0)/(R+1.0)
-    return pval
-
-
-def inner_bootstrap(data_A, data_B, n, delta_orig):
-    temp_A = []
-    temp_B = []
-    samples = np.random.randint(0,n,n) #which samples to add to the subsample with repetitions
-    for samp in samples:
-        temp_A.append(data_A[samp])
-        temp_B.append(data_B[samp])
-    delta = float(sum([x - y for x, y in zip(temp_A, temp_B)])) / n
-    if (delta < 2*delta_orig):
-        return 1.0
-    return 0.0
-
-
-#Bootstrap
-#Repeat R times: randomly create new samples from the data with repetitions, calculate delta(A,B).
-# let r be the number of times that delta(A,B)<2*orig_delta(A,B). significance level: r/R
-# This implementation follows the description in Berg-Kirkpatrick et al. (2012),
-# "An Empirical Investigation of Statistical Significance in NLP".
-def Bootstrap(data_A, data_B, n, R):
-    delta_orig = float(sum([x - y for x, y in zip(data_A, data_B)])) / n
-    r = sum(Parallel(n_jobs=31)(delayed(inner_bootstrap)(data_A, data_B, n, delta_orig) for i in range(0, R)))
-    pval = float(r)/(R)
-    return pval
-
 
 def main():
     if len(sys.argv) < 3:
@@ -137,8 +87,8 @@ def main():
                              quoting=csv.QUOTE_NONNUMERIC,
                              doublequote=True)
     
-    data_A = data_A['error'].to_numpy()
-    data_B = data_B['error'].to_numpy()
+    data_A = 1.0 - data_A['error'].to_numpy()
+    data_B = 1.0 - data_B['error'].to_numpy()
 
 #print("\nPossible statistical tests: Shapiro-Wilk, Anderson-Darling, Kolmogorov-Smirnov, t-test, Wilcoxon, McNemar, Permutation, Bootstrap")
     #name = input("\nEnter name of statistical test: ")
@@ -213,20 +163,10 @@ def main():
             return
 
     if(name=="Permutation"):
-        R = max(10000, int(len(data_A) * (1 / float(alpha))))
+        #R = max(10000, int(len(data_A) * (1 / float(alpha))))
         #print(R)
-        pval = rand_permutation(data_A, data_B, len(data_A), R)
-        if (float(pval) <= float(alpha)):
-            print("\nTest result is significant with p-value: {}".format(pval))
-            return
-        else:
-            print("\nTest result is not significant with p-value: {}".format(pval))
-            return
-
-
-    if(name=="Bootstrap"):
-        R = max(10000, int(len(data_A) * (1 / float(alpha))))
-        pval = Bootstrap(data_A, data_B, len(data_A), R)
+        pval, _ = one_sample(data_A, data_B, stat='mean')
+        #pval = rand_permutation(data_A, data_B, len(data_A), R)
         if (float(pval) <= float(alpha)):
             print("\nTest result is significant with p-value: {}".format(pval))
             return
