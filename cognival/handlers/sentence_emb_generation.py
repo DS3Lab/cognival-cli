@@ -11,6 +11,7 @@ import spacy
 
 from tqdm import tqdm
 from termcolor import cprint
+from handlers.binary_to_text_conversion import bert_to_text
 
 import time
 
@@ -61,28 +62,11 @@ def export_df(emb_path, emb_file, sentences, matrix, dimensions):
 
 
 def generate_bert_sentence_embs(resources_path, emb_params, base_path, emb_file):
-    import torch
-    from transformers import BertTokenizer, BertModel
-
-    nlp, emb_path, sent_vocab, sentences = get_resources(base_path, resources_path)
-
-    print("Obtaining transformers model {}. Unless already downloaded, this may take several minutes ...".format(emb_params['internal_name']) )
-    tokenizer = BertTokenizer.from_pretrained(emb_params['internal_name'])
-    model = BertModel.from_pretrained(emb_params['internal_name'])
-    
-    embeddings = []
-    # BERT uses specialized tokenizer, generating subwords
-    print("Tokenizing and embedding ...")
-    for sentence in tqdm(sentences):
-        input_ids = torch.tensor(tokenizer.encode(sentence)).unsqueeze(0)  # Batch size 1
-        outputs = model(input_ids)
-        last_hidden_states = outputs[0][0]  # The last hidden-state is the first element of the output tuple
-        cls_embeddings = last_hidden_states[0].detach().numpy()
-        embeddings.append(cls_embeddings)
-
-    embeddings = np.vstack(embeddings)
-    export_df(emb_path, emb_file, sentences, embeddings, emb_params["dimensions"])
-
+    bert_to_text(resources_path / 'standard_sentences.txt',
+                                base_path, 
+                                base_path,
+                                base_path/emb_file,
+                                1)
 
 def generate_elmo_sentence_embs(name, resources_path, emb_params, base_path, emb_file, fixed_mean_pooling):
     from allennlp.commands.elmo import ElmoEmbedder
@@ -267,8 +251,8 @@ def generate_infersent_sentence_embs(resources_path, emb_params, base_path, emb_
     # InferSent relies on NLTK punkt for tokenization (tokenize=False performs white-space splitting)
     model = InferSent(params_model)
     #model = model.cuda()
-    model.load_state_dict(torch.load(base_path.parent / 'infersent2.pkl'))
-    model.set_w2v_path(base_path.parent / 'crawl-300d-2M.vec')
+    model.load_state_dict(torch.load(base_path.parent / 'infersent1.pkl'))
+    model.set_w2v_path(base_path.parent / 'glove.840B.300d.txt')
     model.build_vocab(sentences, tokenize=True)
     embeddings = model.encode(tqdm(sentences), tokenize=True)
     export_df(emb_path, emb_file, sentences, embeddings, emb_params["dimensions"])
