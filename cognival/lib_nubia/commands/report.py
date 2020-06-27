@@ -94,7 +94,7 @@ def sig_bar_plot(df):
                 'skip-thoughts-bi': 'Skip-Thought',
                 'elmo-sentence': 'ELMo',
                 'elmo-sentence-large': 'ELMo',
-                'glove.6B.50': 'GloVe',
+                'glove.6B.50': 'GloVe 50',
                 'use': 'USE',
                 'infersent': 'InferSent',
                 'power-mean': 'Power-Mean'}.get(x, x))
