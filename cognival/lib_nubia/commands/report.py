@@ -99,7 +99,7 @@ def sig_bar_plot(df):
                 'infersent': 'InferSent',
                 'power-mean': 'Power-Mean'}.get(x, x))
     df = unnesting(df, ["MSE CV folds"])
-    df['Embeddings'] = pd.Categorical(df['Embeddings'], ["GloVe", "fastText", "Power-Mean", "ELMo", "BERT", "Skip-Thought", "InferSent", "USE"])
+    df['Embeddings'] = pd.Categorical(df['Embeddings'], ["GloVe 50", "fastText", "Power-Mean", "ELMo", "BERT", "Skip-Thought", "InferSent", "USE"])
     df.sort_values(['Embeddings', 'Type'], inplace=True)
     df.reset_index(drop=True, inplace=True)
     max_y = max(df["MSE CV folds"])
