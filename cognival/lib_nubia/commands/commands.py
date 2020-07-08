@@ -103,7 +103,7 @@ from .templates import MAIN_CONFIG_TEMPLATE
 from .strings import EXAMPLE_COMMANDS
 
 NUM_BERT_WORKERS = 1
-COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1S0Fa_gGOJMuPxUrkZHW0RXk7bSPc7ffR'
+COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1D9cIKEpCX5J8vsJ8TTfnsTwsWDr-6yRL'
 DUAL_EMB_TYPES = ['bert', 'elmo']
 
 def run(configuration,

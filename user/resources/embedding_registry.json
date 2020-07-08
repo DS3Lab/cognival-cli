@@ -1,9 +1,9 @@
 {
     "proper": {
         "glove.6B.50": {
-	    "type": "word",
+            "type": "word",
             "url": "http://nlp.stanford.edu/data/glove.6B.zip",
-	    "download": true,
+            "download": true,
             "dimensions": 50,
             "binary": false,
             "binary_file": null,
@@ -16,9 +16,9 @@
             "random_embedding": null
         },
         "glove.6B.100": {
-	    "type": "word",
+            "type": "word",
             "url": "http://nlp.stanford.edu/data/glove.6B.zip",
-	    "download": true,
+            "download": true,
             "dimensions": 100,
             "binary": false,
             "binary_file": null,
@@ -31,8 +31,8 @@
             "random_embedding": null
         },
         "glove.6B.200": {
-	    "type": "word",
-	    "download": true,
+            "type": "word",
+            "download": true,
             "url": "http://nlp.stanford.edu/data/glove.6B.zip",
             "dimensions": 200,
             "binary": false,
@@ -46,9 +46,9 @@
             "random_embedding": null
         },
         "glove.6B.300": {
-	    "type": "word",
+            "type": "word",
             "url": "http://nlp.stanford.edu/data/glove.6B.zip",
-	    "download": true,
+            "download": true,
             "dimensions": 300,
             "binary": false,
             "binary_file": null,
@@ -63,7 +63,7 @@
         "word2vec": {
             "type": "word",
             "url": "https://drive.google.com/uc?id=1axgz0weQ8nujW1OLzEA4USPK89g7PkoY",
-	    "download": true,
+            "download": true,
             "dimensions": 300,
             "binary": false,
             "binary_file": null,
@@ -79,9 +79,9 @@
             "random_embedding": null
         },
         "wnet2vec": {
-	    "type": "word",
+            "type": "word",
             "url": "http://lxcenter.di.fc.ul.pt/wn2vec.zip",
-	    "download": true,
+            "download": true,
             "dimensions": 850,
             "binary": false,
             "binary_file": null,
@@ -94,9 +94,9 @@
             "random_embedding": null
         },
         "fasttext-wiki": {
-	    "type": "word",
+            "type": "word",
             "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-english/wiki-news-300d-1M.vec.zip",
-	    "download": true,
+            "download": true,
             "dimensions": 300,
             "binary": false,
             "binary_file": null,
@@ -112,9 +112,9 @@
             "random_embedding": null
         },
         "fasttext-wiki-subword": {
-	    "type": "word",
+            "type": "word",
             "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-english/wiki-news-300d-1M-subword.vec.zip",
-	    "download": true,
+            "download": true,
             "dimensions": 300,
             "binary": false,
             "binary_file": null,
@@ -130,9 +130,9 @@
             "random_embedding": null
         },
         "fasttext-cc": {
-	    "type": "word",
+            "type": "word",
             "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip",
-	    "download": true,
+            "download": true,
             "dimensions": 300,
             "binary": false,
             "binary_file": null,
@@ -148,9 +148,9 @@
             "random_embedding": null
         },
         "fasttext-cc-subword": {
-	    "type": "word",
+            "type": "word",
             "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M-subword.zip",
-	    "download": true,
+            "download": true,
             "dimensions": 300,
             "binary": false,
             "binary_file": null,
@@ -166,9 +166,9 @@
             "random_embedding": null
         },
         "fasttext-cc-2018": {
-	    "type": "word",
+            "type": "word",
             "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz",
-	    "download": true,
+            "download": true,
             "dimensions": 300,
             "binary": true,
             "binary_file": "cc.en.300.bin",
@@ -183,10 +183,10 @@
             "chunk_ending": ".txt",
             "random_embedding": null
         },
-      "elmo": {
-	    "type": "word",
+        "elmo": {
+            "type": "word",
             "url": null,
-	    "download": false,
+            "download": false,
             "dimensions": 1024,
             "binary": true,
             "binary_file": null,
@@ -198,16 +198,31 @@
             "chunked": false,
             "random_embedding": null
         },
-      "elmo-sentence": {
-	    "type": "sentence",
+        "elmo-sentence": {
+            "type": "sentence",
             "url": null,
-	    "download": false,
+            "download": false,
             "dimensions": 3072,
             "binary": true,
             "binary_file": null,
             "binary_format": "elmo",
             "path": "elmo-sentence",
-            "embedding_file": "elmo_as_sentencembeddings_cognival.txt",
+            "embedding_file": "elmo_as_sent_embeddings_cognival.txt",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": null
+        },
+        "elmo-sentence-large": {
+            "type": "sentence",
+            "url": null,
+            "download": false,
+            "dimensions": 3072,
+            "binary": true,
+            "binary_file": null,
+            "binary_format": "elmo",
+            "path": "elmo-sentence-large",
+            "embedding_file": "elmo_as_sent_large_embeddings_cognival.txt",
             "installed": false,
             "truncate_first_line": false,
             "chunked": false,
@@ -245,43 +260,43 @@
             "chunked": false,
             "random_embedding": null
         },
-        "bert-base-cased": {
+        "bert-large-cased-sentence": {
             "type": "sentence",
-            "internal_name": "bert-base-uncased",
-            "url": null,
-            "download": false,
-            "dimensions": 768,
+            "internal_name": "bert-large-cased-sentence",
+            "url": "https://storage.googleapis.com/bert_models/2019_05_30/wwm_cased_L-24_H-1024_A-16.zip",
+            "download": true,
+            "dimensions": 1024,
             "binary": true,
             "binary_file": null,
             "binary_format": null,
-            "path": "bert-base_cased-768",
-            "embedding_file": "bert-base-cased_as_sentence_embeddings.txt",
+            "path": "bert-large-cased-sentence/wwm_cased_L-24_H-1024_A-16",
+            "embedding_file": "bert-large-cased_as_sentembeddings_cognival.txt",
             "installed": false,
             "truncate_first_line": false,
             "chunked": false,
             "random_embedding": null
         },
-        "bert-large-cased": {
+        "bert-large-uncased-sentence": {
             "type": "sentence",
-            "internal_name": "bert-large-cased",
-            "url": null,
-            "download": false,
+            "internal_name": "bert-large-uncased-sentence",
+            "url": "https://storage.googleapis.com/bert_models/2019_05_30/wwm_uncased_L-24_H-1024_A-16.zip",
+            "download": true,
             "dimensions": 1024,
             "binary": true,
             "binary_file": null,
             "binary_format": null,
-            "path": "bert-large_cased-1024",
-            "embedding_file": "bert-large-cased_as_sentence_embeddings_cognival.txt",
+            "path": "bert-large-uncased-sentence/wwm_uncased_L-24_H-1024_A-16",
+            "embedding_file": "bert-large-uncased_as_sentembeddings_cognival.txt",
             "installed": false,
             "truncate_first_line": false,
             "chunked": false,
             "random_embedding": null
         },
         "power-mean": {
-	    "type": "sentence",
-	    "url": "https://public.ukp.informatik.tu-darmstadt.de/arxiv2018-xling-sentence-embeddings/tf-hub/monolingual/1",
-	    "download": false,
-	    "dimensions": 3600,
+            "type": "sentence",
+            "url": "https://public.ukp.informatik.tu-darmstadt.de/arxiv2018-xling-sentence-embeddings/tf-hub/monolingual/1",
+            "download": false,
+            "dimensions": 3600,
             "binary": true,
             "binary_file": null,
             "binary_format": null,
@@ -291,7 +306,7 @@
             "truncate_first_line": false,
             "chunked": false,
             "random_embedding": null
-	},
+        },
         "skip-thoughts-uni": {
             "type": "sentence",
             "url": "http://download.tensorflow.org/models/skip_thoughts_uni_2017_02_02.tar.gz",
@@ -322,26 +337,26 @@
             "chunked": false,
             "random_embedding": null
         },
-	"quick-thought":{
-	    "type": "sentence",
-	    "url": "https://drive.google.com/uc?id=190rRuHtOCGMvjcvYYtEY5DUDqriRIBql",
-	    "download": true,
-	    "dimensions": 2400,
+        "quick-thoughts": {
+            "type": "sentence",
+            "url": "https://drive.google.com/uc?id=190rRuHtOCGMvjcvYYtEY5DUDqriRIBql",
+            "download": true,
+            "dimensions": 2400,
             "binary": true,
             "binary_file": null,
             "binary_format": null,
-            "path": "quick-thought",
-            "embedding_file": "quick-thought.txt",
+            "path": "quick-thoughts",
+            "embedding_file": "quick-thoughts.txt",
             "installed": false,
             "truncate_first_line": false,
             "chunked": false,
             "random_embedding": null
-	},
-	"infersent":{
-	    "type": "sentence",
-	    "url": "https://drive.google.com/uc?id=102t-8-Rxaynw4m5dtoEfyXuTudXYILQN",
+        },
+        "infersent": {
+            "type": "sentence",
+            "url": "https://drive.google.com/uc?id=102t-8-Rxaynw4m5dtoEfyXuTudXYILQN",
             "download": true,
-	    "dimensions": 4096,
+            "dimensions": 4096,
             "binary": true,
             "binary_file": null,
             "binary_format": null,
@@ -351,12 +366,12 @@
             "truncate_first_line": false,
             "chunked": false,
             "random_embedding": null
-	},
-	"use":{
-	    "type": "sentence",
-	    "url": "https://tfhub.dev/google/universal-sentence-encoder/2",
-	    "download": false,
-	    "dimensions": 512,
+        },
+        "use": {
+            "type": "sentence",
+            "url": "https://tfhub.dev/google/universal-sentence-encoder/2",
+            "download": false,
+            "dimensions": 512,
             "binary": true,
             "binary_file": null,
             "binary_format": null,
@@ -366,22 +381,37 @@
             "truncate_first_line": false,
             "chunked": false,
             "random_embedding": null
-	},
-	"laser-static":{
-	    "type": "sentence",
-	    "url": "https://drive.google.com/uc?id=1mfSfE3o1KjwP5DNSmTeVgDNQSSbFiX6f",
-	    "download": true,
-	    "dimensions": 1024,
-            "binary": false,
+        },
+        "use-large": {
+            "type": "sentence",
+            "url": "https://tfhub.dev/google/universal-sentence-encoder-large/3",
+            "download": false,
+            "dimensions": 512,
+            "binary": true,
             "binary_file": null,
             "binary_format": null,
-            "path": "laser-static",
-            "embedding_file": "laser_static.txt",
+            "path": "use-large",
+            "embedding_file": "use-large.txt",
             "installed": false,
             "truncate_first_line": false,
             "chunked": false,
             "random_embedding": null
-	}
+        },
+        "laser-static": {
+            "type": "sentence",
+            "url": "https://drive.google.com/uc?id=1mfSfE3o1KjwP5DNSmTeVgDNQSSbFiX6f",
+            "download": true,
+            "dimensions": 1024,
+            "binary": false,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "laser-static",
+            "embedding_file": "laser-static.txt",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": null
+        }
     },
     "random_static": {
         "random-50": {
@@ -434,6 +464,6 @@
             "installed": false
         }
     },
-    "random_multiseed": { 
-    }
+    "random_multiseed": {
+   }
 }

@@ -81,26 +81,11 @@ def unnesting(df, explode):
     return df1.join(df.drop(explode, 1), how='left')
 
 
-def sig_bar_plot(df):
+def sig_box_plot(df):
     '''
     Generates a bar plot with average MSE and significance stats per embedding type.
     '''
-    df['Embeddings'] = df['Embeddings'].apply(lambda x: {\
-                'fasttext-wiki-subword':'fastText',
-                'fasttext-cc':'fastText',
-                'fasttext-cc-subword':'fastText',
-                'bert-base-cased': 'BERT',
-                'bert-large-cased': 'BERT',
-                'skip-thoughts-bi': 'Skip-Thought',
-                'elmo-sentence': 'ELMo',
-                'elmo-sentence-large': 'ELMo',
-                'glove.6B.50': 'GloVe 50',
-                'use': 'USE',
-                'infersent': 'InferSent',
-                'power-mean': 'Power-Mean'}.get(x, x))
     df = unnesting(df, ["MSE CV folds"])
-    df['Embeddings'] = pd.Categorical(df['Embeddings'], ["GloVe 50", "fastText", "Power-Mean", "ELMo", "BERT", "Skip-Thought", "InferSent", "USE"])
-    df.sort_values(['Embeddings', 'Type'], inplace=True)
     df.reset_index(drop=True, inplace=True)
     max_y = max(df["MSE CV folds"])
     min_y = min(df["MSE CV folds"])
@@ -115,7 +100,6 @@ def sig_bar_plot(df):
     fig = plt.figure()
     bar = sns.boxplot(x="Embeddings", y="MSE CV folds", hue="Type", data=df[df.columns.difference(['Significance', 'Modality'])], showfliers=False)
     bar.get_legend().remove()
-    #bar.set(ylim=(min_y - 0.1*min_y, max_y + 0.1*max_y))
 
     # Loop over the bars
     import matplotlib.patches
@@ -123,19 +107,11 @@ def sig_bar_plot(df):
 
     # proper embeddings (get xkcd colors)
     for idx, thisbar in enumerate(patches[::2]):
-        #thisbar.set_width(0.95 * thisbar.get_width())
         thisbar.set_facecolor(bar_colors[idx])
-        #x = thisbar.get_x()
-        #y = -0.015*max_y
-        #bar.annotate('({})\n{:.2e}'.format(sig_labels[idx], thisbar.get_height()), (x, y), rotation=45, ha='left')   
 
     # random embeddings (grey)
     for idx, thisbar in enumerate(patches[1::2]):
-        #thisbar.set_width(0.95 * thisbar.get_width())
         thisbar.set_facecolor("#dddddd")
-        #x = thisbar.get_x()
-        #y = -0.01*max_y
-        #bar.annotate('{:.2e}'.format(thisbar.get_height()), (x, y), rotation=45, ha='center') 
     
     # Adjust the margins
     plt.subplots_adjust(bottom= 0.2, top = 0.8)
@@ -687,7 +663,7 @@ def generate_report(configuration,
             for df_agg_for_plot in df_list:
                 try:
                     sig_stats_plots.append((df_agg_for_plot['Modality'].values[0],
-                                            sig_bar_plot(df_agg_for_plot)))
+                                            sig_box_plot(df_agg_for_plot)))
                 except RuntimeError:
                     pass
         
