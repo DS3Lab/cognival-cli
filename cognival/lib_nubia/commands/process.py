@@ -419,7 +419,7 @@ def resolve_cog_emb(modalities,
     return cognitive_sources, embeddings
 
 
-def _edit_config(resources_path,
+def _edit_config(configurations_path,
                  cognival_path,
                  config_dict,
                  configuration,
@@ -496,7 +496,7 @@ def generate_random_df(emb_type, seed, vocabulary, embedding_dim):
     return df
 
 
-def populate(resources_path,
+def populate(configurations_path,
              embedding_registry,
              cog_config_dict,
              configuration,
@@ -533,7 +533,7 @@ def populate(resources_path,
         cog_config_dict = cog_config_dict["sources"][emb_type]
 
     if mode == 'reference':
-        reference_path = resources_path / 'reference_config.json'
+        reference_path = configurations_path / 'reference_config.json'
         with open(reference_path) as f:
             reference_dict = json.load(f)[emb_type]
  

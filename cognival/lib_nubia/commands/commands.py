@@ -108,7 +108,7 @@ DUAL_EMB_TYPES = ['bert', 'elmo']
 
 def run(configuration,
         config_dict,
-        resources_path,
+        configurations_path,
         embedding_registry,
         embeddings,
         modalities,
@@ -123,8 +123,8 @@ def run(configuration,
         network,
         legacy):
 
-    cog_sources_conf = _open_cog_config(resources_path)
-    if not _check_cog_installed(resources_path):
+    cog_sources_conf = _open_cog_config(configurations_path)
+    if not _check_cog_installed(configurations_path):
         cprint('CogniVal sources not installed! Aborted ...', 'red')
         return
 
@@ -225,11 +225,11 @@ def run(configuration,
     return config_dict
 
 
-def list_configs(resources_path):
+def list_configs(configurations_path):
     general_param_dicts = []
     
     # Load all configuration files (except reference) and adjust for tabulation
-    for entry in os.scandir(resources_path):
+    for entry in os.scandir(configurations_path):
         if entry.name.endswith('config.json'):
             with open(entry) as f:
                 config = entry.name.rsplit('_', maxsplit=1)[0]
@@ -317,11 +317,11 @@ def list_cognitive_sources(cog_config):
     return formatted_list
 
 
-def config_open(configuration, cognival_path, resources_path, edit, overwrite):    
+def config_open(configuration, cognival_path, configurations_path, edit, overwrite):    
     create = False
 
     # Determine if config needs to be created or overwritten
-    if os.path.exists(resources_path / '{}_config.json'.format(configuration)):
+    if os.path.exists(configurations_path / '{}_config.json'.format(configuration)):
         if overwrite:
             create = yes_no_dialog(title='Configuration {} already exists.'.format(configuration),
                         text='You have specified to overwrite the existing configuration. Are you sure?').run()
@@ -336,21 +336,21 @@ def config_open(configuration, cognival_path, resources_path, edit, overwrite):
     # Open editor when creating (always) or opening (if edit=True)
     if create:
         config_dict = copy.deepcopy(MAIN_CONFIG_TEMPLATE)
-        config_dict = _edit_config(resources_path, cognival_path, config_dict, configuration, create=create)
+        config_dict = _edit_config(configurations_path, cognival_path, config_dict, configuration, create=create)
         if config_dict:
-            _backup_config(configuration, resources_path)
-            _save_config(config_dict, configuration, resources_path)
+            _backup_config(configuration, configurations_path)
+            _save_config(config_dict, configuration, configurations_path)
         else:
             return
     else:
-        config_dict = _open_config(configuration, resources_path)
+        config_dict = _open_config(configuration, configurations_path)
         if not config_dict:
             return
         if edit:
-            config_dict = _edit_config(resources_path, cognival_path, config_dict, configuration, create=create)
+            config_dict = _edit_config(configurations_path, cognival_path, config_dict, configuration, create=create)
             if config_dict:
-                _backup_config(configuration, resources_path)
-                _save_config(config_dict, configuration, resources_path)
+                _backup_config(configuration, configurations_path)
+                _save_config(config_dict, configuration, configurations_path)
     
     return configuration, config_dict
 
@@ -448,7 +448,7 @@ def config_experiment(configuration,
                       main_conf_dict,
                       cog_config_dict,
                       embedding_registry,
-                      resources_path,
+                      configurations_path,
                       baselines,
                       modalities,
                       cognitive_sources,
@@ -512,7 +512,7 @@ def config_experiment(configuration,
             if populate_conf:
                 cprint('Source {} not yet registered, creating ...'.format(csource), 'yellow')
                 try:
-                    populate(resources_path,
+                    populate(configurations_path,
                              embedding_registry,
                              cog_config_dict,
                              configuration,
@@ -554,9 +554,9 @@ def config_experiment(configuration,
             if config_patch:
                 cog_data_config_dict[csource].update(config_patch)
                 if not backed_up:
-                    _backup_config(configuration, resources_path)
+                    _backup_config(configuration, configurations_path)
                     backed_up = True
-                _save_config(main_conf_dict, configuration, resources_path)
+                _save_config(main_conf_dict, configuration, configurations_path)
             else:
                 return
 
@@ -573,7 +573,7 @@ def config_experiment(configuration,
 
                 if do_populate:
                     try:
-                        populate(resources_path,
+                        populate(configurations_path,
                                  embedding_registry,
                                  cog_config_dict,
                                  configuration,
@@ -615,9 +615,9 @@ def config_experiment(configuration,
                     except AbortException:
                         return
                     if not backed_up:
-                        _backup_config(configuration, resources_path)
+                        _backup_config(configuration, configurations_path)
                         backed_up = True
-                    _save_config(main_conf_dict, configuration, resources_path)
+                    _save_config(main_conf_dict, configuration, configurations_path)
         # Editing embedding specifics of multiple embeddings at once
         else:
             config_template = copy.deepcopy(config_dicts[0])
@@ -650,9 +650,9 @@ def config_experiment(configuration,
                         return
 
             if not backed_up:
-                _backup_config(configuration, resources_path)
+                _backup_config(configuration, configurations_path)
                 backed_up = True
-            _save_config(main_conf_dict, configuration, resources_path)
+            _save_config(main_conf_dict, configuration, configurations_path)
 
 
 def config_delete(configuration,
@@ -675,7 +675,7 @@ def config_delete(configuration,
                                         ('Yes', True),
                                         ]).run()
         if delete_config:
-            os.remove(resources_path / '{}_config.json'.format(configuration))
+            os.remove(configurations_path / '{}_config.json'.format(configuration))
             cprint('Deleting configuration "{}" ...'.format(configuration), 'yellow')
             return
         else:
@@ -992,7 +992,7 @@ def aggregate(configuration,
         if not options_dict:
             continue
 
-        fold_errors, results_lists, avg_results, ci_results = extract_results[modality](options_dict)
+        fold_errors, results_lists, avg_results = extract_results[modality](options_dict)
 
         significance = aggregate_significance[modality](report_dir,
                                                         run_id,
@@ -1011,8 +1011,6 @@ def aggregate(configuration,
                 list_base = results_lists[base]
                 avg_base = avg_results[base]
                 avg_emb = avg_results[emb]
-                ci_base = ci_results[base]
-                ci_emb = ci_results[emb]
                 df_rows_cli.append({'Word embedding': emb,
                                     'ØØ MSE Baseline': avg_base,
                                     'ØØ MSE Embeddings': avg_emb,
@@ -1045,11 +1043,11 @@ def aggregate(configuration,
             print(tabulate.tabulate(df_cli, headers="keys", tablefmt="fancy_grid", showindex=False))
 
 
-def update_vocabulary(resources_path,
+def update_vocabulary(configurations_path,
                       cog_sources_path,
                       old_vocab):
 
-    if not _check_cog_installed(resources_path):
+    if not _check_cog_installed(configurations_path):
         cprint('CogniVal sources not installed! Aborted ...', 'red')
         return
  
@@ -1101,12 +1099,12 @@ def update_vocabulary(resources_path,
     return new_vocab_list
 
 
-def update_sentences(resources_path,
+def update_sentences(configurations_path,
                      cog_sources_path,
                      old_sentences):
     nlp = spacy.load('en_core_web_sm', disable=['ner', 'parser'])
 
-    if not _check_cog_installed(resources_path):
+    if not _check_cog_installed(configurations_path):
         cprint('CogniVal sources not installed! Aborted ...', 'red')
         return
 
@@ -1164,7 +1162,7 @@ def update_sentences(resources_path,
     return new_sentences_list, new_vocab_list
 
 
-def update_embeddings(resources_path,
+def update_embeddings(configurations_path,
                       embeddings_path,
                       embedding_registry,
                       embeddings=None,
@@ -1183,12 +1181,12 @@ def update_embeddings(resources_path,
             
             if emb_type == 'word' and which in ('word', 'both'): 
                 if embedding_registry['proper'][emb_name]['binary_format'] == 'elmo':
-                    elmo_to_text(resources_path / 'standard_vocab.txt',
+                    elmo_to_text(configurations_path / 'standard_vocab.txt',
                                 emb_path,
                                 layer='nocontext')
 
                 elif embedding_registry['proper'][emb_name]['binary_format'] == 'bert':
-                    bert_to_text(resources_path / 'standard_vocab.txt',
+                    bert_to_text(configurations_path / 'standard_vocab.txt',
                                 embeddings_path / embedding_registry['proper'][emb_name]['path'], 
                                 base_path,
                                 emb_path,
@@ -1196,7 +1194,7 @@ def update_embeddings(resources_path,
 
             if (emb_type == 'sentence' or any(infix in emb_name.lower() for infix in DUAL_EMB_TYPES)) and which in ('sentence', 'both'):
                 generate_sent_embeddings(emb_name,
-                                         resources_path,
+                                         configurations_path,
                                          embedding_registry['proper'][emb_name],
                                          base_path,
                                          emb_file)
@@ -1206,14 +1204,14 @@ def update_embeddings(resources_path,
             elif emb_type == 'word' and not any(infix in emb_name.lower() for infix in DUAL_EMB_TYPES) and which in ('sentence', 'both'):
                 cprint("Generating baseline sentence embeddings for {} ...".format(emb_name))
                 generate_avg_sent_embeddings(emb_name,
-                                             resources_path,
+                                             configurations_path,
                                              embedding_registry['proper'][emb_name],
                                              base_path,
                                              emb_file)
 
             # Associate random baselines with embeddings if set by user
             if embedding_registry['proper'][emb_name]['random_embedding']:
-                import_random_baselines(embedding_registry, resources_path, embeddings_path, emb_name, force=True)
+                import_random_baselines(embedding_registry, configurations_path, embeddings_path, emb_name, force=True)
         else:
             cprint('Error: Embeddings {} unknown or not installed, aborting and saving progress so far ...', 'yellow')
             break
@@ -1222,7 +1220,7 @@ def update_embeddings(resources_path,
 
 
 def import_cognitive_sources(cognival_path,
-                             resources_path,
+                             configurations_path,
                              cog_config,
                              source):
     basepath = cognival_path / 'cognitive_sources'
@@ -1354,7 +1352,7 @@ def import_embeddings(x,
                       which, 
                       embedding_registry,
                       path2embeddings,
-                      resources_path,
+                      configurations_path,
                       embeddings_path,                      
                       force=False,
                       log_only_success=False,
@@ -1362,7 +1360,7 @@ def import_embeddings(x,
                       associate_rand_emb=False,
                       debug=False):
 
-    if not _check_cog_installed(resources_path):
+    if not _check_cog_installed(configurations_path):
         cprint('CogniVal sources not installed! Aborted ...', 'red')
         return
     
@@ -1378,7 +1376,7 @@ def import_embeddings(x,
                               which,
                               embedding_registry,
                               path2embeddings,
-                              resources_path,
+                              configurations_path,
                               embeddings_path,
                               are_set=True,
                               associate_rand_emb=associate_rand_emb)
@@ -1390,7 +1388,7 @@ def import_embeddings(x,
                                   which,
                                   embedding_registry,
                                   path2embeddings,
-                                  resources_path,
+                                  configurations_path,
                                   embeddings_path,
                                   rand_emb,
                                   log_only_success=True)
@@ -1404,7 +1402,7 @@ def import_embeddings(x,
                                   which,
                                   embedding_registry,
                                   path2embeddings,
-                                  resources_path,
+                                  configurations_path,
                                   embeddings_path,
                                   rand_emb,
                                   log_only_success=True)
@@ -1460,7 +1458,7 @@ def import_embeddings(x,
                                     'Other modes of hosting and archival are currently NOT supported and will cause the import to fail.\n'
                                     'In those instances, please manually download and extract the files in the {} '
                                     'directory and \nregister them in {}/embedding_registry.json\n\n'
-                                    'Please enter a short name for the embeddings:'.format(url, str(embeddings_path), str(resources_path)),
+                                    'Please enter a short name for the embeddings:'.format(url, str(embeddings_path), str(configurations_path)),
                             ).run()
         if emb_name is None:
             cprint("Aborting ...", "red")
@@ -1478,7 +1476,7 @@ def import_embeddings(x,
         main_emb_file = input_dialog(title='Embedding registration',
                     text='Specify the main embedding file (file name only, without path). This information is usually available from the supplier.\n'
                             'If not available, you can leave this information empty and manually edit {}/embeddings2url.json\n'
-                            'after the import.'.format(str(resources_path))).run()
+                            'after the import.'.format(str(configurations_path))).run()
 
         if main_emb_file is None:
             cprint("Aborting ...", "red")
@@ -1592,7 +1590,7 @@ def import_embeddings(x,
         try:
             if emb_name == 'skip-thoughts-uni':
                 shutil.rmtree(fpath_extracted / 'skip_thoughts_uni_2017_02_02')
-            elif emb_name == 'skip-thoughts-bi':
+            elif emb_name == 'skip-thoughts-combined':
                 shutil.rmtree(fpath_extracted / 'skip_thoughts_bi_2017_02_16')
             else:
                 shutil.rmtree(fpath_extracted)
@@ -1685,12 +1683,12 @@ def import_embeddings(x,
                         # Don't remove binary as it is required for sentence embeddings!
 
                     elif embedding_registry['proper'][emb_name]['binary_format'] == 'elmo':
-                        elmo_to_text(resources_path / 'standard_vocab.txt',
+                        elmo_to_text(configurations_path / 'standard_vocab.txt',
                                     emb_path,
                                     layer='nocontext')
 
                     elif embedding_registry['proper'][emb_name]['binary_format'] == 'bert':
-                        bert_to_text(resources_path / 'standard_vocab.txt',
+                        bert_to_text(configurations_path / 'standard_vocab.txt',
                                     embeddings_path / embedding_registry['proper'][x]['path'],
                                     base_path,
                                     emb_path,
@@ -1702,7 +1700,7 @@ def import_embeddings(x,
             if which in ('sentence', 'both') and any(infix in emb_name.lower() for infix in DUAL_EMB_TYPES) or \
                 embedding_registry['proper'][emb_name]['type'] == 'sentence':
                 generate_sent_embeddings(emb_name,
-                                         resources_path,
+                                         configurations_path,
                                          embedding_registry['proper'][emb_name],
                                          base_path,
                                          emb_file)
@@ -1726,7 +1724,7 @@ def import_embeddings(x,
            not any(infix in emb_name.lower() for infix in DUAL_EMB_TYPES):
             cprint("Generating baseline sentence embeddings for {} ...".format(emb_name))
             generate_avg_sent_embeddings(emb_name,
-                                         resources_path,
+                                         configurations_path,
                                          embedding_registry['proper'][emb_name],
                                          base_path,
                                          emb_file)
@@ -1736,7 +1734,7 @@ def import_embeddings(x,
 
         # Associate random baselines with embeddings if set by user
         if associate_rand_emb:                                                
-            import_random_baselines(embedding_registry, resources_path, embeddings_path, emb_name)
+            import_random_baselines(embedding_registry, configurations_path, embeddings_path, emb_name)
         
         cprint('Finished importing embedding "{}"'.format(emb_name), 'green')
 
@@ -1750,7 +1748,7 @@ def import_embeddings(x,
 
 
 def import_random_baselines(embedding_registry,
-                            resources_path,
+                            configurations_path,
                             embeddings_path,
                             embeddings,
                             num_baselines=10,
@@ -1794,7 +1792,7 @@ def import_random_baselines(embedding_registry,
             if emb_type == 'sentence' and unit_type == 'word':
                 continue
 
-            with open(resources_path / '{}.txt'.format(listing_fname)) as f:
+            with open(configurations_path / '{}.txt'.format(listing_fname)) as f:
                 listing = f.read().split('\n')
 
             cprint('Generating {}-dim. random baselines ({} {})...'.format(emb_dim, len(listing), unit_label), 'yellow')

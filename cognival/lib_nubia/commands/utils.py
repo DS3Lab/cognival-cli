@@ -15,12 +15,12 @@ NO_NVIDIA_GPUS = 'Note: No NVIDIA GPUs found (set --visible-gpus CLI parameter i
 def tupleit(t):
     return tuple(map(tupleit, t)) if isinstance(t, (list, tuple)) else t
 
-def _open_config(configuration, resources_path, quiet=False, protect_reference=True, quiet_errors=False):
+def _open_config(configuration, configurations_path, quiet=False, protect_reference=True, quiet_errors=False):
     if protect_reference and configuration == 'reference':
         cprint('The reference configuration cannot be edited! Use show-config to display its properties.', 'red')
         return
         
-    config_path = resources_path / '{}_config.json'.format(configuration)
+    config_path = configurations_path / '{}_config.json'.format(configuration)
     try:
         with open(config_path) as f:
             config_dict = json.load(f)
@@ -33,15 +33,15 @@ def _open_config(configuration, resources_path, quiet=False, protect_reference=T
     return config_dict
     
 
-def _open_cog_config(resources_path):
-    cog_sources_path = resources_path / 'cognitive_sources.json'
+def _open_cog_config(configurations_path):
+    cog_sources_path = configurations_path / 'cognitive_sources.json'
     with open(cog_sources_path) as f:
         cognitive_sources = json.load(f)
     return cognitive_sources
 
 
-def _check_cog_installed(resources_path):
-    cog_config = _open_cog_config(resources_path)
+def _check_cog_installed(configurations_path):
+    cog_config = _open_cog_config(configurations_path)
     return cog_config['cognival_installed']
 
 
@@ -58,27 +58,27 @@ def _check_emb_installed(embedding, embeddings_conf):
                 raise RuntimeError('Embedding "{}" not known.'.format(embedding))
 
 
-def _save_cog_config(config_dict, resources_path):
-    config_path = resources_path / 'cognitive_sources.json'
+def _save_cog_config(config_dict, configurations_path):
+    config_path = configurations_path / 'cognitive_sources.json'
     with open(config_path, 'w') as f:
         json.dump(config_dict, f, indent=4)
 
 
-def _save_config(config_dict, configuration, resources_path, quiet=False):
-    config_path = resources_path / '{}_config.json'.format(configuration)
+def _save_config(config_dict, configuration, configurations_path, quiet=False):
+    config_path = configurations_path / '{}_config.json'.format(configuration)
     with open(config_path, 'w') as f:
         json.dump(config_dict, f, indent=4)
     if not quiet:
         cprint('Saved configuration file {} ...'.format(str(config_path)), 'green')
 
-def _backup_config(configuration, resources_path):
-    config_dict = _open_config(configuration, resources_path, quiet=True, protect_reference=True, quiet_errors=True)
+def _backup_config(configuration, configurations_path):
+    config_dict = _open_config(configuration, configurations_path, quiet=True, protect_reference=True, quiet_errors=True)
     if not config_dict:
         return
-    prev = [int(x.split('.')[-1]) for x in glob.glob(str(resources_path / '{}_config.bak.*'.format(configuration)))]
+    prev = [int(x.split('.')[-1]) for x in glob.glob(str(configurations_path / '{}_config.bak.*'.format(configuration)))]
     version = max(prev) + 1 if prev else 0
     
-    config_path = resources_path / '{}_config.bak.{}'.format(configuration, version)
+    config_path = configurations_path / '{}_config.bak.{}'.format(configuration, version)
 
     with open(config_path, 'w') as f:
         json.dump(config_dict, f, indent=4)

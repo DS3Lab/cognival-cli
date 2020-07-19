@@ -1,1 +1,0 @@
-The script `testSignificance.py` was taken from this repository: https://github.com/rtmdrr/testSignificanceNLP
