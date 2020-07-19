@@ -225,7 +225,7 @@ def agg_stats_over_time_plots(agg_reports_dict, run_id):
 def generate_report(configuration,
                     test,
                     run_id,
-                    resources_path,
+                    configurations_path,
                     precision,
                     average_multi_hypothesis,
                     train_history_plots,
@@ -244,7 +244,7 @@ def generate_report(configuration,
     '''
     template = load_jinja_template()
 
-    config_dict = _open_config(configuration, resources_path, quiet=True, quiet_errors=True)
+    config_dict = _open_config(configuration, configurations_path, quiet=True, quiet_errors=True)
     if not config_dict:
         return
     cprint('Generating CogniVal report ...', 'green')

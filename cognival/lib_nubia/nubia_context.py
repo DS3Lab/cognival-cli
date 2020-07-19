@@ -30,11 +30,11 @@ class NubiaCognivalContext(context.Context):
         if self.cognival_path:
             self.cog_sources_path = self.cognival_path / 'cognitive_sources'
             self.embeddings_path = self.cognival_path / 'embeddings'
-            self.resources_path = self.cognival_path / 'resources'
+            self.configurations_path = self.cognival_path / 'configurations'
             self.results_path = self.cognival_path / 'embeddings'
         else:
             self.cognival_path, self.embeddings_path, \
-                self.resources_path, self.resources_path = [None] * 4
+                self.configurations_path, self.results_path = [None] * 4
 
         self.embedding_registry = None
         self.open_config = None
@@ -43,9 +43,9 @@ class NubiaCognivalContext(context.Context):
         super().__init__()
 
     def _load_configuration(self):
-        if self.resources_path:
+        if self.configurations_path:
             try:
-                with open(self.resources_path / 'embedding_registry.json') as f:
+                with open(self.configurations_path / 'embedding_registry.json') as f:
                     self.embedding_registry = json.load(f)
             
                 for emb_category, emb_category_dict in self.embedding_registry.items():
@@ -103,7 +103,7 @@ class NubiaCognivalContext(context.Context):
 
     def save_configuration(self):
         if self.embedding_registry:
-            with open(self.resources_path / 'embedding_registry.json', 'w') as f:
+            with open(self.configurations_path / 'embedding_registry.json', 'w') as f:
                 json.dump(self.embedding_registry, f, indent=4)
         else:
             raise RuntimeError("No configuration loaded, cannot save!")

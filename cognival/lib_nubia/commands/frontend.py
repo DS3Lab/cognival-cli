@@ -131,7 +131,7 @@ def run(embeddings=['all'],
     Run parallelized evaluation of single, selected or all combinations of embeddings and cognitive sources.
     '''
     ctx = context.get_context()
-    resources_path = ctx.resources_path
+    configurations_path = ctx.configurations_path
     configuration = ctx.open_config
     embedding_registry = ctx.embedding_registry
     max_gpus = ctx.max_gpus
@@ -141,11 +141,11 @@ def run(embeddings=['all'],
         cprint('No configuration open, aborting ...', 'red')
         return
 
-    config_dict = _open_config(configuration, resources_path)
+    config_dict = _open_config(configuration, configurations_path)
 
     config_dict = commands.run(configuration,
                                config_dict,
-                               resources_path,
+                               configurations_path,
                                embedding_registry,
                                embeddings,
                                modalities,
@@ -160,7 +160,7 @@ def run(embeddings=['all'],
                                network,
                                legacy)
     if config_dict:
-        _save_config(config_dict, configuration, resources_path)
+        _save_config(config_dict, configuration, configurations_path)
 
 
 @command
@@ -185,9 +185,9 @@ class List:
     ―
         '''
         ctx = context.get_context()
-        resources_path = ctx.resources_path
+        configurations_path = ctx.configurations_path
         
-        formatted_list = commands.list_configs(resources_path)
+        formatted_list = commands.list_configs(configurations_path)
 
         page_list([x.encode('utf-8') for x in formatted_list])
 
@@ -211,8 +211,8 @@ class List:
     ―
         """
         ctx = context.get_context()
-        resources_path = ctx.resources_path
-        cog_config = _open_cog_config(resources_path)
+        configurations_path = ctx.configurations_path
+        cog_config = _open_cog_config(configurations_path)
 
         if not cog_config['cognival_installed']:
             cprint('CogniVal cognitive sources not imported, aborting ...', 'red')
@@ -253,10 +253,10 @@ class Config:
         '''
         ctx = context.get_context()
         cognival_path = ctx.cognival_path
-        resources_path = ctx.resources_path
+        configurations_path = ctx.configurations_path
         
         try:
-            configuration, _ = commands.config_open(configuration, cognival_path, resources_path, edit, overwrite)
+            configuration, _ = commands.config_open(configuration, cognival_path, configurations_path, edit, overwrite)
         except TypeError:
             return
 
@@ -274,13 +274,13 @@ class Config:
     ―
         '''
         ctx = context.get_context()
-        resources_path = ctx.resources_path
+        configurations_path = ctx.configurations_path
         configuration = ctx.open_config
         if not configuration:
             cprint('No configuration open, aborting ...', 'red')
             return
 
-        config_dict = _open_config(configuration, resources_path, quiet=True, protect_reference=False)
+        config_dict = _open_config(configuration, configurations_path, quiet=True, protect_reference=False)
         if not config_dict:
             return
 
@@ -317,16 +317,16 @@ class Config:
             return
 
         embedding_registry = ctx.embedding_registry
-        resources_path = ctx.resources_path
+        configurations_path = ctx.configurations_path
 
-        main_conf_dict = _open_config(configuration, resources_path)
-        cog_data_config_dict = _open_cog_config(resources_path)
+        main_conf_dict = _open_config(configuration, configurations_path)
+        cog_data_config_dict = _open_cog_config(configurations_path)
         try:
             commands.config_experiment(configuration,
                                    main_conf_dict,
                                    cog_data_config_dict,
                                    embedding_registry,
-                                   resources_path,
+                                   configurations_path,
                                    baselines,
                                    modalities,
                                    cognitive_sources,
@@ -354,10 +354,10 @@ class Config:
             cprint('No configuration open, aborting ...', 'red')
             return
         embedding_registry = ctx.embedding_registry
-        resources_path = ctx.resources_path
+        configurations_path = ctx.configurations_path
 
-        main_conf_dict = _open_config(configuration, resources_path)
-        cog_config_dict = _open_cog_config(resources_path)
+        main_conf_dict = _open_config(configuration, configurations_path)
+        cog_config_dict = _open_cog_config(configurations_path)
 
         main_conf_dict = commands.config_delete(configuration,
                                                 main_conf_dict,
@@ -367,10 +367,10 @@ class Config:
                                                 cognitive_sources,
                                                 embeddings)
 
-        _backup_config(configuration, resources_path)
+        _backup_config(configuration, configurations_path)
         
         if main_conf_dict:
-            _save_config(main_conf_dict, configuration, resources_path)
+            _save_config(main_conf_dict, configuration, configurations_path)
 
 
 @command
@@ -394,9 +394,9 @@ def significance(run_id=0,
     if not configuration:
         cprint('No configuration open, aborting ...', 'red')
         return
-    resources_path = ctx.resources_path
+    configurations_path = ctx.configurations_path
 
-    config_dict = _open_config(configuration, resources_path, quiet=quiet)
+    config_dict = _open_config(configuration, configurations_path, quiet=quiet)
     if not config_dict:
         return
 
@@ -427,8 +427,8 @@ def aggregate(run_id=0,
     if not configuration:
         cprint('No configuration open, aborting ...', 'red')
         return
-    resources_path = ctx.resources_path
-    config_dict = _open_config(configuration, resources_path, quiet=quiet)
+    configurations_path = ctx.configurations_path
+    config_dict = _open_config(configuration, configurations_path, quiet=quiet)
 
     if not config_dict:
         return
@@ -463,14 +463,14 @@ class Update:
         Update the vocabulary based on all imported cognitive sources.
         """
         ctx = context.get_context()
-        resources_path = ctx.resources_path
+        configurations_path = ctx.configurations_path
         cog_sources_path = ctx.cog_sources_path
-        vocab_path = resources_path / 'standard_vocab.txt'
+        vocab_path = configurations_path / 'standard_vocab.txt'
 
         with open(vocab_path) as f:
             old_vocab = [x.rstrip('\n') for x in f]
 
-        new_vocab_list = commands.update_vocabulary(resources_path,
+        new_vocab_list = commands.update_vocabulary(configurations_path,
                                                     cog_sources_path,
                                                     old_vocab)
 
@@ -487,15 +487,15 @@ class Update:
         Update the CogniVal sentence listbased on all imported cognitive sources.
         """
         ctx = context.get_context()
-        resources_path = ctx.resources_path
+        configurations_path = ctx.configurations_path
         cog_sources_path = ctx.cog_sources_path
-        sentences_path = resources_path / 'standard_sentences.txt'
-        sent_vocab_path = resources_path / 'standard_sent_vocab.txt'    
+        sentences_path = configurations_path / 'standard_sentences.txt'
+        sent_vocab_path = configurations_path / 'standard_sent_vocab.txt'    
 
         with open(sentences_path) as f:
             old_sentences = [x.rstrip('\n') for x in f]
 
-        new_sentences, new_vocab_list = commands.update_sentences(resources_path,
+        new_sentences, new_vocab_list = commands.update_sentences(configurations_path,
                                                                   cog_sources_path,
                                                                   old_sentences)
 
@@ -530,10 +530,10 @@ class Update:
         """
         ctx = context.get_context()
         embeddings_path = ctx.embeddings_path
-        resources_path = ctx.resources_path
+        configurations_path = ctx.configurations_path
         embedding_registry = ctx.embedding_registry
 
-        embedding_registry = commands.update_embeddings(resources_path, embeddings_path, embedding_registry, embeddings=embeddings, which=which)
+        embedding_registry = commands.update_embeddings(configurations_path, embeddings_path, embedding_registry, embeddings=embeddings, which=which)
 
         if embedding_registry:
             ctx.save_configuration()
@@ -563,16 +563,16 @@ class Import:
         """
         ctx = context.get_context()
         cognival_path = ctx.cognival_path
-        resources_path = ctx.resources_path
-        cog_config = _open_cog_config(resources_path)
+        configurations_path = ctx.configurations_path
+        cog_config = _open_cog_config(configurations_path)
 
         cog_config = commands.import_cognitive_sources(cognival_path,
-                                                       resources_path,
+                                                       configurations_path,
                                                        cog_config,
                                                        source)
 
         if cog_config:
-            _save_cog_config(cog_config, resources_path)
+            _save_cog_config(cog_config, configurations_path)
 
     @command()
     @argument('x', type=str, description='Force removal and download', positional=True) #choices=list(CTX.embedding_registry['proper']))
@@ -582,7 +582,7 @@ class Import:
         Download and import a default embedding (by name) or custom embedding (from URL)
         """
         ctx = context.get_context()
-        resources_path = ctx.resources_path
+        configurations_path = ctx.configurations_path
         embeddings_path = ctx.embeddings_path
         embedding_registry = ctx.embedding_registry
         path2embeddings = ctx.path2embeddings
@@ -592,7 +592,7 @@ class Import:
                                          which,
                                          embedding_registry,
                                          path2embeddings,
-                                         resources_path,
+                                         configurations_path,
                                          embeddings_path,
                                          force,
                                          log_only_success,
@@ -624,12 +624,12 @@ class Import:
     ―
         """
         ctx = context.get_context()
-        resources_path = ctx.resources_path
+        configurations_path = ctx.configurations_path
         embeddings_path = ctx.embeddings_path
         embedding_registry = ctx.embedding_registry
 
         embedding_registry = commands.import_random_baselines(embedding_registry,
-                                                              resources_path,
+                                                              configurations_path,
                                                               embeddings_path,
                                                               embeddings,
                                                               num_baselines,
@@ -750,7 +750,7 @@ def report(run_id=0,
     if not configuration:
         cprint('No configuration open, aborting ...', 'red')
         return
-    resources_path = ctx.resources_path
+    configurations_path = ctx.configurations_path
 
     cprint('Computing significance stats ...', 'yellow')
     significance(run_id, modalities, alpha, num_hypotheses, test, quiet=False)
@@ -759,7 +759,7 @@ def report(run_id=0,
     generate_report(configuration,
                     test,
                     run_id,
-                    resources_path,
+                    configurations_path,
                     precision,
                     average_multi_hypothesis,
                     history_plots,

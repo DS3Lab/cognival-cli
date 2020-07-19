@@ -15,11 +15,11 @@ from handlers.binary_to_text_conversion import bert_to_text
 
 import time
 
-def get_resources(base_path, resources_path):
+def get_resources(base_path, configurations_path):
     nlp = get_nlp()
     emb_path = create_sent_path(base_path)
-    sent_vocab = get_sent_vocab(resources_path)
-    sentences = get_sentences(resources_path)
+    sent_vocab = get_sent_vocab(configurations_path)
+    sentences = get_sentences(configurations_path)
     
     return nlp, emb_path, sent_vocab, sentences
 
@@ -35,14 +35,14 @@ def create_sent_path(base_path):
     return emb_path
 
 
-def get_sent_vocab(resources_path):
-    with open(resources_path / 'standard_sent_vocab.txt') as f:
+def get_sent_vocab(configurations_path):
+    with open(configurations_path / 'standard_sent_vocab.txt') as f:
         sentences_set = set([x.strip() for x in f])
     return sentences_set
 
 
-def get_sentences(resources_path):
-    with open(resources_path / 'standard_sentences.txt') as f:
+def get_sentences(configurations_path):
+    with open(configurations_path / 'standard_sentences.txt') as f:
         sentences = set([x.strip() for x in f])
     return sentences
 
@@ -61,20 +61,20 @@ def export_df(emb_path, emb_file, sentences, matrix, dimensions):
                        header=False)
 
 
-def generate_bert_sentence_embs(resources_path, emb_params, base_path, emb_file):
-    bert_to_text(resources_path / 'standard_sentences.txt',
+def generate_bert_sentence_embs(configurations_path, emb_params, base_path, emb_file):
+    bert_to_text(configurations_path / 'standard_sentences.txt',
                                 base_path, 
                                 base_path,
                                 base_path/emb_file,
                                 1)
 
-def generate_elmo_sentence_embs(name, resources_path, emb_params, base_path, emb_file, fixed_mean_pooling):
+def generate_elmo_sentence_embs(name, configurations_path, emb_params, base_path, emb_file, fixed_mean_pooling):
     from allennlp.commands.elmo import ElmoEmbedder
     import tensorflow as tf
     import tensorflow_hub as hub
     tf.compat.v1.logging.set_verbosity(0)
 
-    nlp, emb_path, sent_vocab, sentences = get_resources(base_path, resources_path)
+    nlp, emb_path, sent_vocab, sentences = get_resources(base_path, configurations_path)
     print("Tokenizing ...")
     sentence_tokens = [[token.text for token in nlp(sentence)] for sentence in tqdm(sentences)]
     embeddings = []
@@ -114,15 +114,19 @@ def generate_elmo_sentence_embs(name, resources_path, emb_params, base_path, emb
     export_df(emb_path, emb_file, sentences, embeddings, emb_params["dimensions"])
 
 
-def generate_powermean_sentence_embs(resources_path, emb_params, base_path, emb_file):
+def generate_powermean_sentence_embs(configurations_path, emb_params, base_path, emb_file, lower):
     import tensorflow as tf        
     import tensorflow_hub as hub   
     tf.compat.v1.logging.set_verbosity(0)
 
-    nlp, emb_path, sent_vocab, sentences = get_resources(base_path, resources_path)
+    nlp, emb_path, sent_vocab, sentences = get_resources(base_path, configurations_path)
     print("Tokenizing ...")
     # powermean requires tokenized sentence strings
-    sentences_tokenized = [" ".join([token.text.lower() for token in nlp(sentence)]) for sentence in tqdm(sentences)]
+    if lower:
+        # recommendation by authors
+        sentences_tokenized = [" ".join([token.text.lower() for token in nlp(sentence)]) for sentence in tqdm(sentences)]
+    else:
+        sentences_tokenized = [" ".join([token.text for token in nlp(sentence)]) for sentence in tqdm(sentences)]
 
     print("Embedding (chunked) ...")
     embeddings = []
@@ -138,18 +142,18 @@ def generate_powermean_sentence_embs(resources_path, emb_params, base_path, emb_
     export_df(emb_path, emb_file, sentences, embeddings, emb_params["dimensions"])
 
 
-def generate_skipthought_sentence_embs(variant, resources_path, emb_params, base_path, emb_file):
+def generate_skipthought_sentence_embs(variant, configurations_path, emb_params, base_path, emb_file):
     from handlers.sentence_embeddings.skip_thoughts import configuration as skipthought_config
     from handlers.sentence_embeddings.skip_thoughts import encoder_manager as skipthought_enc_manager
 
-    nlp, emb_path, sent_vocab, sentences = get_resources(base_path, resources_path)
+    nlp, emb_path, sent_vocab, sentences = get_resources(base_path, configurations_path)
         
     encoder = skipthought_enc_manager.EncoderManager()
     encoder.load_model(skipthought_config.model_config(),
                        vocabulary_file=str(base_path.parent / "skip_thoughts_uni_2017_02_02" / "vocab.txt"),
                        embedding_matrix_file=str(base_path.parent / "skip_thoughts_uni_2017_02_02" / "embeddings.npy"),
                        checkpoint_path=str(base_path.parent / "skip_thoughts_uni_2017_02_02" / "model.ckpt-501424"))
-    if variant == 'bi':
+    if variant == 'combined':
         try:
             encoder.load_model(skipthought_config.model_config(bidirectional_encoder=True),
                                vocabulary_file=str(base_path.parent / "skip_thoughts_bi_2017_02_16" / "vocab.txt"),
@@ -164,7 +168,7 @@ def generate_skipthought_sentence_embs(variant, resources_path, emb_params, base
     export_df(emb_path, emb_file, sentences, encodings, emb_params["dimensions"])
 
 
-def generate_quickthought_sentence_embs(resources_path, emb_params, base_path, emb_file):
+def generate_quickthought_sentence_embs(configurations_path, emb_params, base_path, emb_file):
     import tensorflow as tf           
     import tensorflow_hub as hub   
     tf.compat.v1.logging.set_verbosity(0)
@@ -172,7 +176,7 @@ def generate_quickthought_sentence_embs(resources_path, emb_params, base_path, e
     from handlers.sentence_embeddings.quickthought import configuration as quickthought_config
     from handlers.sentence_embeddings.quickthought import encoder_manager as quickthought_enc_manager
 
-    nlp, emb_path, sent_vocab, sentences = get_resources(base_path, resources_path)
+    nlp, emb_path, sent_vocab, sentences = get_resources(base_path, configurations_path)
     encoder = quickthought_enc_manager.EncoderManager()
     
     # TF flags required by QuickThought
@@ -208,12 +212,12 @@ def generate_quickthought_sentence_embs(resources_path, emb_params, base_path, e
     export_df(emb_path, emb_file, sentences, embeddings, emb_params["dimensions"])
     
 
-def generate_use_sentence_embs(resources_path, emb_params, base_path, emb_file):
+def generate_use_sentence_embs(configurations_path, emb_params, base_path, emb_file):
     import tensorflow as tf
     import tensorflow_hub as hub
     tf.compat.v1.logging.set_verbosity(0) 
 
-    nlp, emb_path, sent_vocab, sentences = get_resources(base_path, resources_path)
+    nlp, emb_path, sent_vocab, sentences = get_resources(base_path, configurations_path)
     # tensorflow session
     session = tf.compat.v1.Session()
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -235,10 +239,10 @@ def generate_use_sentence_embs(resources_path, emb_params, base_path, emb_file):
     export_df(emb_path, emb_file, sentences, embeddings, emb_params["dimensions"])
 
 
-def generate_infersent_sentence_embs(resources_path, emb_params, base_path, emb_file):
+def generate_infersent_sentence_embs(configurations_path, emb_params, base_path, emb_file):
     import torch
     from handlers.sentence_embeddings.infersent.models import InferSent
-    nlp, emb_path, sent_vocab, sentences = get_resources(base_path, resources_path)
+    nlp, emb_path, sent_vocab, sentences = get_resources(base_path, configurations_path)
     params_model = {'bsize': 64,
                     'word_emb_dim': 300,
                     'enc_lstm_dim': 2048,
@@ -259,44 +263,45 @@ def generate_infersent_sentence_embs(resources_path, emb_params, base_path, emb_
 
 
 def generate_sent_embeddings(name,
-                             resources_path,
+                             configurations_path,
                              emb_params,
                              base_path,
                              emb_file):
 
 
     if 'bert' in name:
-        generate_bert_sentence_embs(resources_path, emb_params, base_path, emb_file)
+        generate_bert_sentence_embs(configurations_path, emb_params, base_path, emb_file)
     elif name == 'elmo-sentence' or name == 'elmo-sentence-large':
-        generate_elmo_sentence_embs(name, resources_path, emb_params, base_path, emb_file, fixed_mean_pooling=False)
+        generate_elmo_sentence_embs(name, configurations_path, emb_params, base_path, emb_file, fixed_mean_pooling=False)
     elif name == 'elmo-sentence-fixed-mean-pooling':
-        generate_elmo_sentence_embs(name, resources_path, emb_params, base_path, emb_file, fixed_mean_pooling=True)
-    elif name == 'power-mean':
-        generate_powermean_sentence_embs(resources_path, emb_params, base_path, emb_file)
+        generate_elmo_sentence_embs(name, configurations_path, emb_params, base_path, emb_file, fixed_mean_pooling=True)
+    elif 'power-mean' in name:
+        lower = 'lower' in name
+        generate_powermean_sentence_embs(configurations_path, emb_params, base_path, emb_file, lower)
     elif 'skip-thoughts' in name:
         if 'uni' in name:
             variant = 'uni'
-        elif 'bi' in name:
-            variant = 'bi'
-        generate_skipthought_sentence_embs(variant, resources_path, emb_params, base_path, emb_file)
+        elif 'combined' in name:
+            variant = 'combined'
+        generate_skipthought_sentence_embs(variant, configurations_path, emb_params, base_path, emb_file)
     elif name == 'quick-thoughts':
-        generate_quickthought_sentence_embs(resources_path, emb_params, base_path, emb_file)
+        generate_quickthought_sentence_embs(configurations_path, emb_params, base_path, emb_file)
     elif name in ('use', 'use-large'):
-        generate_use_sentence_embs(resources_path, emb_params, base_path, emb_file)
+        generate_use_sentence_embs(configurations_path, emb_params, base_path, emb_file)
     elif name == 'infersent':
-        generate_infersent_sentence_embs(resources_path, emb_params, base_path, emb_file)
+        generate_infersent_sentence_embs(configurations_path, emb_params, base_path, emb_file)
     else:
         return
 
 
 def generate_avg_sent_embeddings(name,
-                                 resources_path,
+                                 configurations_path,
                                  emb_params,
                                  base_path,
                                  emb_file):
     nlp = get_nlp()
     emb_path = create_sent_path(base_path)
-    sent_vocab = get_sent_vocab(resources_path)
+    sent_vocab = get_sent_vocab(configurations_path)
 
     emb_dict = {}
 
@@ -340,7 +345,7 @@ def generate_avg_sent_embeddings(name,
                    (counter['OOV']/counter_sum) * 100), color='magenta')
         del df
 
-    sentences = get_sentences(resources_path)
+    sentences = get_sentences(configurations_path)
     sent_embs = []
 
     # Generate average word embeddings per sentence (not accounting for subwords)

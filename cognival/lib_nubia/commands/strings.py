@@ -15,7 +15,7 @@ EDITOR_DESCRIPTIONS = { "properties": {"cognival_path": "Path for storing user d
                                 "seed": "Random seed for train-test sampling",
                                 "run_id": "Configuration run ID. Normally set to 1 when creating a new configuration file"
                                 },
-                       "cognitive": {"dataset": "Name of the cognitive data set. See resources/cognitive_sources.json for a list of all available source",
+                       "cognitive": {"dataset": "Name of the cognitive data set. See configurations/cognitive_sources.json for a list of all available source",
                                      "parent": "Name of parent data set in multi-hypothesis datasets (usually fMRI). Identical to the cognitive source name otherwise.",
                                      "kpca_n_dims": "Dimensionality of KernelPCA (only relevant for EEG and fMRI)",
                                      "kpca_gamma": "Gamma of KernelPCA",

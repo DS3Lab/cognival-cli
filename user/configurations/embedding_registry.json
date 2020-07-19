@@ -306,6 +306,21 @@
             "truncate_first_line": false,
             "chunked": false,
             "random_embedding": null
+        },  
+	"power-mean-lower": {
+            "type": "sentence",
+            "url": "https://public.ukp.informatik.tu-darmstadt.de/arxiv2018-xling-sentence-embeddings/tf-hub/monolingual/1",
+            "download": false,
+            "dimensions": 3600,
+            "binary": true,
+            "binary_file": null,
+            "binary_format": null,
+            "path": "power-mean-lower",
+            "embedding_file": "power-mean-lower.txt",
+            "installed": false,
+            "truncate_first_line": false,
+            "chunked": false,
+            "random_embedding": null
         },
         "skip-thoughts-uni": {
             "type": "sentence",
@@ -322,7 +337,7 @@
             "chunked": false,
             "random_embedding": null
         },
-        "skip-thoughts-bi": {
+        "skip-thoughts-combined": {
             "type": "sentence",
             "url": "http://download.tensorflow.org/models/skip_thoughts_bi_2017_02_16.tar.gz",
             "download": true,
@@ -331,7 +346,7 @@
             "binary_file": null,
             "binary_format": null,
             "path": "skip-thoughts",
-            "embedding_file": "skip-thoughts-bi.txt",
+            "embedding_file": "skip-thoughts-combined.txt",
             "installed": false,
             "truncate_first_line": false,
             "chunked": false,
