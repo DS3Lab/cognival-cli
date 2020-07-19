@@ -5,6 +5,7 @@ Pygments==2.2.0
 allennlp==0.9.0
 bert_serving_client==1.10.0
 bert_serving_server==1.10.0
+cryptorandom==0.2
 fastparquet==0.3.3
 fasttext==0.9.1
 gdown==3.8.3
@@ -20,7 +21,7 @@ pandas==0.25.3
 pdfkit==0.6.1
 permute==0.1a5
 prompt_toolkit==3.0.2
-pybind11=2.5.0
+pybind11==2.5.0
 pytest==4.6.3
 python_nubia==0.2b2
 requests==2.19.1
