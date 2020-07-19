@@ -986,6 +986,11 @@ def aggregate(configuration,
     
     # Extract results for aggregation and aggregate significance scores
     for modality, options_dict in zip(modalities, options_dicts):
+        try:
+            os.remove(report_dir / modality / str(run_id) / 'aggregated_scores.json')
+        except FileNotFoundError:
+            pass
+ 
         if not quiet:
             cprint('\n[{}]\n'.format(modality.upper()), attrs=['bold'], color='green')
     
