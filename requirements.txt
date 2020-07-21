@@ -10,7 +10,7 @@ fastparquet==0.3.3
 fasttext==0.9.1
 gdown==3.8.3
 gensim==3.8.1
-https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-2.1.0/en_core_web_lg-2.1.0.tar.gz#egg=en_core_web_lg
+en_core_web_lg @ https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-2.1.0/en_core_web_lg-2.1.0.tar.gz#egg=en_core_web_lg
 imbalanced_learn==0.4.3
 joblib==0.13.2
 matplotlib==2.2.3
