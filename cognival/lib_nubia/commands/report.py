@@ -12,7 +12,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from termcolor import colored
+from termcolor import colored, cprint
 from tqdm import tqdm
 from jinja2 import Environment, PackageLoader, select_autoescape
 import pdfkit
@@ -398,8 +398,12 @@ def generate_report(configuration,
                 continue
 
             for experiment, sig_test_result in mod_report['hypotheses'].items():
-                with open(experiment_to_path[experiment]) as f:
-                    result_dict = json.load(f)
+                try:
+                    with open(experiment_to_path[experiment]) as f:
+                        result_dict = json.load(f)
+                except FileNotFoundError:
+                    cprint('{} not found, skipping ...'.format(experiment), 'yellow')
+
                 result = {'Modality': MODALITIES_SHORT_TO_FULL[modality],
                         'Ø MSE': result_dict['AVERAGE_MSE'],
                         'SD MSE': np.std([x['MSE_PREDICTION'] for x in result_dict['folds']]),
@@ -413,17 +417,21 @@ def generate_report(configuration,
     # If no significance tests have been performed
     if not results:
         for experiment, result_json_path in experiment_to_path.items():
-            with open(result_json_path) as f:
-                result_dict = json.load(f)
-                result = {'Modality': MODALITIES_SHORT_TO_FULL[result_dict['modality']],
-                        'Ø MSE': result_dict['AVERAGE_MSE'],
-                        'SD MSE': np.std([x['MSE_PREDICTION'] for x in result_dict['folds']]),
-                        'Word embedding': result_dict['wordEmbedding'],
-                        'Subject': result_dict['cognitiveData'] if result_dict['multi_hypothesis'] == 'subject' else '-',
-                        'Cognitive source': result_dict['cognitiveParent'],
-                        'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature'],
-                        'Details': result_dict['details']}
-                results.append(result)
+            try:
+                with open(result_json_path) as f:
+                    result_dict = json.load(f)
+            except FileNotFoundError:
+                    cprint('{} not found, skipping ...'.format(result_json_path), 'yellow')
+
+            result = {'Modality': MODALITIES_SHORT_TO_FULL[result_dict['modality']],
+                    'Ø MSE': result_dict['AVERAGE_MSE'],
+                    'SD MSE': np.std([x['MSE_PREDICTION'] for x in result_dict['folds']]),
+                    'Word embedding': result_dict['wordEmbedding'],
+                    'Subject': result_dict['cognitiveData'] if result_dict['multi_hypothesis'] == 'subject' else '-',
+                    'Cognitive source': result_dict['cognitiveParent'],
+                    'Feature': '-' if result_dict['feature'] == 'ALL_DIM' else result_dict['feature'],
+                    'Details': result_dict['details']}
+            results.append(result)
 
     df_details = pd.DataFrame(results)
     
