@@ -721,30 +721,36 @@ def config_delete(configuration,
         cprint("Removing experiments ...", "magenta")
         for csource in cognitive_sources:            
             for emb in embeddings:
-                if emb in main_conf_dict['cogDataConfig'][csource]["wordEmbSpecifics"]:
-                    rand_emb = main_conf_dict["wordEmbConfig"][emb]["random_embedding"]
+                try:
+                    if emb in main_conf_dict['cogDataConfig'][csource]["wordEmbSpecifics"]:
+                        rand_emb = main_conf_dict["wordEmbConfig"][emb]["random_embedding"]
 
-                    del main_conf_dict['cogDataConfig'][csource]["wordEmbSpecifics"][emb]
+                        del main_conf_dict['cogDataConfig'][csource]["wordEmbSpecifics"][emb]
 
-                    # Remove associated random embeddings if present
-                    if rand_emb:
-                        cprint ("Deleting {}/{} and associated random baselines set {}/{}...".format(csource, emb, csource, rand_emb), 'green')
+                        # Remove associated random embeddings if present
+                        if rand_emb:
+                            cprint ("Deleting {}/{} and associated random baselines set {}/{}...".format(csource, emb, csource, rand_emb), 'green')
+                        else:
+                            cprint ("Deleting {}/{} ...".format(csource, emb), 'green')
+
+                        if rand_emb:
+                            for rand_emb_part in main_conf_dict["randEmbSetToParts"][rand_emb]:
+                                del main_conf_dict['cogDataConfig'][csource]["wordEmbSpecifics"][rand_emb_part]
+
+                        # Delete embedding config and associated random embedding configs if not longer used by any cognitive source
+                        remove_dangling_emb_random(emb, main_conf_dict)
                     else:
-                        cprint ("Deleting {}/{} ...".format(csource, emb), 'green')
-
-                    if rand_emb:
-                        for rand_emb_part in main_conf_dict["randEmbSetToParts"][rand_emb]:
-                            del main_conf_dict['cogDataConfig'][csource]["wordEmbSpecifics"][rand_emb_part]
-
-                    # Delete embedding config and associated random embedding configs if not longer used by any cognitive source
-                    remove_dangling_emb_random(emb, main_conf_dict)
-                else:
-                    cprint ("Combination {}/{} not found in configuration {}, skipping ...".format(csource, emb, configuration), 'yellow')
+                        cprint ("Combination {}/{} not found in configuration {}, skipping ...".format(csource, emb, configuration), 'yellow')
+                except KeyError:
+                    pass
         
             # Remove cognitive source if empty
-            if not main_conf_dict['cogDataConfig'][csource]["wordEmbSpecifics"]:
-                cprint("Deleting now empty source {} ...".format(csource), 'yellow')
-                del main_conf_dict['cogDataConfig'][csource]
+            try:
+                if not main_conf_dict['cogDataConfig'][csource]["wordEmbSpecifics"]:
+                    cprint("Deleting now empty source {} ...".format(csource), 'yellow')
+                    del main_conf_dict['cogDataConfig'][csource]
+            except KeyError:
+                pass
 
     # Remove complete cognitive source along with embeddings
     else:
@@ -830,6 +836,8 @@ def significance(configuration,
                         hypothesis_counter[embed] += 1
                     except KeyError:
                         pass
+                    except FileNotFoundError:
+                        cprint('{} not found, skipping ...'.format(experiment), 'yellow')
 
         # Skip modality if no hypotheses found
         if not hypothesis_counter:
