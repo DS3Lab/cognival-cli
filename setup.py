@@ -25,13 +25,13 @@ class PostInstallCommand(install):
                                 ('embeddings', 'README.md'),
                                 ('cognitive_sources', 'README.md'),
                                 ('results', 'README.md'),
-                                ('resources', 'cognitive_sources.json'),
-                                ('resources', 'demo_config.json'),
-                                ('resources', 'embedding_registry.json'),
-                                ('resources', 'reference_config.json'),
-                                ('resources', 'standard_vocab.txt'),
-                                ('resources', 'standard_sentences.txt'),
-                                ('resources', 'standard_sent_vocab.txt')
+                                ('configurations', 'cognitive_sources.json'),
+                                ('configurations', 'demo_config.json'),
+                                ('configurations', 'embedding_registry.json'),
+                                ('configurations', 'reference_config.json'),
+                                ('configurations', 'standard_vocab.txt'),
+                                ('configurations', 'standard_sentences.txt'),
+                                ('configurations', 'standard_sent_vocab.txt')
                         ]:
                 try:
                     os.makedirs(cognival_usr_dir / path)
@@ -45,7 +45,7 @@ class PostInstallCommand(install):
 
 setuptools.setup(
     name="cognival",
-    version="0.2.0",
+    version="0.2.1",
     author="Multiple authors",
     author_email="foo@bar.com",
     description="CogniVal cognitive embedding evaluation",
