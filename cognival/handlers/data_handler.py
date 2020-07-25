@@ -355,7 +355,7 @@ def data_handler(mode, config, stratified_sampling, balance, word_embedding, cog
     # If externally chunked, use word embedding chunk files (only word embeddings!)
     if emb_type == 'word' and config[emb_key][word_embedding]["chunked"]:
         df_join = multi_join(mode, config, emb_type, df_cognitive_data, cognitive_data, feature, word_embedding)
-    # Chunk on the fly otherwise, with a fixed number of chunks of 8
+    # Chunk on the fly otherwise, with a fixed number of chunks of 16
     else:
         if truncate_first_line:
             skip_rows = 1

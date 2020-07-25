@@ -103,7 +103,7 @@ from .templates import MAIN_CONFIG_TEMPLATE
 from .strings import EXAMPLE_COMMANDS
 
 NUM_BERT_WORKERS = 1
-COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1D9cIKEpCX5J8vsJ8TTfnsTwsWDr-6yRL'
+COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1yzemI_JQCpvwV_KbuBw_e4qYxG4PpVba'
 DUAL_EMB_TYPES = ['bert', 'elmo']
 
 def run(configuration,
@@ -465,7 +465,7 @@ def config_experiment(configuration,
     # Never add random baselines if not yet present
     if main_conf_dict['wordEmbConfig'] and baselines and not main_conf_dict['randEmbConfig']:
         cprint('Cannot add random baselines to existing configuration without random baselines! Aborting ...', 'red')
-        #return
+        return
 
     # Always add random baselines if already present
     if main_conf_dict['randEmbConfig']:
@@ -1333,6 +1333,7 @@ def import_cognitive_sources(cognival_path,
                                                              'multi_file': False,
                                                              'multi_hypothesis': False if features == 'single' else True,
                                                              'stratified_sampling': False,
+                                                             'balance': False,
                                                              'installed': True}
         # Add to index
         index = cog_config['index']
