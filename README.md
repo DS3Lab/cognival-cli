@@ -18,15 +18,15 @@ For practical purposes, this tool should be used. It is based on the original co
  Feel free to report issues and bugs you encounter.
 
  ## A framework for cognitive word embedding evaluation
- The CogniVal tool generates and fits a neural network regression to predict cognitive data such as fMRI, eye-tracking and EEG (corpora mapping words to cognitive signals) from word embedding inputs.
- Thus, it allows determining the predictive power of sets of of word embeddings with respect to cognitive sources. Currently supported modalities are **eye-tracking**, **electroencephalography (EEG)** and **functional magnetic resonance imaging (fMRI)**. Furthermore, the significance of the prediction can be estimated by comparing a set of embeddings with n-fold random baselines of identical dimensionality and computing statistic significance using the Wilcoxon signed-rank test with conservative Bonferroni correction, counteracting the multiple hypotheses problem.
+ The CogniVal tool generates and fits a neural network regression to predict cognitive data such as fMRI, eye-tracking and EEG (corpora mapping words to cognitive signals) from word and sentence embedding inputs.
+ Thus, it allows determining the predictive power of sets of of word embeddings with respect to cognitive sources. Currently supported modalities are **eye-tracking**, **electroencephalography (EEG)** and **functional magnetic resonance imaging (fMRI)**. Furthermore, the significance of the prediction can be estimated by comparing a set of embeddings with n-fold random baselines of identical dimensionality and computing statistic significance using the Wilcoxon signed-rank test with conservative Bonferroni correction, counteracting the multiple hypotheses problem. Several word and sentence embeddings are bundled, as well as cognitive sources on the word and sentence level. For word embeddings, cognitive sources are pre-scaled (for compatibility with the original implementation). For sentence embeddings, scaling and dimensionality reduction occurs on the fly during cross-validation.
 
 ## Installation
 
 ### Installing latest release with pip
 1. Download the `.tar.gz` file of the latest release from [https://github.com/DS3Lab/cognival-cli/releases/](https://github.com/DS3Lab/cognival-cli/releases/)  
 2. Install with pip (this will automatically install all requirements):  
-`pip install ./cognival-0.1.1.tar.gz`
+`pip install ./cognival-0.x.x.tar.gz`
 
 ### Installing from source
 1. Clone or download this repository as a ZIP.  
@@ -67,8 +67,8 @@ User files are stored in `$HOME/.cognival` by default. This can be reconfigured 
 
 
 ## Terminology
-- Embeddings: Word embeddings in textual format, with a single vector per word. Context-sensitive embedding types like BERT and ELMo thus require preprocessing
-- Cognitive source: per-word cognitive signal vectors (e.g. EEG electrodes or eye-tracking statistics)
+- Embeddings: Word or sentence embeddings in textual format, with a single vector per word. Context-sensitive embedding types like BERT and ELMo and most sentence embeddings thus require preprocessing.
+- Cognitive source: per-word or per-sentence cognitive signal vectors (e.g. EEG electrodes or eye-tracking statistics)
 - Experiment: Combination of a set of embeddings, associated n-fold set of random baselines and a cognitive source.
 
 In the cases of fMRI and EEG, we want to predict a vector representing the data and not a specific feature.
@@ -82,7 +82,7 @@ The CogniVal interactive shell allows:
 - Generating corresponding random embedding sets for significance testing
 - Evaluating embeddings against the readily preprocessed CogniVal cognitive sources or any (preprocessed) user-provided cognitive sources
 - Setting up regression experiments of cognitive source and embedding pairs (grid search and training parameters)
-- Performing regression experiments on CPUs and GPUs in a parallelized fashion
+- Performing regression experiments on CPU in a parallelized fashion
 - Computing significance statistics for the results
 - Aggregating MSE and significance statistic
 - Generating an interactive HTML or static PDF report, showing both aggregate and detail statistics in tabular and plot form,
@@ -113,7 +113,7 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
 
 ### Main commands and subcommands
 - config
-    - open: Opens configuration if it already exists or creates an empty configuration file and, when setting edit=True, the general parameters  of the specified configuration.
+    - open: Opens configuration if it already exists or creates an empty configuration file and, when setting edit=True, the general parameters of the specified configuration.
             In the editor, default values are provided for most fields (cpu_count corresponds to number of CPU cores - 1) and reset
             automatically for all empty fields upon saving. Configurations can be overwritten with the `overwrite` flag.
 
@@ -128,7 +128,7 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
         `config show details=True`  
         `config show details=True cognitive-source=eeg_zuco`
             
-      Call: `config show [details=False] [cognitive-source=None] [hide-random=True]`
+      Call: `config show [details=False] [cognitive-source=None] [hide-baselines=True]`
 
     - experiment: Edits one or multiple experiments (arbitrary combinations of cognitive sources and embeddings). Allows to set grid search parameters for activations, batch size, epochs and layers (both number of layers and sizes per layer) as well as the cross-validation folds and validation split during training.
                   
@@ -145,6 +145,7 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
         parametrizations are required
         - edit-cog-source-params: Whether to edit parameters of the cognitive source. In general, this is only required when
                                 in the case of a multi-feature source, not all features are to be evaluated.
+        - scope: Specifies the scope for meta-parameters and -arguments (modalities, 'all'). Either 'all' (all installed embeddings/cog. sources) or 'config (configuration only). In the latter case, no automatic insertion of missing sources occurs. If  set to None (default), the scope is 'all' if the configuration is empty and 'config' after adding the first source-embedding pair(s).
 
             
     
@@ -185,8 +186,8 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
     - cognitive-sources: Lists imported cognitive sources along with their features (where applicable).
     
 - run: Run all or a subset of experiments specified in a configuration. The parameters `embeddings`, `modalities` and `cognitive-sources` correspond to `config experiment`. Note that `cognitive-features` is a nested list that must specify features
-for all cognitive-sources. Each inner list must be specified as semicolon-separated string within quotes.  
-    Call: `run [embeddings=[all]] [modalities=None] [cognitive-sources=[all]] [cognitive-features=None] [baselines=True]`
+for all cognitive-sources. Each inner list must be specified as semicolon-separated string within quotes. If `legacy` is True, do not use dropout or batch regularization, as in the original implementation. If `cache_random` is set, random baselines are reused for embeddings of identical dimensionality.
+    Call: `run [processes=None] [embeddings=[all]] [modalities=None] [cognitive-sources=[all]] [cognitive-features=None] [baselines=True] [legacy=False] [cache_random=False]`
 
 - update
     - vocabulary: Scans all imported cognitive sources with word-level aggregation and updates the vocabulary file.
@@ -199,13 +200,14 @@ for all cognitive-sources. Each inner list must be specified as semicolon-separa
                  associated and evaluated during the run. Evaluates the results of the last run by default. Results are printed to the
                  shell and stored in the reports directory of the results path.
 
-    Call: `significance [run-id=0] [modalities=[eye-tracking, eeg, fmri]] [alpha=0.01 test=Wilcoxon]`
+    Call: `significance [run-id=0] [modalities=[eye-tracking, eeg, fmri]] [alpha=0.01] [test=Wilcoxon]`
 
     Parameters:
     - run-id: Either 0 for the last experimental run or any run-id before the current run-id of the configuration.
-    - modalities: Modalities for which significane is to be termined
-    - alpha: Alpha for significance computation
-    - test: Significance test. Currently, only the Wilcoxon rank-sum test is implemented (implementation of the Wilcoxon test for NLP provided by [Dror et al. (2018)](https://github.com/rtmdrr/testSignificanceNLP)).
+    - modalities: Modalities for which significane is to be termined.
+    - alpha: Alpha for significance computation.
+    - num-hypotheses: If not None, do not infer number of hypotheses from results but use specified value for bonferroni correction. This is necessary when hypotheses are spread across multiple configurations for practical reasons.
+    - test: Significance test. A two-sided Wilcoxon rank-sum test and a one-sided paired permutation test are supported.
 
 - aggregate: Aggregate the significance test results of an ecxperimental run. This will output how many of your hypotheses are accepted under the Bonferroni correction (see paper for detailed description).
      
@@ -214,7 +216,7 @@ for all cognitive-sources. Each inner list must be specified as semicolon-separa
      Parameters:
     - run-id: Either 0 for the last experimental run or any run-id before the current run-id of the configuration.
     - modalities: Modalities for which significane is to be termined
-    - test: Significance test. Currently, only the Wilcoxon rank-sum test is implemented
+    - test: Test, of which results are to be used
 
 - report: Perform significance testing and result aggregation, and generate a HTML or PDF report tabulating and plotting statistics.
      
@@ -224,13 +226,16 @@ for all cognitive-sources. Each inner list must be specified as semicolon-separa
     - run-id: Either 0 for the last experimental run or any run-id before the current run-id of the configuration.
     - modalities: Modalities for which significane is to be termined
     - alpha: Alpha for significance computation
+    - num-hypotheses: If not None, do not infer number of hypotheses from results but use specified value for bonferroni correction. This is necessary when hypotheses are spread across multiple configurations for practical reasons.
     - test: Significance test. Currently, only the Wilcoxon rank-sum test is implemented
     - precision: Number of decimal points in report (except for bonferroni alpha)
     - average-multi-hypothesis: Average multi-hypothesis (multi-feature or multi-subject) results.
     - history-plots: Whether to include training history plots (note: significantly increases report size when number of experiments is large.
     - features: Whether to include the feature column in detail tables.
-    - heatmaps: Whether to include word/sentence to embedding per-source error heatmaps.
-    - heatmaps-sample-n: If not None, randomly sample n words/sentences. Show all otherwise
+    - err-tables: Whether to include word/sentence to embedding per-source error heatmaps.
+    - err-tables-sample-n: If not None, randomly sample n words/sentences. Show all otherwise
+    - err-tables-discard-na: If True (default: False), only keep rows with values for all embeddings. Occurs *before* sampling.
+    - export-err-tables: If True and err-tables == True, export error DataFrames (basis of heatmap tables) as gzipped parquet to report directory. Requires pyarrow or fastparquet. Sampling and discarding of NaNs does not affect export. 
     - html: Whether to generate a HTML report (stored in the reports directory of the results path)
     - open-html: Whether to open the HTML report with the default browser. Note: In case of remote access, this requires a server-side installation of a browser and X11 forwarding.
     - pdf: Whether to generate a PDF version of the HTML report (stored in the reports directory of the results path)
@@ -281,7 +286,7 @@ EEG:
 
 fMRI:
 
-``word v1 v2 v3 v4 v5 ...``  
+``word e1 e2 e3 e4 e5 ...``  
 ``his 0.5394774791900334 0.4356708610374691 0.523294558226597 0.5059544824545096 0.466957449316214 ...``
 
 Eye-tracking:
@@ -378,7 +383,19 @@ The following table contains reference results for the modality EEG for some of 
 
 * ELMo relies on the embeddings provided by the allennlp library, thus custom ELMo embeddings for words and sentences must be generated externally and imported as custom embeddings.
 
-* BERT word embeddings rely on bert-as-service. This is due to the fact that at the time of writing, we found no way to obtain OOV words using the transformer libary. BERT sentence embeddings are generated using the transformers library.
+* BERT word and sentence embeddings rely on bert-as-service. This is due to the fact that at the time of writing, we found no way to obtain OOV words using the transformer libary.
 
 ## Testing and Development
 In order to run the tests, you need to download the [test_data](https://drive.google.com/open?id=1f0hFulGIwqf6FRbPCv14d6yiEXh6WI49) and extract the archive into the `tests` directory. Note that testing coverage is fairly minimal at present time.
+
+## Code references
+- Drop highly correlated features: https://chrisalbon.com/machine\_learning/feature\_selection/drop\_highly\_correlated\_features/
+- List directory tree structure: https://stackoverflow.com/a/49912639
+- Download progress bar https://sumit-ghosh.com/articles/python-download-progress-bar/
+- File chunking : https://stackoverflow.com/a/312464
+- Traceback of warnings: https://stackoverflow.com/a/22376126
+- Explode pandas df column with list values: https://stackoverflow.com/a/53218939
+- Unmerged prompt-toolkit widget: https://github.com/prompt-toolkit/python-prompt-toolkit/pull/724
+- Full-screen prompt-toolkit overlay based on: https://github.com/prompt-toolkit/python-prompt-toolkit/blob/master/examples/full-screen/simple-demos/focus.py
+- Test jsonable: https://stackoverflow.com/a/42033176
+- Less paging from Python: https://chase-seibert.github.io/blog/2012/10/31/python-fork-exec-vim-raw-input.html

@@ -116,7 +116,7 @@ COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1ouonaByYn2cnDAWihnQ3cGmM
 @argument("network", type=str, description="Use a multi-layer perceptron with Dropout and BatchNormalization ('mlp', default) or \
                                             a 1D CNN ('cnn') with MaxPooling after each layer and BatchNormalization (Keras default parameters otherwise). \
                                             If CNN, at least two hidden layers must be specified and the last hidden layer is considered a Dense layer.")
-@argument("legacy", type=bool, description="If True, use legacy mode when network is MLP (no Dropout, no BatchRegularization). Defaults to False") 
+@argument("legacy", type=bool, description="If True, use legacy mode when network is MLP (no Dropout, no BatchRegularization). Defaults to None (yielding True for word and False for sentence level)") 
 def run(embeddings=['all'],
         modalities=None,
         cognitive_sources=['all'],
@@ -126,10 +126,11 @@ def run(embeddings=['all'],
         baselines=True,
         cache_random=False,
         network='mlp',
-        legacy=False):
+        legacy=None):
     '''
     Run parallelized evaluation of single, selected or all combinations of embeddings and cognitive sources.
     '''
+
     ctx = context.get_context()
     configurations_path = ctx.configurations_path
     configuration = ctx.open_config
@@ -142,6 +143,13 @@ def run(embeddings=['all'],
         return
 
     config_dict = _open_config(configuration, configurations_path)
+    if legacy is None:
+        if config_dict['type'] == 'word':
+            legacy = True
+            cprint('Using pipeline *without* dropout and batch normalization. Set legacy = False to override.', 'yellow')
+        elif config_dict['type'] == 'sentence':
+            legacy = False
+            cprint('Using pipeline *with* dropout and batch normalization. Set legacy = True to override.', 'yellow')
 
     config_dict = commands.run(configuration,
                                config_dict,
@@ -295,7 +303,7 @@ class Config:
     @argument('baselines', type=bool, description='Include random baselines. Note that if random baselines were included previously, changes are applied to them in any case.')
     @argument('single_edit', type=bool, description='Whether to edit embedding specifics one by one or all at once.')
     @argument('edit_cog_source_params', type=bool, description='Whether to edit parameters of the specified cognitive sources.')
-    @argument('scope', type=str, description="Specifies the scope for meta-parameters and -arguments ('all', modalities). "
+    @argument('scope', type=str, description="Specifies the scope for meta-parameters and -arguments (modalities, 'all'). "
                                              "Either 'all' (all installed embeddings/cog. sources) or 'config' (configuration only). "
                                              "In the latter case, no automatic insertion of missing sources occurs. If set to None (default), "
                                              "the scope is 'all' if the configuration is empty and 'config' after adding the first source-embedding pair(s).")
@@ -378,7 +386,7 @@ class Config:
 @argument('modalities', type=list, description='Modalities for which significance is to be termined (default: all applicable)')
 @argument('alpha', type=float, description='Alpha value')
 @argument('num_hypotheses', type=int, description='Number of hypotheses. Defaults to None, i.e. is inferred from the results associated with a run. Note: This needs to be specified manually if not all experiments of a modality are performed in the same run, otherwise, the Bonferroni correction is incorrect!')
-@argument('test', type=str, description='Significance test')
+@argument('test', type=str, description="Significance test: two-sided 'Wilcoxon' or one-sided 'Permutation' test, where embeddings are expected to outperform baselines.")
 def significance(run_id=0,
                  modalities=['eye-tracking', 'eeg', 'fmri'],
                  alpha=0.01,
@@ -412,8 +420,8 @@ def significance(run_id=0,
 
 @command
 @argument('run_id', type=int, description='Run ID to be aggregated. Defaults to 0, treated as last run (run_id - 1).')
-@argument('modalities', type=str, description='Modalities for which significance is to be termined (default: all applicable)')
-@argument('test', type=str, description='Significance test')
+@argument('modalities', type=str, description='Modalities for which significance is to be determined (default: all applicable)')
+@argument('test', type=str, description="Significance test results to be aggregated ('Wilcoxon' or 'Permutation').")
 def aggregate(run_id=0,
               modalities=['eye-tracking', 'eeg', 'fmri'],
               test="Wilcoxon",
@@ -711,7 +719,7 @@ def properties():
 @argument('modalities', type=list, description='Modalities for which significance is to be termined (default: all applicable)')
 @argument('alpha', type=float, description='Alpha value')
 @argument('num_hypotheses', type=int, description='Number of hypotheses. Defaults to None, i.e. is inferred from the results associated with a run. Note: This needs to be specified manually if not all experiments of a modality are performed in the same run, otherwise, the Bonferroni correction is incorrect!')
-@argument('test', type=str, description='Significance test')
+@argument('test', type=str, description="Significance test: two-sided 'Wilcoxon' or one-sided 'Permutation' test, where embeddings are expected to outperform baselines.")
 @argument('precision', type=int, description='Number of decimal points in report (except for bonferroni alpha)')
 @argument('average_multi_hypothesis', type=bool, description='Average multi-hypothesis (multi-feature or multi-subject) results.')
 @argument('history_plots', type=bool, description='Whether to include training history plots (note: significantly increases report size when number of experiments is large.')

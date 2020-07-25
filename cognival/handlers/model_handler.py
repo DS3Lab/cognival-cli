@@ -57,7 +57,7 @@ def create_model_template(network, shape, legacy):
                 if not legacy:
                     model.add(Dropout(rate=0.5))
     
-            if not legacy:    
+            if not legacy:
                 model.add(BatchNormalization())
 
         elif network == 'cnn':
@@ -229,7 +229,7 @@ def model_cv(model_constr, modality, cognitive_data, feature, emb_type, cog_conf
     return grid, grid_result, ss, pca, minmax
 
 
-def model_predict(grid, ss, pca, minmax, words, X_test, y_test):
+def model_predict(grid, ss, pca, minmax, words, X_test, y_test, emb_type):
     '''
     Performs prediction for test data using given
     fitted GridSearchCV model.
@@ -240,7 +240,7 @@ def model_predict(grid, ss, pca, minmax, words, X_test, y_test):
     :param y_test: test labels (cognitive data)
     '''
     y_pred = grid.predict(X_test)
-    if y_test.shape[1] ==1:
+    if y_test.shape[1] == 1:
         y_pred = y_pred.reshape(-1,1)
     
     # Apply transformations fitted on training targets to test targets
@@ -252,13 +252,14 @@ def model_predict(grid, ss, pca, minmax, words, X_test, y_test):
         y_test = minmax.transform(y_test)
 
     # Clip test values outside of [0, 1] (unseen by MinMaxScaler upon fitting)
-    print('Test range before clipping:', np.min(y_test), np.max(y_test))
-    y_test = np.clip(y_test, 0.0, 1.0)
-    print('After clipping:', np.min(y_test), np.max(y_test))
-
+    if emb_type == 'sentence':
+        print('Test range before clipping:', np.min(y_test), np.max(y_test))
+        y_test = np.clip(y_test, 0.0, 1.0)
+        print('After clipping:', np.min(y_test), np.max(y_test))
     error = np.abs(y_test - y_pred)
 
     word_error = np.hstack([words,error])
+    
     if y_test.shape[1] ==1:
         mse = np.mean(np.square(error))
     else:
@@ -294,7 +295,8 @@ def model_loop(i, X_train, X_test, y_train, y_test, fold_size_lower_b, words_tes
         set_session(session)
         session.run(init)
         with session.as_default():
-            grid, grid_result, ss, pca, minmax = model_cv(create_model_template(network, X_train[i].shape, legacy),
+            model_f = create_model_template(network, X_train[i].shape, legacy)
+            grid, grid_result, ss, pca, minmax = model_cv(model_f,
                          modality,
                          cognitive_data,
                          feature,
@@ -313,7 +315,8 @@ def model_loop(i, X_train, X_test, y_train, y_test, fold_size_lower_b, words_tes
                  ss, pca, minmax,
                  words_test[i],
                  X_test[i],
-                 y_test[i])
+                 y_test[i],
+                 emb_type)
 
     tf.compat.v1.reset_default_graph()
     clear_session()

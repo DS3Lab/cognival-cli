@@ -31,7 +31,7 @@ class NubiaCognivalContext(context.Context):
             self.cog_sources_path = self.cognival_path / 'cognitive_sources'
             self.embeddings_path = self.cognival_path / 'embeddings'
             self.configurations_path = self.cognival_path / 'configurations'
-            self.results_path = self.cognival_path / 'embeddings'
+            self.results_path = self.cognival_path / 'results'
         else:
             self.cognival_path, self.embeddings_path, \
                 self.configurations_path, self.results_path = [None] * 4
