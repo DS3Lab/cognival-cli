@@ -1302,7 +1302,8 @@ def import_cognitive_sources(cognival_path,
 
         dimensionality = input_dialog(title='Cognitive source registration',
                                 text='Specify the dimensionality of the cognitive source. Leave empty if each dimension constitutes a separate \n'
-                                        'feature. Multi-dimensional multi-feature sources are not supported.').run()
+                                        'feature on the word level. Multi-dimensional multi-feature sources are only supported on the sentence-level, where each feature \n'
+                                        'must be contained in a separate file (and dimensionality must be specified).').run()
         
         if dimensionality is None:
             return
@@ -1312,7 +1313,7 @@ def import_cognitive_sources(cognival_path,
 
         dimensionality = int(dimensionality)
 
-        if dimensionality == 1:
+        if dimensionality == 1 or emb_type == 'sentence':
             features = input_dialog(title='Cognitive source registration',
                                     text='If the source has multiple features, specify below, separated by comma. Leave empty otherwise.').run()
         else:
@@ -1327,28 +1328,43 @@ def import_cognitive_sources(cognival_path,
             features = [x.strip() for x in features.split(',')]
 
         # Add config dictionary
-        cog_config['sources'][emb_type][modality][source] = {'file': '{}.txt'.format(source),
-                                                             'features': features,
-                                                             'dimensionality': dimensionality,
-                                                             'multi_file': False,
-                                                             'multi_hypothesis': False if features == 'single' else True,
-                                                             'stratified_sampling': False,
-                                                             'balance': False,
-                                                             'installed': True}
+        file_name = source
+        if features == 'single': 
+            cog_config['sources'][emb_type][modality][source] = {'file': '{}.txt'.format(source),
+                                                                 'features': 'single',
+                                                                 'dimensionality': dimensionality,
+                                                                 'multi_file': False,
+                                                                 'multi_hypothesis': False,
+                                                                 'stratified_sampling': False,
+                                                                 'balance': False,
+                                                                 'installed': True}
+        else:
+            cog_config['sources'][emb_type][modality][source] = {'file': '{}.txt'.format(source),
+                                                                 'hypothesis_to_feature': {'{}_{}'.format(source, feat):feat for feat in features},
+                                                                 'dimensionality': dimensionality,
+                                                                 'multi_file': False,
+                                                                 'multi_hypothesis': True,
+                                                                 'stratified_sampling': False,
+                                                                 'balance': False,
+                                                                 'installed': True}
+            if emb_type == 'sentence':
+                cog_config['sources'][emb_type][modality][source]['hypothesis_to_file'] = {'{}_{}'.format(source, feat):'{}_{}.txt'.format(source, feat) for feat in features}
+                file_name = '{}_<feature>'.format(source)
+
         # Add to index
         index = cog_config['index']
         index.append('{}_{}_{}'.format(emb_type, modality, source))
         cog_config['index'] = natsorted(list(set(index)))
     
         message_dialog(title='Cognitive source registration',
-                        text='Please ensure that the file has the following path and name after import:\n\n'
+                        text='Please ensure that the file has the following path and name format after import:\n\n'
                                 '{}/cognitive_sources/{}/{}.txt\n\n'
                                 'Afterwards, run the command "update-listings" to update the evaluation listings (vocabulary and sentences).\n'
                                 'Note: If you are evaluating word embeddings of type BERT or ELMo, or sentence embeddings, you also have to \n'
                                 'run "update-embeddings".'
                                 'The cognitive source will be available under {}_{}'.format(str(cognival_path),
                                                                                                 modality,
-                                                                                                source,
+                                                                                                file_name,
                                                                                                 modality,
                                                                                                 source)).run()
     
