@@ -310,7 +310,7 @@ EEG:
 
 fMRI:
 
-``"sentence" "v1" "v2" "v3" "v4" v5"` ...`
+``"sentence" "e1" "e2" "e3" "e4" e5"` ...`
 ``"Beekeeping encourages the conservation of local habitats." 0.5367426492864596 0.4926509188003651 ....``
 
 Eye-tracking:
@@ -386,7 +386,7 @@ The following table contains reference results for the modality EEG for some of 
 * BERT word and sentence embeddings rely on bert-as-service. This is due to the fact that at the time of writing, we found no way to obtain OOV words using the transformer libary.
 
 ## Testing and Development
-In order to run the tests, you need to download the [test_data](https://drive.google.com/open?id=1f0hFulGIwqf6FRbPCv14d6yiEXh6WI49) and extract the archive into the `tests` directory. Note that testing coverage is fairly minimal at present time.
+In order to run the tests, you need to download the [test_data](https://drive.google.com/uc?id=1-5h2VkAp-XTPONFFIOLBbQQwwhpvgKQc&export=download) and extract the archive into the `tests` directory. Note that testing coverage is fairly minimal at present time.
 
 ## Code references
 - Drop highly correlated features: https://chrisalbon.com/machine\_learning/feature\_selection/drop\_highly\_correlated\_features/
