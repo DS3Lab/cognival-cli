@@ -1298,7 +1298,7 @@ def test_model_predict(data, config_embedding, predict_result, set_seed):
                       'layers': [5],
                       'output_dim': 105})
     model.fit(X_train, y_train)
-    mse, w_e = model_predict(model, None, None, None, words_test, X_test, y_test)
+    mse, w_e = model_predict(model, None, None, None, words_test, X_test, y_test, 'word')
     assert mse == pytest.approx(mse_reference, rel=1e-3, abs=1e-3)
     # TODO: Restore test, requires refactoring 
     #assert np.array_equal(w_e[:10], w_e_reference)

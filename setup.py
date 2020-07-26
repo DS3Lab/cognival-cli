@@ -45,9 +45,9 @@ class PostInstallCommand(install):
 
 setuptools.setup(
     name="cognival",
-    version="0.2.1",
+    version="0.2.2",
     author="Multiple authors",
-    author_email="foo@bar.com",
+    author_email="",
     description="CogniVal cognitive embedding evaluation",
     packages=setuptools.find_packages(),
     classifiers=[
