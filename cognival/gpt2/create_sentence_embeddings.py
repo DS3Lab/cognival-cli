@@ -1,8 +1,8 @@
 import pandas as pd
 import gpt_embeddings
 
-inputs = pd.read_csv("./bert_sentences.txt", header=None, delimiter="\n")
-
+inputs = pd.read_csv("./sentence_vocabulary.txt", header=None, delimiter="\n")
+print(f'Finished reading {len(inputs)} input sentences')
 list_of_outputs = []
 
 for i in range(len(inputs)):
