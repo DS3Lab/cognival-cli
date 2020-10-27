@@ -312,6 +312,9 @@
                 "wehbe": {
                     "dimensionality": 256,
                     "features": "single",
+                    "kpca_n_dim": 256,
+                    "kpca_gamma": 0.01,
+                    "kpca_kernel": "poly",
                     "multi_file": true,
                     "multi_hypothesis": "subject",
                     "stratified_sampling": false,
@@ -331,6 +334,9 @@
                 "pereira_243": {
                     "dimensionality": 243,
                     "features": "single",
+                    "kpca_n_dim": 256,
+                    "kpca_gamma": 0.01,
+                    "kpca_kernel": "poly",
                     "multi_file": true,
                     "multi_hypothesis": "subject",
                     "stratified_sampling": false,
@@ -347,6 +353,9 @@
                 "pereira_384": {
                     "dimensionality": 243,
                     "features": "single",
+                    "kpca_n_dim": 256,
+                    "kpca_gamma": 0.01,
+                    "kpca_kernel": "poly",
                     "multi_file": true,
                     "multi_hypothesis": "subject",
                     "stratified_sampling": false,
@@ -368,6 +377,9 @@
                 "naturalspeech": {
                     "dimensionality": 32,
                     "features": "single",
+                    "kpca_n_dim": 256,
+                    "kpca_gamma": 0.01,
+                    "kpca_kernel": "poly",
                     "file": "natural.txt",
                     "multi_file": false,
                     "multi_hypothesis": false,
@@ -378,6 +390,9 @@
                 "zuco": {
                     "dimensionality": 32,
                     "features": "single",
+                    "kpca_n_dim": 256,
+                    "kpca_gamma": 0.01,
+                    "kpca_kernel": "poly",
                     "file": "zuco.txt",
                     "multi_file": false,
                     "multi_hypothesis": false,
@@ -388,6 +403,9 @@
                 "zuco2": {
                     "dimensionality": 32,
                     "features": "single",
+                    "kpca_n_dim": 256,
+                    "kpca_gamma": 0.01,
+                    "kpca_kernel": "poly",
                     "file": "zuco2.txt",
                     "multi_file": false,
                     "multi_hypothesis": false,

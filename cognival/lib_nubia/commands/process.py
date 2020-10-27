@@ -590,6 +590,15 @@ def populate(configurations_path,
                                     "type": 'multivariate_output' if csource_dict['dimensionality'] > 1 else 'single_output'
                                     }
 
+                        kpca_n_dim =  csource_dict.get('kpca_n_dim', None)
+                        kpca_gamma = csource_dict.get('kpca_gamma', None)
+                        kpca_kernel = csource_dict.get('kpca_kernel', None)
+
+                        if kpca_n_dim:
+                            cdc_dict['kpca_n_dim'] = kpca_n_dim
+                            cdc_dict['kpca_gamma'] = kpca_gamma
+                            cdc_dict['kpca_kernel'] = kpca_kernel
+
                         config_dict['cogDataConfig'][key] = copy.deepcopy(cdc_dict)
                         config_dict['cogDataConfig'][key]['wordEmbSpecifics'] = {}
                     except KeyError:
