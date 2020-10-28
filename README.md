@@ -243,7 +243,7 @@ The last dialog box of the assistant will prompt the user regarding manual impor
 
 First, a name must be specified for addressing the embeddings in subsequent commands. Next, the name of the main embeddings file must be specified. Optionally, the name of the embeddings path can be customized. Following, the user is prompted with respect to the embeddings dimensionality, whether the embeddings are binary or textual. In the binary case, conversion from word2vec- and BERT-compliant formats can be performed (Note: BERT conversion requires at least 16GB of RAM). Embeddings can also be chunked to avoid memory errors, with the number of chunks being parametrizable.
 
-## Custom cognitive source import
+## Custom cognitive data source import
 Custom cognitive sources can be imported in a semi-automatic manner, in that the associated file must be placed manually in the corresponding path (shown by the assistant). 
 
 Call: `import cognitive-sources source=<name of the source>`
