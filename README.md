@@ -172,7 +172,7 @@ Note that the syntax is a simplified version of Python's, as strings and ints ca
                          Custom sources must be manually placed in the path indicated by the assistant.
                          
         CogniVal sources: `import cognitive-sources`  
-        Custom source: `import cognitive-sources source=yoursource`
+        Custom cognitive data source: `import cognitive-sources source=yoursource`
     
     - embeddings: Import and preprocess default embeddings (see CogniVal paper) as well as custom embeddings (word2vec compliant text/binary or BERT compliant). Allows to directly associate random baselines with the embeddings.
 
