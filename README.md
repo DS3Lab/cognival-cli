@@ -216,7 +216,7 @@ for all cognitive-sources. Each inner list must be specified as semicolon-separa
 
 - report: Perform significance testing and result aggregation, and generate a HTML or PDF report tabulating and plotting statistics.
      
-     Call: `significance [run_id=0] [modalities=[eye-tracking, eeg, fmri]] [alpha=0.01] [test=Wilcoxon] [html=True] [open-html=False] [pdf=False] [open-pdf=False]`
+     Call: `report [run_id=0] [modalities=[eye-tracking, eeg, fmri]] [alpha=0.01] [test=Wilcoxon] [html=True] [open-html=False] [pdf=False] [open-pdf=False]`
 
      Parameters:
     - run_id: Either 0 for the last experimental run or any run_id before the current run_id of the configuration.
