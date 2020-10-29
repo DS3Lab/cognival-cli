@@ -5,6 +5,8 @@ Nora Hollenstein, Antonio de la Torre, Ce Zhang & Nicolas Langer. "CogniVal: A F
 
 For practical purposes, this tool should be used. It is based on the original code from the above paper, which can be found [here](https://github.com/DS3Lab/cognival). Note that there are some changes as well as fixed issues compared with the original version. See the README of the corresponding repository for details.
 
+A full tutorial is provided in `cognival_tutorial.pdf`.
+
 **Notes**:
 
 * CogniVal is in active (and relatively early) development and testing coverage is as of yet low, thus we highly recommend that you take the following precautions:
