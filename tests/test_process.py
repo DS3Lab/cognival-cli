@@ -42,7 +42,7 @@ def test_process_and_write_results(fixture_process_and_write_results, results_pr
 
 
 def test_insert_config_dict(fixture_insert_config_dict, results_insert_config_dict):
-    assert insert_config_dict(**{**fixture_insert_config_dict, 'emb_type':'word'}) == results_insert_config_dict
+    assert insert_config_dict(**{**fixture_insert_config_dict}) == results_insert_config_dict
 
 
 def test_resolve_cog_emb(fixture_resolve_cog_emb, results_resolve_cog_emb):
