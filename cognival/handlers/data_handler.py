@@ -223,7 +223,8 @@ def data_handler(mode, config, word_embedding, cognitive_data, feature, truncate
                                     sep=" ",
                                     quotechar=None,
                                     quoting=csv.QUOTE_NONE,
-                                    doublequote=False)
+                                    doublequote=False,
+                                    index_col=False)
 
     # In case it's a single output cogData we just need the single feature
     if config['cogDataConfig'][cognitive_data]['type'] == "single_output":
@@ -247,6 +248,10 @@ def data_handler(mode, config, word_embedding, cognitive_data, feature, truncate
                             encoding="utf-8", quoting=csv.QUOTE_NONE, skiprows=skip_rows, names=['word'] + ['x_{}'.format(idx + 1) for idx in range(dimensionality)])
 
         # Left (outer) Join to get wordembedding vectors for all words in cognitive dataset
+        #print("Hello hello")
+        #print(df_cognitive_data.dtypes)
+        #print("Hello there")
+        #print(df_cognitive_data['word'])
         df_join = pd.merge(df_cognitive_data, df_word_embedding, how='left', on=['word'])
 
     df_join.dropna(inplace=True)
