@@ -1002,7 +1002,8 @@ def update_vocabulary(cog_sources_path,
                             quoting=csv.QUOTE_NONE,
                             doublequote=False,
                             keep_default_na=False)
-        
+        if(str(source_path) == "/home/lvkleis/.cognival/cognitive_sources/eye-tracking/dutchgeco.txt"):
+            print(df.head)
         # Determine if any NaNs in word column, warn accordingly
         is_nan_series = df['word'].isnull()
         if is_nan_series.values.any():
@@ -1012,8 +1013,13 @@ def update_vocabulary(cog_sources_path,
             
         # Fill NaNs and perform inplace set union with new vocabulary set
         df.fillna('', inplace=True)
+        print('belangstelling' in df['word'])
         new_vocab |= set(df['word'])
-
+        print("DF")
+        print('belangstelling' in df['word'])
+        print('Set')
+        print('belangstelling' in set(df['word']))
+        print('belangstelling' in new_vocab)
     new_vocab_list = sorted([x for x in new_vocab if x])
     new_len = len(new_vocab_list)
 
@@ -1030,7 +1036,7 @@ def update_vocabulary(cog_sources_path,
     diff_list = ', '.join(sorted(list((old_vocab | new_vocab) - (old_vocab & new_vocab))))
     if diff_list:
         cprint('Diff: {}'.format(diff_list))
-        
+    print('belangstelling' in new_vocab_list)    
     return new_vocab_list
 
 

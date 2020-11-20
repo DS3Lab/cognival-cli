@@ -1,4 +1,5 @@
 import csv
+from tqdm import tqdm
 from string import punctuation
 def remove_punct(string):
     """remvoes leading and trailing punctuation in tokens. This happen due to the different tolenization used when
@@ -8,12 +9,16 @@ def remove_punct(string):
     # special case for geco: remove "...any charactes" e.g. secretary....you
     string = string.split("...")[0]
     string = string.split('."')[0]
+    string = string.split(',"')[0]
+    string = string.split('!"')[0]
+
+    
     return string
 # Set file name
 # Download data here: http://expsy.ugent.be/downloads/geco/
 geco_original = "dutchgeco.csv"
-output_raw = open("dutch_geco_raw.txt", "w")
-output_scaled = open("dutch_geco_scaled.txt", "w")
+output_raw = open("dutch_geco2_raw.txt", "w")
+output_scaled = open("dutch_geco2_scaled.txt", "w")
 tokens = []
 feature_names = []
 subjects = []
@@ -25,13 +30,7 @@ with open(geco_original) as csv_file:
     # select eye-tracking features
     feature_names = [header[12], header[19], header[28], header[46], header[51], header[53], header[56]]
     print("Features:", feature_names)
-    i = 0
-    for row in csv_reader:
-        if(i % 100 == 0):
-            print(i)
-        if(i > 1000):
-            break
-        i+=1
+    for row in tqdm(csv_reader):
         subject = [row[0]]
         # lowercasing all tokens
         word = row[11].lower()

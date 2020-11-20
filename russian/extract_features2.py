@@ -8,6 +8,8 @@ def remove_punct(string):
     # special case for geco: remove "...any charactes" e.g. secretary....you
     string = string.split("...")[0]
     string = string.split('."')[0]
+    string = string.split("!")[0]
+    string = string.split(","[0])
     return string
 # Set file name
 # Download data here: http://expsy.ugent.be/downloads/geco/
@@ -19,21 +21,21 @@ feature_names = []
 subjects = []
 # Read CSV with original gaze data
 with open(geco_original) as csv_file:
-    csv_reader = csv.reader(csv_file, delimiter=',')
+    csv_reader = csv.reader(csv_file, delimiter='\t')
     line_count = 0
     header = next(csv_reader, None)
+    print(header)
     # select eye-tracking features
-    feature_names = [header[12], header[19], header[28], header[46], header[51], header[53], header[56]]
+    feature_names = [header[4], header[5], header[6], header[7], header[8]]
     print("Features:", feature_names)
     i = 0
     for row in csv_reader:
-        print(i)
         i+=1
         subject = [row[0]]
         # lowercasing all tokens
-        word = row[10].lower()
-        word = [remove_punct(word)]
-        features = [row[12], row[19], row[28], row[46], row[51], row[53], row[56]]
+        word = row[2].lower()
+        word = remove_punct(word)
+        features = [row[4], row[5], row[6], row[7], row[8]]
         tokens.append(subject + word + features)
         if subject not in subjects:
             subjects.append(subject)
@@ -43,15 +45,19 @@ print("word", " ".join(feature_names), file=output_raw)
 print("word", " ".join(feature_names), file=output_scaled)
 types = {}
 # Get all word types for each subject
+print(tokens)
 for token in tokens:
     features = []
     for feat in token[2:]:
+        print(feat)
         # unknown feature values become 0
-        if feat == ".":
+        if feat == "." or feat == "NA":
             feat = 0.0
+            
         else:
             feat = float(feat)
         features.append(feat)
+    print(token)
     id = token[0]+"_"+token[1]
     if id not in types:
         types[id] = (features, 1)

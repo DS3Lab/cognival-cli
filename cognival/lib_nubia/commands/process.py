@@ -127,7 +127,7 @@ def filter_config(embedding_registry,
             not_installed_str += '- {}\n'.format(emb)
         
         if random_baseline:
-            if not rand_emb:
+            if not 'rand_emb' in vars():
                 no_rand_emb_str += '- {}\n'.format(emb)
             else:
                 emb_to_random_dict[emb] = rand_emb
