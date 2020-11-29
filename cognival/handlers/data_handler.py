@@ -1,7 +1,7 @@
 import collections
 import csv
 from pathlib import Path
-
+import pdb
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import KFold, StratifiedKFold
@@ -396,7 +396,10 @@ def data_handler(mode, config, stratified_sampling, balance, word_embedding, cog
                                 df_word_embedding,
                                 emb_type,
                                 chunk_number=16)
-
+        print("Different DFs")
+        print(df_join.head)
+        print(df_cognitive_data.head)
+        print(df_word_embedding.head)
     df_join.dropna(inplace=True)
     
     if stratified_sampling:
@@ -417,13 +420,23 @@ def data_handler(mode, config, stratified_sampling, balance, word_embedding, cog
     strings = np.array(strings, dtype='str').reshape(-1,1)
 
     df_join.drop([emb_type], axis=1, inplace=True)
-
+    print("DF Join: ")
+    print(df_join.dtypes)
+    print(df_join.head)
     if config['cogDataConfig'][cognitive_data]['type'] == "single_output":
         y = df_join[feature]
         y = np.array(y, dtype='float').reshape(-1, 1)
 
         X = df_join.drop(feature, axis=1)
-        X = np.array(X, dtype='float')
+        try:
+          X = np.array(X, dtype='float')
+        except:
+            print("Something went wrong!")
+            pdb.set_trace()
+            print(df_word_embedding.head)
+            print(X)
+            print(word_embedding)
+            print(cognitive_data)
     else:
         features = df_cognitive_data.columns[1:]
         y = df_join[features]

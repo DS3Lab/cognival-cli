@@ -22,5 +22,5 @@ if __name__=="__main__":
   outputs = pd.DataFrame(list_of_outputs)
 
   result = pd.concat([input_df, outputs], axis=1)
-  result.to_csv("result.txt", header=None)
+  result.to_csv("result.txt", header=None, sep=" ", index_col=None)
   print("Finished! Embeddings written to result.txt")

@@ -208,6 +208,8 @@ class List:
         ctx = context.get_context()
         debug = ctx.debug
         embedding_registry = ctx.embedding_registry
+        print("Embedding registry is")
+        print(embedding_registry)
         formatted_list = commands.list_embeddings(debug, embedding_registry)
 
         page_list([x.encode('utf-8') for x in formatted_list])

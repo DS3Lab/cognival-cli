@@ -1398,7 +1398,8 @@ def import_embeddings(x,
         associate_rand_emb = yes_no_dialog(title='Random baseline generation',
                                             text='Do you wish to compare the embeddings with random baselines of identical dimensionality? \n').run()
     local = False                                   
-
+    download = None
+    folder=None
     # Download all embeddings
     if x == 'all':
         for emb in embedding_registry['proper']:
