@@ -7,9 +7,11 @@ def remove_punct(string):
     string = string.strip(punctuation)
     # special case for geco: remove "...any charactes" e.g. secretary....you
     string = string.split("...")[0]
-    string = string.split('."')[0]
+    string = string.split('.')[0]
     string = string.split("!")[0]
-    string = string.split(","[0])
+    string = string.split(",")[0]
+    string = string.split('\"')[0]
+    string = string.split('?')[0]
     return string
 # Set file name
 # Download data here: http://expsy.ugent.be/downloads/geco/
@@ -26,7 +28,7 @@ with open(geco_original) as csv_file:
     header = next(csv_reader, None)
     print(header)
     # select eye-tracking features
-    feature_names = [header[4], header[5], header[6], header[7], header[8]]
+    feature_names = [header[4], header[5], header[6], header[7], header[8], header[10], header[11], header[12]]
     print("Features:", feature_names)
     i = 0
     for row in csv_reader:
@@ -34,8 +36,8 @@ with open(geco_original) as csv_file:
         subject = [row[0]]
         # lowercasing all tokens
         word = row[2].lower()
-        word = remove_punct(word)
-        features = [row[4], row[5], row[6], row[7], row[8]]
+        word = [remove_punct(word)]
+        features = [row[4], row[5], row[6], row[7], row[8], row[10], row[11], row[12]]
         tokens.append(subject + word + features)
         if subject not in subjects:
             subjects.append(subject)
@@ -45,11 +47,9 @@ print("word", " ".join(feature_names), file=output_raw)
 print("word", " ".join(feature_names), file=output_scaled)
 types = {}
 # Get all word types for each subject
-print(tokens)
 for token in tokens:
     features = []
     for feat in token[2:]:
-        print(feat)
         # unknown feature values become 0
         if feat == "." or feat == "NA":
             feat = 0.0
@@ -57,7 +57,6 @@ for token in tokens:
         else:
             feat = float(feat)
         features.append(feat)
-    print(token)
     id = token[0]+"_"+token[1]
     if id not in types:
         types[id] = (features, 1)

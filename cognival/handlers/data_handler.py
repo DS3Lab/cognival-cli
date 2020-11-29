@@ -57,7 +57,7 @@ def chunk(input_path_name,
                         f_out.write(next(f))
                     except StopIteration:
                         break
-                print()
+                    print()
 
 
 def update(left_df, right_df, on_column, columns_to_omit, whole_row):
@@ -244,9 +244,11 @@ def data_handler(mode, config, word_embedding, cognitive_data, feature, truncate
 
         
         with open(Path(config['PATH']) / config[emb_key][word_embedding]["path"]) as f:
+            if truncate_first_line:
+                header_line = next(f)
             first_line = next(f)
         dimensionality = len(first_line.split(" ")) - 1
-        
+         
         df_word_embedding = pd.read_csv(Path(config['PATH']) / config[emb_key][word_embedding]["path"], sep=" ",
                             encoding="utf-8", quoting=csv.QUOTE_NONE, skiprows=skip_rows, names=['word'] + ['x_{}'.format(idx + 1) for idx in range(dimensionality)])
         
@@ -255,15 +257,18 @@ def data_handler(mode, config, word_embedding, cognitive_data, feature, truncate
         #print(df_word_embedding)
         #print(len(df_word_embedding))
         # Left (outer) Join to get wordembedding vectors for all words in cognitive dataset
-        #print("Hello hello")
-        #print(df_cognitive_data.dtypes)
-        #print("Hello there")
-        #print(df_cognitive_data['word'])
-        df_join = pd.merge(df_cognitive_data, df_word_embedding, how='left', on=['word'])
-        if(len(df_join) == 0):
+        try:
+            df_join = pd.merge(df_cognitive_data, df_word_embedding, how='left', on=['word'])
+        except:
+            print(Path(config['PATH']) / config[emb_key][word_embedding]["path"])
+            print(dimensionality)
+            print(skip_rows)
+            print("word embedding types")
             print(word_embedding)
-            print(df_cognitive_data.head)
+            print(df_word_embedding.dtypes)
             print(df_word_embedding.head)
+            print("cog data types")
+            print(df_cognitive_data.dtypes)   
         #print(df_cognitive_data.head)
         #print(df_word_embedding.head)
     df_old = df_join.copy()    
