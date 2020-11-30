@@ -1,14 +1,23 @@
 import pandas as pd
-from transformers import GPT2Tokenizer, GPT2Model
+import importlib
 import torch
-
+import sys
+import transformers
 if __name__=="__main__":
+  model = sys.argv[1]
+  model_specific = sys.argv[2]
+  tokenizer_name = model + "Tokenizer"
+  model_name = model + "Model"
+  
+  exec("from transformers import %s" % tokenizer_name)
+  exec("from transformers import %s" % model_name)
+  exec("tokenizer = %s.from_pretrained(model_specific)" % tokenizer_name)
+  exec("model = %s.from_pretrained(model_specific, return_dict=True)" % model_name)
+ 
   input_df = pd.read_csv("./sentence_vocabulary.txt", header=None, delimiter="\n")
   print(f'Finished reading {len(input_df)} input sentences')
   list_of_outputs = []
 
-  tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-  model = GPT2Model.from_pretrained('gpt2', return_dict=True)
   for i in range(len(input_df)):
     print(f'Calculating embedding for sentence nr. {i}')
   
