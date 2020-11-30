@@ -4,15 +4,16 @@ import torch
 import sys
 import transformers
 if __name__=="__main__":
-  model = sys.argv[1]
-  model_specific = sys.argv[2]
+  
+  model = sys.argv[1] #Name of the huggingface model
+  vocab_file = sys.argv[2] #Name of the relevant huggingface vocab file 
   tokenizer_name = model + "Tokenizer"
   model_name = model + "Model"
   
   exec("from transformers import %s" % tokenizer_name)
   exec("from transformers import %s" % model_name)
-  exec("tokenizer = %s.from_pretrained(model_specific)" % tokenizer_name)
-  exec("model = %s.from_pretrained(model_specific, return_dict=True)" % model_name)
+  exec("tokenizer = %s.from_pretrained(vocab_file)" % tokenizer_name)
+  exec("model = %s.from_pretrained(vocab_file, return_dict=True)" % model_name)
  
   input_df = pd.read_csv("./sentence_vocabulary.txt", header=None, delimiter="\n")
   print(f'Finished reading {len(input_df)} input sentences')
