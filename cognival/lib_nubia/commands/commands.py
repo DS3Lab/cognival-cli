@@ -21,6 +21,10 @@ import sys
 import re
 import shutil
 import subprocess
+import pandas as pd
+import importlib
+import torch
+import transformers
 
 from pathlib import Path
 from pprint import pprint
@@ -1377,6 +1381,122 @@ def import_cognitive_sources(cognival_path,
         cprint(path.displayable(), 'cyan')
     return cog_config
 
+def import_sentence_embeddings(x,
+                      which, 
+                      embedding_registry,
+                      path2embeddings,
+                      configurations_path,
+                      embeddings_path,                      
+                      force=False,
+                      log_only_success=False,
+                      are_set=False,
+                      associate_rand_emb=False,
+                      debug=False
+                      ):
+    emb_type = "sentence"
+    if not _check_cog_installed(configurations_path):
+        cprint('CogniVal sources not installed! Aborted ...', 'red')
+        return
+    model_name = input_dialog(title='Embedding registration',
+                            text="Please enter the model name").run()
+
+    vocab_file = input_dialog(title='Embedding registration',
+                            text="Please enter the dictionary name").run()
+    emb_name = input_dialog(title='Embedding registration',
+                                    text='Please enter a short name for the embeddings:'
+                            ).run()
+          
+        
+    if not emb_name:
+        emb_name = 'my_custom_embeddings'
+        cprint('No name specified, using "my_custom_embeddings" ...', 'yellow')
+
+    main_emb_file = f'{model_name}.txt'
+        
+    path = input_dialog(title='Embedding registration',
+                            text='Optionally specify the directory name for the embeddings. The path may specify more details. \n'
+                                    'If no string is specified, the name of the main embedding file (without extension) is used instead.').run()
+
+
+    if path == '':
+            folder = path = main_emb_file.rsplit('.', maxsplit=1)[0]
+    elif not path:
+            cprint('Aborted.', 'red')
+            return
+
+
+    emb_dim = input_dialog(title='Embedding registration',
+                            text="Please enter the embedding dimensionality").run()
+
+    embedding_registry['proper'][emb_name] = {'type': emb_type,
+                                                'url': "http://placeholder.com",
+                                                'dimensions': emb_dim,
+                                                'path': path,
+                                                'embedding_file': main_emb_file,
+                                                'installed': False,
+                                                'binary': True,
+                                                'binary_format': "elmo",
+                                                'binary_file': 'placeholder.txt',
+                                                'truncate_first_line': False,
+                                                'random_embedding': None}
+        
+        # Make mapping for current session (loaded from config upon next start)
+    path2embeddings[folder] = [emb_name]
+
+    # Check if embeddings already installed
+    if x in embedding_registry['proper'] and embedding_registry['proper'][x]['installed'] and not force:
+        if not log_only_success:
+            cprint('Embedding {} already imported. Use "force" to override'.format(emb_name), 'yellow')
+        return
+
+   # Get file name and paths
+    fname = main_emb_file 
+    fpath = embeddings_path / fname
+    fpath_extracted = embeddings_path / path / emb_type
+  
+
+    os.makedirs(fpath_extracted, exist_ok=True)
+    full_filepath = fpath_extracted / fname
+
+    tokenizer_name = model_name + "Tokenizer"
+    model_name_extended = model_name + "Model"
+    tokenizer = None
+    exec("from transformers import %s" % tokenizer_name)
+    exec("from transformers import %s" % model_name_extended)
+    print(f'tokenizer name is {tokenizer_name}')
+    ldict = {}
+    exec("tokenizer  = %s.from_pretrained(vocab_file)" %  tokenizer_name, locals(), ldict)
+    tokenizer = ldict['tokenizer']
+    exec("model = %s.from_pretrained(vocab_file, return_dict=True)" % model_name_extended, locals(), ldict)
+    model = ldict['model']
+
+    input_df = pd.read_csv("/home/lvkleis/cognivalsent/cognival/gpt2/sentence_vocabulary.txt", header=None, delimiter="\n")
+    print(f'Finished reading {len(input_df)} input sentences')
+    list_of_outputs = []
+    if not tokenizer:
+       exec("tokenizer = %s.from_pretrained(vocab_file)" % tokenizer_name)
+ 
+    for i in range(len(input_df)):
+      print(f'Calculating embedding for sentence nr. {i}')
+
+      inputs = tokenizer(input_df.iloc[i][0], return_tensors="pt")
+      outputs = model(**inputs)
+      last_hidden_states = outputs.last_hidden_state
+      sum = torch.mean(last_hidden_states, dim=1)
+
+      list_of_outputs.append(sum.detach().numpy()[0])
+
+    outputs = pd.DataFrame(list_of_outputs)
+
+    result = pd.concat([input_df, outputs], axis=1)
+    result.to_csv(full_filepath, header=None, sep=" ", index_col=None)
+    print(f'Finished! Embeddings saved to {full_filepath}')
+ 
+    for emb_name in path2embeddings[folder]:
+      embedding_registry['proper'][emb_name]['installed'] = True
+
+    return embedding_registry
+
 
 def import_embeddings(x,
                       which, 
@@ -1491,9 +1611,6 @@ def import_embeddings(x,
                                     'directory and \nregister them in {}/embedding_registry.json\n\n'
                                     'Please enter a short name for the embeddings:'.format(url, str(embeddings_path), str(configurations_path)),
                             ).run()
-        if emb_name is None:
-            cprint("Aborting ...", "red")
-            return
           
         emb_type = radiolist_dialog(title='Embedding registration',
                 text='Specify whether the embeddings are of type word or sentence embedding:',

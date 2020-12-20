@@ -612,6 +612,36 @@ class Import:
 
         if embedding_registry:
             ctx.save_configuration()
+    
+    @command()
+    @argument('x', type=str, description='Force removal and download', positional=True) #choices=list(CTX.embedding_registry['proper']))
+    @argument('force', type=bool, description='Force removal and download')
+    def sentence_embeddings(self, x, force=False, which='both', log_only_success=False, are_set=False, associate_rand_emb=None):
+        """
+        Download and import a default embedding (by name) or custom embedding (from URL)
+        """
+        ctx = context.get_context()
+        configurations_path = ctx.configurations_path
+        embeddings_path = ctx.embeddings_path
+        embedding_registry = ctx.embedding_registry
+        path2embeddings = ctx.path2embeddings
+        debug = ctx.debug
+
+        embedding_registry = commands.import_sentence_embeddings(x,
+                                         which,
+                                         embedding_registry,
+                                         path2embeddings,
+                                         configurations_path,
+                                         embeddings_path,
+                                         force,
+                                         log_only_success,
+                                         are_set,
+                                         associate_rand_emb,
+                                         debug)
+
+        if embedding_registry:
+            ctx.save_configuration()
+
 
 
     @command()
