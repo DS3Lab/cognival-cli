@@ -248,10 +248,23 @@ def data_handler(mode, config, word_embedding, cognitive_data, feature, truncate
                 header_line = next(f)
             first_line = next(f)
         dimensionality = len(first_line.split(" ")) - 1
-         
-        df_word_embedding = pd.read_csv(Path(config['PATH']) / config[emb_key][word_embedding]["path"], sep=" ",
+        if word_embedding=="fasttextrussian":
+            print("Hey ho captain joe")
+            df_word_embedding = pd.read_csv(Path(config['PATH']) / config[emb_key][word_embedding]["path"], sep=" ",
+                            encoding="utf-8", quoting=3, skiprows=skip_rows, names=['word'] + ['x_{}'.format(idx + 1) for idx in range(dimensionality)])
+        else:
+             df_word_embedding = pd.read_csv(Path(config['PATH']) / config[emb_key][word_embedding]["path"], sep=" ",
                             encoding="utf-8", quoting=csv.QUOTE_NONE, skiprows=skip_rows, names=['word'] + ['x_{}'.format(idx + 1) for idx in range(dimensionality)])
+
+            #print(f'skip rows {skip_rows}')
+        print("data types word emb")
+        print(df_word_embedding.dtypes)
+        print(df_word_embedding['word'])
+        print("data types cog source")
         
+        
+        print(df_cognitive_data.dtypes)
+        print(df_cognitive_data['word'])
         #print("word embedding: ")
         #print(word_embedding)
         #print(df_word_embedding)
@@ -278,7 +291,13 @@ def data_handler(mode, config, word_embedding, cognitive_data, feature, truncate
         print(df_word_embedding)
         print(df_word_embedding[df_word_embedding['word'] == 'zien'])
         print("before dropping")
+        print("Data types")
+        print(df_word_embedding.dtypes)
+        print(df_cognitive_data.dtypes)
+        print("That was the data types")
         print(df_old)
+
+
         print("after dropping")
         print(df_join.head)
     words = df_join['word']

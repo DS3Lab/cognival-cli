@@ -98,6 +98,8 @@ def run_parallel(config_dict,
         for option in options:
             random_embeddings = option["random_embedding"]
             rand_embeddings.append(random_embeddings)
+            print(option["wordEmbedding"])
+            print(option["truncate_first_line"])
             result_proper = pool.apply_async(cog_evaluate.run_single, args=('proper',
                                                                             config_dict,
                                                                             option["wordEmbedding"],

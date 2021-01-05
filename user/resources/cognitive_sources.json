@@ -10,7 +10,9 @@
                          "pereira",
                          "provo",
                          "geco",
-                         "dundee",
+                         "dutchgeco",
+			 "russiangeco",
+			 "dundee",
                          "cfilt-scanpath",
                          "cfilt-sarcasm",
                          "all"],
@@ -197,6 +199,37 @@
                 "hypothesis_per_participant": false,
                 "installed": false
             },
+	    "dutchgeco": {
+                "dimensionality": 1,
+                "features": [
+                    "WORD_AVERAGE_FIX_PUPIL_SIZE",
+                    "WORD_FIRST_RUN_FIXATION_%",
+                    "WORD_THIRD_RUN_FIXATION_%",
+                    "WORD_THIRD_FIXATION_Y",
+                    "WORD_LAST_FIXATION_Y",
+                    "WORD_SELECTIVE_GO_PAST_TIME",
+                    "WORD_SPILLOVER"
+		],
+                "file": "dutchgeco_scaled.txt",
+                "hypothesis_per_participant": false,
+                "installed": false
+            },
+             "russiangeco": {
+                "dimensionality": 1,
+                "features": [
+	            "IA_DWELL_TIME",
+                    "IA_FIRST_FIXATION_DURATION",
+                    "IA_FIRST_RUN_DWELL_TIME",
+                    "IA_FIRST_RUN_FIXATION_COUNT",
+                    "IA_FIXATION_COUNT",
+                    "IA_REGRESSION_IN",
+                    "IA_REGRESSION_OUT_FULL",
+		    "IA_REGRESSION_PATH_DURATION"
+                ],
+                "file": "russiangeco_scaled.txt",
+                "hypothesis_per_participant": false,
+                "installed": false
+            },
             "dundee": {
                 "dimensionality": 1,
                 "features": [
@@ -321,7 +354,9 @@
         "eye-tracking_ucl",
         "eye-tracking_provo",
         "eye-tracking_geco",
-        "eye-tracking_dundee",
+        "eye-tracking_dutchgeco",
+	"eye-tracking_russiangeco",
+	"eye-tracking_dundee",
         "eye-tracking_cfilt-scanpath",
         "eye-tracking_cfilt-sarcasm",
         "eye-tracking_all"

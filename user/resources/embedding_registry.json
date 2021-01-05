@@ -145,6 +145,38 @@
             "chunk_ending": ".txt",
             "random_embedding": null
         },
+	"fasttextdutch": {
+            "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.nl.300.vec.gz",
+            "dimensions": 300,
+            "path": "cc.nl.300",
+            "embedding_file": "cc.nl.300.txt",
+            "installed": false,
+            "binary": false,
+            "binary_format": null,
+            "binary_file": null,
+            "truncate_first_line": true,
+            "chunked": false,
+            "chunk_number": 0,
+            "chunked_file": null,
+            "chunk_ending": ".txt",
+            "random_embedding": "random-300-10"
+        },
+	"fasttextrussian":  {
+            "url": "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.ru.300.vec.gz",
+            "dimensions": 300,
+            "path": "cc.ru.300",
+            "embedding_file": "cc.ru.300.txt",
+            "installed": false,
+            "binary": false,
+            "binary_format": null,
+            "binary_file": null,
+            "truncate_first_line": true,
+            "chunked": false,
+            "chunk_number": 0,
+            "chunked_file": null,
+            "chunk_ending": ".txt",
+            "random_embedding": "random-300-10"
+        },
         "elmo": {
             "url": null,
             "dimensions": 1024,

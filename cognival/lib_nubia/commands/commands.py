@@ -111,7 +111,8 @@ warnings.formatwarning = custom_formatwarning
 
 NUM_BERT_WORKERS = 1
 COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1ouonaByYn2cnDAWihnQ3cGmMT6bJ4NaP'
-
+RUSSIAN_SOURCES_URL = 'https://drive.google.com/uc?id=1CpAbZYtNLxJ6SPj7HXFALPN7DibrVr6V'
+DUTCH_SOURCES_URL = 'https://drive.google.com/uc?id=1QFgbsujjINOrCPROrHNizjezlZdrLGLQ'
 def run(configuration,
         config_dict,
         resources_path,
@@ -1053,25 +1054,27 @@ def import_cognitive_sources(cognival_path,
 
     if source == 'cognival':
         if not cog_config['cognival_installed']:
-            fullpath = basepath / 'cognival_vectors.zip'
-            cprint("Retrieving CogniVal cognitive sources ...", "yellow")
-            gdown.cached_download(url, path=str(fullpath), quiet=False, postprocess=gdown.extractall)
-            cognival_dir = basepath / 'cognival-vectors'
-            subdirs = os.listdir(cognival_dir)
-            for subdir in subdirs:
-                shutil.move(str(cognival_dir / subdir), basepath)
-            os.remove(basepath / 'cognival_vectors.zip')
-            for path in ['__MACOSX', '.DS_Store', 'cognival-vectors']:
-                try:
-                    shutil.rmtree(basepath / path)
-                except NotADirectoryError:
-                    os.remove(basepath / path)
-            cog_config['cognival_installed'] = True
-            cognival_sources = set(cog_config['cognival_sources'])
-            for modality in cog_config['sources'].values():
-                for csource, source_props in modality.items():
-                    if csource in cognival_sources:
-                        source_props['installed'] = True
+              fullpath = basepath / 'cognival_vectors.zip'
+              cprint("Retrieving CogniVal cognitive sources ...", "yellow")
+              gdown.cached_download(url, path=str(fullpath), quiet=False, postprocess=gdown.extractall)
+              cognival_dir = basepath / 'cognival-vectors'
+              subdirs = os.listdir(cognival_dir)
+              for subdir in subdirs:
+                  shutil.move(str(cognival_dir / subdir), basepath)
+              os.remove(basepath / 'cognival_vectors.zip')
+              for path in ['__MACOSX', '.DS_Store', 'cognival-vectors']:
+                  try:
+                      shutil.rmtree(basepath / path)
+                  except NotADirectoryError:
+                      os.remove(basepath / path)
+              gdown.cached_download(DUTCH_SOURCES_URL, path=str(basepath / 'eye-tracking/dutchgeco_scaled.txt'), quiet=False)
+              gdown.cached_download(RUSSIAN_SOURCES_URL, path=str(basepath / 'eye-tracking/russiangeco_scaled.txt'), quiet=False)
+              cog_config['cognival_installed'] = True
+              cognival_sources = set(cog_config['cognival_sources'])
+              for modality in cog_config['sources'].values():
+                  for csource, source_props in modality.items():
+                      if csource in cognival_sources:
+                          source_props['installed'] = True
         else:
             cprint("CogniVal sources already present!", "green")
             return 
@@ -1340,7 +1343,7 @@ def import_embeddings(x,
         embedding_registry['proper'][emb_name] = {'url': url,
                                                 'dimensions': emb_dim,
                                                 'path': path,
-                                                'embedding_file': main_emb_file if not emb_binary else '{}.txt'.format(main_emb_file.rsplit('.', maxsplit=1)[0]),
+                                                'embedding_file': main_emb_file if not emb_binary else '{}.vec'.format(main_emb_file.rsplit('.', maxsplit=1)[0]),
                                                 'installed': False,
                                                 'binary': emb_binary,
                                                 'binary_format': emb_binary_format,
@@ -1403,6 +1406,12 @@ def import_embeddings(x,
             if fname.endswith('zip'):
                 with zipfile.ZipFile(fpath, 'r') as zip_ref:
                     zip_ref.extractall(fpath_extracted)
+                os.remove(fpath)
+            elif x == 'fasttextdutch' or x == 'fasttextrussian':
+                 # Assume gzipped bin (requires manually setting filename)
+                with gzip.open(fpath, 'rb') as f_in:
+                    with open(fpath_extracted / '{}.txt'.format(path), 'wb') as f_out:
+                        shutil.copyfileobj(f_in, f_out)
                 os.remove(fpath)
             elif fname.endswith('gz'):
                 # Assume gzipped bin (requires manually setting filename)
