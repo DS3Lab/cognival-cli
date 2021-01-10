@@ -1489,7 +1489,7 @@ def import_sentence_embeddings(x,
     outputs = pd.DataFrame(list_of_outputs)
 
     result = pd.concat([input_df, outputs], axis=1)
-    result.to_csv(full_filepath, header=None, sep=" ", index_col=None)
+    result.to_csv(full_filepath, header=None, sep=" ", index=False)
     print(f'Finished! Embeddings saved to {full_filepath}')
  
     for emb_name in path2embeddings[folder]:

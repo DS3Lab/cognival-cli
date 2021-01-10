@@ -362,7 +362,8 @@ def data_handler(mode, config, stratified_sampling, balance, word_embedding, cog
         else:
             skip_rows = 0
 
-        dimensions = config[emb_key][word_embedding]["dimensions"]
+        dimensions = int(config[emb_key][word_embedding]["dimensions"])
+        print(dimensions)
         
         if emb_type == 'word':
             df_word_embedding = pd.read_csv(Path(config['PATH']) / config[emb_key][word_embedding]["path"],
