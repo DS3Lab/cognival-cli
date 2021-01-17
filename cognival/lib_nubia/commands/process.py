@@ -100,9 +100,12 @@ def filter_config(embedding_registry,
             return
     else:
         cog_sources_list = cognitive_sources
+        print(cog_sources_list)
+
         if cognitive_features:
             cog_feat_list = [fl.split(';') for fl in cognitive_features]
         else:
+            print(config_dict['cogDataConfig'])
             cog_feat_list = [config_dict['cogDataConfig'][csource]['features'] for csource in cognitive_sources]
     
     if not cog_feat_list:

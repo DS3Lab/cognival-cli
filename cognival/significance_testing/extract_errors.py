@@ -8,21 +8,32 @@ from .testing_helpers import save_errors
 
 def extract_errors(run_id, modality, experiment, mapping_dict, input_dir, results_dir):
     embedding_path = Path(input_dir) / mapping_dict[experiment]['proper']
+    print("Hello there")
     try:
+        print("Konichiwa")
         random_path = Path(input_dir) / mapping_dict[experiment]['random']
     except KeyError:
         random_path = ''
     emb_type = mapping_dict[experiment]['type']
-    
+    print("Emb type")
+    print(emb_type)
+    print(random_path)
+
     embeddings_df = pd.read_csv(embedding_path / '{}.txt'.format(mapping_dict[experiment]['embedding']),
 				sep=" ",
 				encoding="utf-8",
 				quotechar='"',
 				quoting=csv.QUOTE_NONNUMERIC,
 				doublequote=True)
-
+    print(embeddings_df.head)
     try:
+        print("Hello?")
+        print(mapping_dict)
+        print(experiment)
+
         rand_emb_file = mapping_dict[mapping_dict[experiment]['random_name']]['embedding']
+        print("Buonjiorno")
+        print(rand_emb_file)
         random_df = pd.read_csv(random_path / '{}.txt'.format(rand_emb_file),
                                     sep=" ",
                                     encoding="utf-8",
@@ -31,6 +42,7 @@ def extract_errors(run_id, modality, experiment, mapping_dict, input_dir, result
                                     doublequote=True)
         rand_embs_available = True
     except (KeyError, FileNotFoundError):
+        print("there is an error")
         rand_embs_available = False
         #cprint('No results found for random embedding associated with {}, skipping ...'.format(experiment), 'red')
 

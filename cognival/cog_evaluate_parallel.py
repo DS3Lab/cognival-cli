@@ -68,6 +68,9 @@ def run_parallel(config_dict,
                 option["wordEmbedding"] = word_embedding if word_embedding in config_dict["cogDataConfig"][cognitive_data]['wordEmbSpecifics'] else None
                 if not option['wordEmbedding']:
                     continue
+                print("Whata re embedding and dict?")
+                print(word_embedding)
+                print(emb_to_random_dict)
                 option["random_embedding"] = emb_to_random_dict.get(word_embedding, None)
                 option["truncate_first_line"] = truncate_first_line
                 options.append(option)
@@ -112,6 +115,8 @@ def run_parallel(config_dict,
     try:
         for id_, option in enumerate(options):
             random_embeddings = option["random_embedding"]
+            print("Are there random embeddings?")
+            print(random_embeddings)
             rand_embeddings.append(random_embeddings)
             proper_params = [('proper',
                              config_dict,

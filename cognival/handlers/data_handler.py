@@ -382,6 +382,8 @@ def data_handler(mode, config, stratified_sampling, balance, word_embedding, cog
                                             names=[emb_type] + ['x_{}'.format(idx + 1) for idx in range(dimensions)])
 
         df_size_before = df_word_embedding.shape[0]
+        print("Word embedding initial")
+        print(df_word_embedding.head)
         df_word_embedding = df_word_embedding[df_word_embedding[emb_type].isin(df_cognitive_data[emb_type].values)]
         df_size_after = df_word_embedding.shape[0]
         cprint('{} / {} / {}'.format(cognitive_data, feature, word_embedding), color='yellow') 
@@ -399,8 +401,11 @@ def data_handler(mode, config, stratified_sampling, balance, word_embedding, cog
                                 chunk_number=16)
         print("Different DFs")
         print(df_join.head)
+        print("Cog data info")
         print(df_cognitive_data.head)
+        print(df_cognitive_data.dtypes)
         print(df_word_embedding.head)
+        print(df_word_embedding.dtypes)
     df_join.dropna(inplace=True)
     
     if stratified_sampling:

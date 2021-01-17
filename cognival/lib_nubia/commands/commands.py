@@ -161,6 +161,8 @@ def run(configuration,
     if not parametrization:
         return
 
+    print("What is the parametrization?")
+    print(parametrization)
     config_dict, embeddings_list, emb_to_random_dict, cog_sources_list, cog_source_to_feature = parametrization
 
     # Run parallelized evaluation and obtain results dictionary.
@@ -836,6 +838,7 @@ def significance(configuration,
                     try:
                         has_rand_emb = extract_errors(run_id, modality, experiment, mapping_dict, experiments_dir, avg_errors_dir)
                         if not has_rand_emb:
+                            print("Nuffin")
                             continue
                         hypothesis_counter[embed] += 1
                     except KeyError:
