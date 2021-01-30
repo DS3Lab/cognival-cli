@@ -161,8 +161,6 @@ def run(configuration,
     if not parametrization:
         return
 
-    print("What is the parametrization?")
-    print(parametrization)
     config_dict, embeddings_list, emb_to_random_dict, cog_sources_list, cog_source_to_feature = parametrization
 
     # Run parallelized evaluation and obtain results dictionary.
@@ -1473,21 +1471,20 @@ def import_sentence_embeddings(x,
     exec("model = %s.from_pretrained(vocab_file, return_dict=True)" % model_name_extended, locals(), ldict)
     model = ldict['model']
 
-    input_df = pd.read_csv("/home/lvkleis/cognivalsent/cognival/gpt2/sentence_vocabulary.txt", header=None, delimiter="\n")
+    input_df = pd.read_csv(configurations_path / 'standard_sentences.txt', header=None, delimiter="\n")
     print(f'Finished reading {len(input_df)} input sentences')
     list_of_outputs = []
     if not tokenizer:
        exec("tokenizer = %s.from_pretrained(vocab_file)" % tokenizer_name)
- 
-    for i in range(len(input_df)):
-      print(f'Calculating embedding for sentence nr. {i}')
+    with ProgressBar() as pb:
+      for i in pb(range(len(input_df))):
 
-      inputs = tokenizer(input_df.iloc[i][0], return_tensors="pt")
-      outputs = model(**inputs)
-      last_hidden_states = outputs.last_hidden_state
-      sum = torch.mean(last_hidden_states, dim=1)
+        inputs = tokenizer(input_df.iloc[i][0], return_tensors="pt")
+        outputs = model(**inputs)
+        last_hidden_states = outputs.last_hidden_state
+        sum = torch.mean(last_hidden_states, dim=1)
 
-      list_of_outputs.append(sum.detach().numpy()[0])
+        list_of_outputs.append(sum.detach().numpy()[0])
 
     outputs = pd.DataFrame(list_of_outputs)
 

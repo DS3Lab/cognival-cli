@@ -382,8 +382,6 @@ def data_handler(mode, config, stratified_sampling, balance, word_embedding, cog
                                             names=[emb_type] + ['x_{}'.format(idx + 1) for idx in range(dimensions)])
 
         df_size_before = df_word_embedding.shape[0]
-        print("Word embedding initial")
-        print(df_word_embedding.head)
         df_word_embedding = df_word_embedding[df_word_embedding[emb_type].isin(df_cognitive_data[emb_type].values)]
         df_size_after = df_word_embedding.shape[0]
         cprint('{} / {} / {}'.format(cognitive_data, feature, word_embedding), color='yellow') 
@@ -399,20 +397,12 @@ def data_handler(mode, config, stratified_sampling, balance, word_embedding, cog
                                 df_word_embedding,
                                 emb_type,
                                 chunk_number=16)
-        print("Different DFs")
-        print(df_join.head)
-        print("Cog data info")
-        print(df_cognitive_data.head)
-        print(df_cognitive_data.dtypes)
-        print(df_word_embedding.head)
-        print(df_word_embedding.dtypes)
     df_join.dropna(inplace=True)
     
     if stratified_sampling:
         df_join['source'] = df_join['source'].astype(int)
         for source, count in df_join['source'].value_counts().to_dict().items():
             if count < config['folds']:
-                #print("Source {} has too few elements, dropping ...".format(source))
                 df_join = df_join[df_join['source'] != source]
 
         sub_sources = df_join['source'].to_numpy()
@@ -426,9 +416,6 @@ def data_handler(mode, config, stratified_sampling, balance, word_embedding, cog
     strings = np.array(strings, dtype='str').reshape(-1,1)
 
     df_join.drop([emb_type], axis=1, inplace=True)
-    print("DF Join: ")
-    print(df_join.dtypes)
-    print(df_join.head)
     if config['cogDataConfig'][cognitive_data]['type'] == "single_output":
         y = df_join[feature]
         y = np.array(y, dtype='float').reshape(-1, 1)

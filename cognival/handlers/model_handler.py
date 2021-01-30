@@ -365,7 +365,6 @@ def model_handler(word_embedding,
     else:
         # Word error dimensionality of multi-dim output depends on whether PCA is performed (eeg, fmri)
         if emb_type == 'sentence' and  modality in ('eeg', 'fmri'):
-            print(cog_config) 
             word_error = np.array([emb_type] + ['e' + str(i) for i in range(cog_config['kpca_n_dim'])], dtype='str')
         else:
             word_error = np.array([emb_type] + ['e' + str(i) for i in range(1, y_test[0].shape[1]+1)], dtype='str')
