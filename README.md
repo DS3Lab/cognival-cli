@@ -399,3 +399,12 @@ In order to run the tests, you need to download the [test_data](https://drive.go
 - Full-screen prompt-toolkit overlay based on: https://github.com/prompt-toolkit/python-prompt-toolkit/blob/master/examples/full-screen/simple-demos/focus.py
 - Test jsonable: https://stackoverflow.com/a/42033176
 - Less paging from Python: https://chase-seibert.github.io/blog/2012/10/31/python-fork-exec-vim-raw-input.html
+
+## How to import embeddings from Huggingface
+In the cognival CLI:
+Import cognitive-sources
+Import sentence-embeddings GPT2
+When prompted(: Name: GPT2, dictionary name: gpt2, embeddings size: 768, directory name: None. Appropriate values can be looked up on Huggingface website)
+Wait for embedding generation to be completed
+In embedding_registry.json, remove the quotes from the dimensionality entry to turn it into an int, e.g. “768” to 768.
+Open a new configuration and run experiments as usual. 
