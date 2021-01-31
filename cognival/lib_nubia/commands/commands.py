@@ -103,6 +103,7 @@ from .strings import EXAMPLE_COMMANDS
 # Pretty warnings
 import warnings
 
+
 def custom_formatwarning(msg, *args, **kwargs):
     # ignore everything except the message
     return colored('Warning: {}\n'.format(msg), 'yellow')
@@ -113,6 +114,7 @@ NUM_BERT_WORKERS = 1
 COGNIVAL_SOURCES_URL = 'https://drive.google.com/uc?id=1ouonaByYn2cnDAWihnQ3cGmMT6bJ4NaP'
 RUSSIAN_SOURCES_URL = 'https://drive.google.com/uc?id=1CpAbZYtNLxJ6SPj7HXFALPN7DibrVr6V'
 DUTCH_SOURCES_URL = 'https://drive.google.com/uc?id=1QFgbsujjINOrCPROrHNizjezlZdrLGLQ'
+LANGUAGE_SOURCES={"dutch": ["dutchgeco_scaled.txt"], "russian": ["russiangeco_scaled.txt"]}
 def run(configuration,
         config_dict,
         resources_path,
@@ -986,25 +988,45 @@ def aggregate(configuration,
 
 
 def update_vocabulary(cog_sources_path,
-                      old_vocab):
+                      old_vocab,
+                      language="english"):
+    
     old_vocab = set(old_vocab)
     old_len = len(old_vocab)
-
+    print(f'language: {language}')
     new_vocab = set()
+    if language=="english":
+        source_paths = [(Path(path) / source) for path, _, sources in os.walk(cog_sources_path) for source in sources \
+                        if source.endswith('txt') and not source.startswith('.') and not source in LANGUAGE_SOURCES["dutch"] and not source in LANGUAGE_SOURCES["russian"]]
+    else:
+         source_paths = [(Path(path) / source) for path, _, sources in os.walk(cog_sources_path) for source in sources \
+                        if source.endswith('txt') and not source.startswith('.') and source in LANGUAGE_SOURCES[language]]
+    """
     source_paths = [(Path(path) / source) for path, _, sources in os.walk(cog_sources_path) for source in sources \
-                        if source.endswith('txt') and not source.startswith('.')]
+                        if source.endswith('txt') and not source.startswith('.') ]
+    """
+    print(source_paths)
     cprint("Updating CogniVal vocabulary from cognitive sources ...", "yellow")
     
     # Iterate over sources
     for source_path in tqdm(source_paths):
-        df = pd.read_csv(source_path,
+        if language=="dutch":
+            df = pd.read_csv(source_path,
+                            sep=" ",
+                            quotechar=None,
+                            quoting=csv.QUOTE_NONE,
+                            doublequote=False,
+                            keep_default_na=False,
+                            index_col=False)
+        else:
+            df = pd.read_csv(source_path,
                             sep=" ",
                             quotechar=None,
                             quoting=csv.QUOTE_NONE,
                             doublequote=False,
                             keep_default_na=False)
-        if(str(source_path) == "/home/lvkleis/.cognival/cognitive_sources/eye-tracking/dutchgeco.txt"):
-            print(df.head)
+
+        print(df['word'])
         # Determine if any NaNs in word column, warn accordingly
         is_nan_series = df['word'].isnull()
         if is_nan_series.values.any():
@@ -1014,13 +1036,7 @@ def update_vocabulary(cog_sources_path,
             
         # Fill NaNs and perform inplace set union with new vocabulary set
         df.fillna('', inplace=True)
-        print('belangstelling' in df['word'])
         new_vocab |= set(df['word'])
-        print("DF")
-        print('belangstelling' in df['word'])
-        print('Set')
-        print('belangstelling' in set(df['word']))
-        print('belangstelling' in new_vocab)
     new_vocab_list = sorted([x for x in new_vocab if x])
     new_len = len(new_vocab_list)
 
@@ -1037,7 +1053,6 @@ def update_vocabulary(cog_sources_path,
     diff_list = ', '.join(sorted(list((old_vocab | new_vocab) - (old_vocab & new_vocab))))
     if diff_list:
         cprint('Diff: {}'.format(diff_list))
-    print('belangstelling' in new_vocab_list)    
     return new_vocab_list
 
 

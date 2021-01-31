@@ -436,7 +436,8 @@ def aggregate(run_id=0,
 
 
 @command
-def update_vocabulary():
+@argument('language', type=str, description='Language of embeddings/sources')
+def update_vocabulary(language="english"):
     """
     Update the vocabulary based on all imported cognitive sources.
     """
@@ -449,7 +450,7 @@ def update_vocabulary():
         old_vocab = [x.rstrip('\n') for x in f]
 
     new_vocab_list = commands.update_vocabulary(cog_sources_path,
-                                                old_vocab)
+                                                old_vocab, language)
 
     if new_vocab_list:
         cprint('Writing vocabulary to {} ...'.format(str(vocab_path)), 'green')

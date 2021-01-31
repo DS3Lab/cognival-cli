@@ -232,10 +232,6 @@ def data_handler(mode, config, word_embedding, cognitive_data, feature, truncate
 
     if (config[emb_key][word_embedding]["chunked"]):
         df_join = multi_join(mode, config, df_cognitive_data, word_embedding)
-        if(len(df_join) == 0):
-            print("chunked")
-            print(df_join.head)
-            print("word_embedding")
     else:
         if truncate_first_line:
             skip_rows = 1
@@ -254,35 +250,9 @@ def data_handler(mode, config, word_embedding, cognitive_data, feature, truncate
         else:
              df_word_embedding = pd.read_csv(Path(config['PATH']) / config[emb_key][word_embedding]["path"], sep=" ",
                             encoding="utf-8", quoting=csv.QUOTE_NONE, skiprows=skip_rows, names=['word'] + ['x_{}'.format(idx + 1) for idx in range(dimensionality)])
-
-            #print(f'skip rows {skip_rows}')
-        #print("data types word emb")
-        #print(df_word_embedding.dtypes)
-        #print(df_word_embedding['word'])
-        #print("data types cog source")
-        
-        
-        #print(df_cognitive_data.dtypes)
-        #print(df_cognitive_data['word'])
-        #print("word embedding: ")
-        #print(word_embedding)
-        #print(df_word_embedding)
-        #print(len(df_word_embedding))
+    print(Path(config['PATH']) / config[emb_key][word_embedding]["path"])
         # Left (outer) Join to get wordembedding vectors for all words in cognitive dataset
-        try:
-            df_join = pd.merge(df_cognitive_data, df_word_embedding, how='left', on=['word'])
-        except:
-            #print(Path(config['PATH']) / config[emb_key][word_embedding]["path"])
-            print(dimensionality)
-            print(skip_rows)
-            print("word embedding types")
-            print(word_embedding)
-            print(df_word_embedding.dtypes)
-            print(df_word_embedding.head)
-            print("cog data types")
-            print(df_cognitive_data.dtypes)   
-        #print(df_cognitive_data.head)
-        #print(df_word_embedding.head)
+    df_join = pd.merge(df_cognitive_data, df_word_embedding, how='left', on=['word'])
     df_old = df_join.copy()    
     df_join.dropna(inplace=True)
     words = df_join['word']
@@ -303,7 +273,6 @@ def data_handler(mode, config, word_embedding, cognitive_data, feature, truncate
 
         X = df_join.drop(features, axis=1)
         X = np.array(X, dtype='float')
-    #print("X is: ")
 
         
     return split_folds(words, X, y, config["folds"], config["seed"])

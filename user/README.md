@@ -338,3 +338,14 @@ The following table contains reference results for the modality EEG for some of 
 
 ## Testing and Development
 In order to run the tests, you need to download the [test_data](https://drive.google.com/open?id=1f0hFulGIwqf6FRbPCv14d6yiEXh6WI49) and extract the archive into the `tests` directory. Note that testing coverage is fairly minimal at present time.
+## Running Experiments for Dutch and Russian Data
+1) python setup.py install
+2) import cognitive-sources
+
+3) import embeddings fasttextdutch
+4) update-vocabulary
+5) import random-baselines embeddings=fasttextdutch force=True
+6) config open configuration=SOMETHING
+7) config experiment embeddings=["fasttextdutch"] cognitive-sources=["eye-tracking_dutchgeco"]
+8) in the config.json, set truncate_first_line to false
+9) run
