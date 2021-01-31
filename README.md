@@ -402,9 +402,9 @@ In order to run the tests, you need to download the [test_data](https://drive.go
 
 ## How to import embeddings from Huggingface
 In the cognival CLI:
-Import cognitive-sources
-Import sentence-embeddings GPT2
-When prompted(: Name: GPT2, dictionary name: gpt2, embeddings size: 768, directory name: None. Appropriate values can be looked up on Huggingface website)
-Wait for embedding generation to be completed
-In embedding_registry.json, remove the quotes from the dimensionality entry to turn it into an int, e.g. “768” to 768.
-Open a new configuration and run experiments as usual. 
+1) Import cognitive-sources
+2) Import sentence-embeddings GPT2
+3) When prompted(: Name: GPT2, dictionary name: gpt2, embeddings size: 768, directory name: None. Appropriate values can be looked up on Huggingface website)
+4) Wait for embedding generation to be completed
+5) In embedding_registry.json, remove the quotes from the dimensionality entry to turn it into an int, e.g. “768” to 768.
+6) Open a new configuration and run experiments as usual. 
