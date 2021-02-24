@@ -343,7 +343,7 @@ In order to run the tests, you need to download the [test_data](https://drive.go
 2) import cognitive-sources
 
 3) import embeddings fasttextdutch
-4) update-vocabulary
+4) update-vocabulary language="dutch"
 5) import random-baselines embeddings=fasttextdutch force=True
 6) config open configuration=SOMETHING
 7) config experiment embeddings=["fasttextdutch"] cognitive-sources=["eye-tracking_dutchgeco"]
