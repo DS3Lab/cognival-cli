@@ -6,12 +6,12 @@ import signal
 import sys
 from multiprocessing import Pool
 from datetime import  datetime
-import cog_evaluate
+import cognival.cog_evaluate as cog_evaluate
 
 from contextlib import redirect_stdout
 
-from handlers.file_handler import *
-from utils import animated_loading
+from cognival.handlers.file_handler import *
+from cognival.utils import animated_loading
 
 import GPUtil
 from termcolor import cprint, colored
