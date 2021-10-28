@@ -3,7 +3,7 @@ import os
 import numpy as np
 
 from pathlib import Path
-from handlers.plot_handler import plot_handler
+from cognival.handlers.plot_handler import plot_handler
 
 def update_run_id(configFile):
     '''

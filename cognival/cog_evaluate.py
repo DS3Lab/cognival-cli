@@ -2,9 +2,9 @@ from datetime import datetime
 import numpy as np
 
 #own modules
-from handlers.data_handler import data_handler
-from handlers.model_handler import model_handler
-from handlers.file_handler import *
+from cognival.handlers.data_handler import data_handler
+from cognival.handlers.model_handler import model_handler
+from cognival.handlers.file_handler import *
 
 def handler(mode, config, word_embedding, cognitive_data, feature, truncate_first_line):
     '''
