@@ -19,7 +19,7 @@ pandas==0.25.3
 bert_serving_client==1.10.0
 Pygments==2.2.0
 natsort==6.2.0
-numpy==1.18.1
+numpy==1.22.0
 pdfkit==0.6.1
 scipy==1.2.1
 bert_serving_server==1.10.0
