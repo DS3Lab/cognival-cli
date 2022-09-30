@@ -5,7 +5,7 @@ Keras==2.3.1
 Keras-Applications==1.0.8
 Keras-Preprocessing==1.0.5
 pytest==4.6.3
-joblib==0.13.2
+joblib==1.2.0
 tabulate==0.8.3
 gdown==3.8.3
 python_nubia==0.2b2
